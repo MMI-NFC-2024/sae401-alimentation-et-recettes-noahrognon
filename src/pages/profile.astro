@@ -1,0 +1,497 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Mon profil - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(200,248,224,0.8),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(207,230,255,0.75),transparent_28%),linear-gradient(180deg,#ecfbf4_0%,#f8fdff_72%,#eef6ff_100%)] py-7 lg:py-8">
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
+			<div class="mx-auto max-w-[980px]">
+				<div class="mb-7 flex flex-wrap items-end justify-between gap-4">
+					<div>
+						<h1 class="text-[2.2rem] font-semibold tracking-[-0.04em] text-[#16223c]">Mon Profil</h1>
+						<p class="mt-2 text-[1.05rem] text-slate-500">Gérez vos informations et suivez votre progression</p>
+					</div>
+					<button id="logout-button" type="button" class="inline-flex min-h-[44px] items-center justify-center rounded-[14px] border border-slate-300 px-5 py-2.5 text-[1rem] font-medium text-slate-700 transition hover:border-slate-400">
+						Se déconnecter
+					</button>
+				</div>
+
+				<p id="profile-error" class="mb-4 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+
+				<div class="grid gap-[18px] lg:grid-cols-[minmax(0,1fr)_320px]">
+					<div class="grid content-start gap-[18px]">
+						<section class="self-start rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_45px_rgba(58,91,133,0.12)] sm:px-6">
+							<div class="mb-5 flex items-center justify-between gap-4">
+								<h2 class="text-[1.3rem] font-semibold text-[#16223c]">Informations personnelles</h2>
+								<button id="profile-edit-button" type="button" class="inline-flex min-h-[44px] items-center justify-center gap-2 rounded-[14px] bg-[#08b37d] px-5 py-2.5 text-[1rem] font-medium text-white">
+									<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+										<path d="M4 20h4l9.5-9.5a2.1 2.1 0 0 0-4-1.4L4 18.6V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+									</svg>
+									<span>Modifier</span>
+								</button>
+							</div>
+
+							<form id="profile-form" class="grid gap-5">
+								<input type="hidden" name="objectif_slug" />
+								<input type="hidden" name="niveau_activite_libelle" />
+								<input type="hidden" name="type_activite_slug" />
+								<input type="hidden" name="regime_slug" />
+								<input type="hidden" name="restrictions_text" />
+								<input type="hidden" name="prenom" />
+								<input type="hidden" name="nom" />
+								<input type="hidden" name="telephone" />
+								<input type="hidden" name="sexe" />
+
+								<div class="flex items-center gap-5">
+									<div id="profile-avatar-shell" class="flex h-[78px] w-[78px] items-center justify-center overflow-hidden rounded-full bg-[#08b37d] text-[2rem] font-semibold text-white">
+										<img id="profile-avatar-image" alt="Avatar utilisateur" class="hidden h-full w-full object-cover" />
+										<span id="profile-avatar-fallback">NP</span>
+									</div>
+									<div>
+										<p id="profile-name" class="text-[1.45rem] font-semibold text-[#16223c]">Utilisateur</p>
+										<p id="profile-age-display" class="mt-1 text-[1rem] text-slate-500">0 ans</p>
+									</div>
+								</div>
+
+								<div class="grid gap-4 sm:grid-cols-2">
+									<label class="grid gap-2">
+										<span class="inline-flex items-center gap-2 text-[1rem] font-medium text-slate-700">
+											<svg viewBox="0 0 24 24" class="h-4 w-4 text-slate-500" fill="none" aria-hidden="true"><path d="M7 4v16M17 4v16M4 8h6M14 16h6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+											Poids actuel (kg)
+										</span>
+										<input name="poids_actuel_kg" disabled class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none disabled:bg-slate-50" />
+									</label>
+									<label class="grid gap-2">
+										<span class="inline-flex items-center gap-2 text-[1rem] font-medium text-slate-700">
+											<svg viewBox="0 0 24 24" class="h-4 w-4 text-slate-500" fill="none" aria-hidden="true"><path d="M12 3v18M6 9h12M8 6l4-3 4 3M8 18l4 3 4-3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+											Poids objectif (kg)
+										</span>
+										<input name="poids_objectif_kg" disabled class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none disabled:bg-slate-50" />
+									</label>
+									<label class="grid gap-2">
+										<span class="inline-flex items-center gap-2 text-[1rem] font-medium text-slate-700">
+											<svg viewBox="0 0 24 24" class="h-4 w-4 text-slate-500" fill="none" aria-hidden="true"><path d="M4 18h16M7 18V6m10 12V9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+											Taille (cm)
+										</span>
+										<input name="taille_cm" disabled class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none disabled:bg-slate-50" />
+									</label>
+									<label class="grid gap-2">
+										<span class="inline-flex items-center gap-2 text-[1rem] font-medium text-slate-700">
+											<svg viewBox="0 0 24 24" class="h-4 w-4 text-slate-500" fill="none" aria-hidden="true"><path d="M12 7v5l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+											Âge
+										</span>
+										<input name="age" disabled class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none disabled:bg-slate-50" />
+									</label>
+									<label class="grid gap-2">
+										<span class="inline-flex items-center gap-2 text-[1rem] font-medium text-slate-700">
+											<svg viewBox="0 0 24 24" class="h-4 w-4 text-slate-500" fill="none" aria-hidden="true"><path d="M4 14h4l2-7 4 10 2-5h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+											Niveau d’activité
+										</span>
+										<input id="profile-activity-level" disabled class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none disabled:bg-slate-50" />
+									</label>
+									<label class="grid gap-2">
+										<span class="inline-flex items-center gap-2 text-[1rem] font-medium text-slate-700">
+											<svg viewBox="0 0 24 24" class="h-4 w-4 text-slate-500" fill="none" aria-hidden="true"><path d="M6 8h4M14 8h4M9 8v8M15 8v8M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+											Séances/semaine
+										</span>
+										<input name="seances_par_semaine" disabled class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none disabled:bg-slate-50" />
+									</label>
+								</div>
+
+								<div id="profile-save-row" class="hidden border-t border-slate-200 pt-5">
+									<button type="submit" class="inline-flex min-h-[48px] items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[1rem] font-semibold text-white">Enregistrer les modifications →</button>
+								</div>
+							</form>
+						</section>
+
+						<section class="self-start rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_45px_rgba(58,91,133,0.12)] sm:px-6">
+							<h2 class="text-[1.3rem] font-semibold text-[#16223c]">Évolution du poids</h2>
+							<div class="mt-8">
+								<div id="weight-chart" class="flex h-[190px] items-end justify-between gap-3"></div>
+								<div class="mt-3 flex justify-between px-1 text-[0.95rem] text-slate-500">
+									<span>Oct</span><span>Nov</span><span>Déc</span><span>Jan</span><span>Fév</span><span>Mar</span>
+								</div>
+								<div class="mt-5 flex flex-wrap items-center justify-center gap-5 text-[0.98rem] text-slate-500">
+									<div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#11c29f]"></span><span id="legend-current">Poids actuel: 0kg</span></div>
+									<div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#5fd6f2]"></span><span id="legend-target">Objectif: 0kg</span></div>
+								</div>
+							</div>
+						</section>
+
+						<section class="self-start overflow-hidden rounded-[22px] border border-[#d9e7df] bg-[linear-gradient(135deg,#eef8f1_0%,#f7fbf8_100%)] px-5 py-5 text-[#16223c] shadow-[0_18px_45px_rgba(58,91,133,0.08)] sm:px-6 sm:py-6">
+							<div class="max-w-[640px]">
+								<div class="inline-flex rounded-full bg-[#d8efe3] px-4 py-1.5 text-[0.88rem] font-semibold text-[#0c8f68]">SPONSORISÉ</div>
+								<h2 class="mt-4 max-w-[560px] text-[1.9rem] font-semibold tracking-[-0.03em] leading-[1.08] sm:text-[2rem]">Programme Transformation 90 jours</h2>
+								<p class="mt-3 max-w-[600px] text-[1rem] leading-7 text-slate-600">Coaching personnalisé, plan nutrition sur mesure et suivi quotidien avec un cadre progressif.</p>
+							</div>
+							<div class="mt-5 flex flex-col items-start gap-3 sm:flex-row sm:items-center sm:gap-5">
+								<a href="#" class="inline-flex min-h-[48px] items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[1rem] font-semibold text-white">Découvrir le programme</a>
+								<p class="text-[1rem] text-slate-600">À partir de 99€/mois</p>
+							</div>
+						</section>
+					</div>
+
+					<div class="grid content-start gap-[18px]">
+						<section class="self-start rounded-[22px] bg-[linear-gradient(180deg,#10b389_0%,#0ca985_100%)] px-5 py-5 text-white shadow-[0_20px_45px_rgba(16,179,137,0.28)]">
+							<div class="mb-8 flex items-center gap-4">
+								<div class="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-white/15">
+									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+										<path d="M4 8l5 5 4-4 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+										<path d="M15 16h5v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+									</svg>
+								</div>
+								<h2 class="text-[1.35rem] font-semibold">Projection de poids</h2>
+							</div>
+							<p class="text-[1rem] text-white/80">Poids estimé dans 8 semaines</p>
+							<p id="projection-weight" class="mt-2 text-[4rem] leading-none font-semibold">0kg</p>
+							<p id="projection-delta" class="mt-2 text-[1rem] text-white/80">0kg depuis aujourd'hui</p>
+							<div class="my-6 h-px bg-white/20"></div>
+							<p class="text-[1rem] text-white/80">Objectif atteint le</p>
+							<p id="projection-date" class="mt-3 text-[2.1rem] font-semibold">--</p>
+							<p id="projection-duration" class="mt-2 text-[1rem] text-white/80">Dans -- semaines</p>
+							<div class="my-6 h-px bg-white/20"></div>
+							<p class="text-[1rem] text-white/80">Rythme recommandé</p>
+							<p id="projection-weekly" class="mt-3 text-[2rem] font-semibold">0 kg/semaine</p>
+						</section>
+
+						<section class="self-start rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_45px_rgba(58,91,133,0.12)]">
+							<h2 class="text-[1.3rem] font-semibold text-[#16223c]">Indice de Masse Corporelle</h2>
+							<div class="mt-6 text-center">
+								<p id="bmi-value" class="text-[3.4rem] font-semibold text-[#08b37d]">0.0</p>
+								<p class="mt-1 text-[1rem] text-slate-500">IMC actuel</p>
+							</div>
+							<div class="mt-6 grid gap-3 text-[0.98rem] text-slate-500">
+								<div class="flex items-center justify-between"><span>Sous-poids</span><span>&lt; 18.5</span></div>
+								<div class="flex items-center justify-between text-[#08b37d]"><span>Normal</span><span>18.5 - 24.9</span></div>
+								<div class="flex items-center justify-between"><span>Surpoids</span><span>25 - 29.9</span></div>
+							</div>
+						</section>
+
+						<section class="self-start rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_45px_rgba(58,91,133,0.12)]">
+							<h2 class="flex items-center gap-3 text-[1.3rem] font-semibold text-[#16223c]">
+								<span class="flex h-[40px] w-[40px] items-center justify-center rounded-2xl bg-[#fff2c9]">
+									<svg viewBox="0 0 24 24" class="h-5 w-5 text-[#e0a100]" fill="none" aria-hidden="true">
+										<path d="M8 4h8v2a4 4 0 0 0 4 4v1a6 6 0 0 1-5 5.91V20H9v-3.09A6 6 0 0 1 4 11v-1a4 4 0 0 0 4-4V4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+									</svg>
+								</span>
+								<span>Objectifs atteints</span>
+							</h2>
+							<div class="mt-6 grid gap-5">
+								<div class="flex items-start gap-4">
+									<div class="flex h-[40px] w-[40px] items-center justify-center rounded-2xl bg-[#e6fbf4]">
+										<svg viewBox="0 0 24 24" class="h-5 w-5 text-[#08b37d]" fill="none" aria-hidden="true">
+											<path d="M12 5a7 7 0 1 0 7 7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+											<path d="M12 9l3 3-3 3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+										</svg>
+									</div>
+									<div><p id="achievement-weight" class="text-[1.35rem] font-semibold text-[#16223c]">0kg à atteindre</p><p class="text-[0.95rem] text-slate-500">Depuis le début</p></div>
+								</div>
+								<div class="flex items-start gap-4">
+									<div class="flex h-[40px] w-[40px] items-center justify-center rounded-2xl bg-[#fff0ea]">
+										<svg viewBox="0 0 24 24" class="h-5 w-5 text-[#ff7a45]" fill="none" aria-hidden="true">
+											<path d="M12 3c2 3 5 5 5 9a5 5 0 1 1-10 0c0-2 1-4 5-9Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+										</svg>
+									</div>
+									<div><p class="text-[1.35rem] font-semibold text-[#16223c]">30 jours de suite</p><p class="text-[0.95rem] text-slate-500">Record de régularité</p></div>
+								</div>
+								<div class="flex items-start gap-4">
+									<div class="flex h-[40px] w-[40px] items-center justify-center rounded-2xl bg-[#f8ecff]">
+										<svg viewBox="0 0 24 24" class="h-5 w-5 text-[#a44dff]" fill="none" aria-hidden="true">
+											<path d="M6 12h4l2-6 2 12 2-6h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+										</svg>
+									</div>
+									<div><p id="achievement-sessions" class="text-[1.35rem] font-semibold text-[#16223c]">0 séances sport</p><p class="text-[0.95rem] text-slate-500">Total cumulé</p></div>
+								</div>
+							</div>
+						</section>
+
+						<section class="self-start overflow-hidden rounded-[22px] border border-slate-200 bg-white shadow-[0_18px_45px_rgba(58,91,133,0.12)]">
+							<div class="bg-[#4658ff] px-4 py-3 text-[0.86rem] font-semibold text-white">SPONSORISÉ - PRODUIT RECOMMANDÉ</div>
+							<div class="px-4 py-4">
+								<div class="h-[150px] rounded-[14px] bg-[linear-gradient(135deg,#75d7f8_0%,#2e9cd7_45%,#1553a8_100%)]"></div>
+								<h3 class="mt-4 text-[1.45rem] font-semibold text-[#16223c]">Balance Connectée Smart+</h3>
+								<p class="mt-2 text-[0.98rem] leading-6 text-slate-500">Suivi automatique du poids, IMC, masse musculaire et plus encore</p>
+								<div class="mt-5 flex items-center justify-between gap-4">
+									<p class="text-[2rem] font-semibold text-[#2d63ff]">79,99€</p>
+									<a href="#" class="inline-flex min-h-[42px] items-center justify-center rounded-[14px] bg-[#2d63ff] px-5 py-2 text-[1rem] font-medium text-white">Acheter</a>
+								</div>
+							</div>
+						</section>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const profileError = document.querySelector('#profile-error');
+	const editButton = document.querySelector('#profile-edit-button');
+	const saveRow = document.querySelector('#profile-save-row');
+	const profileForm = document.querySelector('#profile-form');
+	const logoutButton = document.querySelector('#logout-button');
+	let profileData = null;
+	let editMode = false;
+
+	function showProfileError(message) {
+		if (!(profileError instanceof HTMLElement)) return;
+		profileError.textContent = message;
+		profileError.classList.remove('hidden');
+	}
+
+	function clearProfileError() {
+		if (!(profileError instanceof HTMLElement)) return;
+		profileError.classList.add('hidden');
+		profileError.textContent = '';
+	}
+
+	function getStoredAuth() {
+		try {
+			const raw = localStorage.getItem(authKey);
+			return raw ? JSON.parse(raw) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function setStoredAuth(payload) {
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function logout() {
+		localStorage.removeItem(authKey);
+		window.location.href = '/auth/login';
+	}
+
+	function formatMonthProjection(date) {
+		return new Intl.DateTimeFormat('fr-FR', { month: 'long', year: 'numeric' }).format(date);
+	}
+
+	function getInitials(prenom, nom) {
+		return `${prenom?.[0] ?? ''}${nom?.[0] ?? ''}`.toUpperCase() || 'NP';
+	}
+
+	function setField(name, value) {
+		const field = profileForm?.querySelector(`[name="${name}"]`);
+		if (field instanceof HTMLInputElement || field instanceof HTMLTextAreaElement) {
+			field.value = value ?? '';
+		}
+	}
+
+	function buildWeightSeries(currentWeight, targetWeight) {
+		const months = 6;
+		const series = [];
+		const startWeight = currentWeight + (currentWeight - targetWeight) * 1.25;
+
+		for (let index = 0; index < months; index += 1) {
+			const progress = index / (months - 1);
+			const weight = startWeight + (currentWeight - startWeight) * progress;
+			series.push(Number(weight.toFixed(1)));
+		}
+
+		return series;
+	}
+
+	function renderWeightChart(weights) {
+		const chart = document.querySelector('#weight-chart');
+		if (!(chart instanceof HTMLElement)) return;
+
+		const maxWeight = Math.max(...weights);
+		const minWeight = Math.min(...weights);
+		const range = Math.max(1, maxWeight - minWeight);
+
+		chart.innerHTML = '';
+		weights.forEach((weight) => {
+			const column = document.createElement('div');
+			column.className = 'flex flex-1 flex-col items-center justify-end gap-2';
+			const normalized = ((weight - minWeight) / range) * 120 + 36;
+			column.innerHTML = `
+				<div class="flex w-full items-end justify-center rounded-t-[12px] bg-[#11c29f]" style="height:${normalized}px">
+					<span class="pb-2 text-[0.82rem] font-semibold text-white">${weight}kg</span>
+				</div>
+			`;
+			chart.appendChild(column);
+		});
+	}
+
+	function renderProfile(payload) {
+		profileData = payload;
+		const user = payload.user;
+		const nutrition = payload.nutritionProfile;
+
+		const avatarImage = document.querySelector('#profile-avatar-image');
+		const avatarFallback = document.querySelector('#profile-avatar-fallback');
+		if (avatarImage instanceof HTMLImageElement && avatarFallback instanceof HTMLElement) {
+			if (user.avatarUrl) {
+				avatarImage.src = user.avatarUrl;
+				avatarImage.classList.remove('hidden');
+				avatarFallback.classList.add('hidden');
+			} else {
+				avatarImage.classList.add('hidden');
+				avatarFallback.classList.remove('hidden');
+				avatarFallback.textContent = getInitials(user.prenom, user.nom);
+			}
+		}
+
+		document.querySelector('#profile-name').textContent = `${user.prenom ?? ''} ${user.nom ?? ''}`.trim();
+		document.querySelector('#profile-age-display').textContent = `${user.age ?? 0} ans`;
+
+		setField('poids_actuel_kg', String(user.poids_actuel_kg ?? ''));
+		setField('poids_objectif_kg', String(user.poids_objectif_kg ?? ''));
+		setField('taille_cm', String(user.taille_cm ?? ''));
+		setField('age', String(user.age ?? ''));
+		setField('seances_par_semaine', String(user.seances_par_semaine ?? ''));
+		setField('objectif_slug', user.expand?.objectif_id?.slug ?? 'perte-poids');
+		setField('niveau_activite_libelle', user.expand?.niveau_activite_id?.libelle ?? '');
+		setField('type_activite_slug', user.expand?.type_activite_id?.slug ?? '');
+		setField('regime_slug', user.expand?.regime_id?.slug ?? 'classique');
+		setField('restrictions_text', user.restrictions_text ?? '');
+		setField('prenom', user.prenom ?? '');
+		setField('nom', user.nom ?? '');
+		setField('telephone', user.telephone ?? '');
+		setField('sexe', user.sexe ?? '');
+
+		const activityLevelLabel = user.expand?.niveau_activite_id?.libelle ?? 'Modéré';
+		const activityField = document.querySelector('#profile-activity-level');
+		if (activityField instanceof HTMLInputElement) {
+			activityField.value = activityLevelLabel;
+		}
+
+		const currentWeight = Number(user.poids_actuel_kg ?? 0);
+		const targetWeight = Number(user.poids_objectif_kg ?? 0);
+		const sessions = Number(user.seances_par_semaine ?? 0);
+		const weightDiff = Number((targetWeight - currentWeight).toFixed(1));
+		const recommendedWeeklyRate = Math.min(0.9, Math.max(0.2, Math.abs(weightDiff) / Math.max(8, 14 - sessions)));
+		const weeksToGoal = Math.max(1, Math.ceil(Math.abs(weightDiff) / recommendedWeeklyRate));
+		const projectedInEightWeeks =
+			weightDiff === 0
+				? currentWeight
+				: Number(
+						(currentWeight + Math.sign(weightDiff) * Math.min(Math.abs(weightDiff), recommendedWeeklyRate * 8)).toFixed(1),
+				  );
+		const projectionDate = new Date();
+		projectionDate.setDate(projectionDate.getDate() + weeksToGoal * 7);
+
+		document.querySelector('#projection-weight').textContent = `${projectedInEightWeeks}kg`;
+		document.querySelector('#projection-delta').textContent = `${projectedInEightWeeks > currentWeight ? '+' : ''}${(projectedInEightWeeks - currentWeight).toFixed(1)}kg depuis aujourd'hui`;
+		document.querySelector('#projection-date').textContent = formatMonthProjection(projectionDate);
+		document.querySelector('#projection-duration').textContent = `Dans ${weeksToGoal} semaine${weeksToGoal > 1 ? 's' : ''}`;
+		document.querySelector('#projection-weekly').textContent = `${recommendedWeeklyRate.toFixed(1)} kg/semaine`;
+
+		const bmi = Number(nutrition?.imc ?? 0).toFixed(1);
+		document.querySelector('#bmi-value').textContent = bmi;
+		document.querySelector('#legend-current').textContent = `Poids actuel: ${currentWeight}kg`;
+		document.querySelector('#legend-target').textContent = `Objectif: ${targetWeight}kg`;
+		document.querySelector('#achievement-weight').textContent = `${Math.abs(weightDiff).toFixed(1)}kg ${weightDiff <= 0 ? 'à perdre' : 'à prendre'}`;
+		document.querySelector('#achievement-sessions').textContent = `${sessions * 12} séances sport`;
+
+		renderWeightChart(buildWeightSeries(currentWeight, targetWeight));
+	}
+
+	function setEditMode(enabled) {
+		editMode = enabled;
+		profileForm?.querySelectorAll('input:not([type="hidden"])').forEach((field) => {
+			if (field instanceof HTMLInputElement) {
+				field.disabled = !enabled;
+			}
+		});
+
+		if (saveRow instanceof HTMLElement) {
+			saveRow.classList.toggle('hidden', !enabled);
+		}
+
+		if (editButton instanceof HTMLButtonElement) {
+			editButton.innerHTML = enabled
+				? '<span>Annuler</span>'
+				: '<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true"><path d="M4 20h4l9.5-9.5a2.1 2.1 0 0 0-4-1.4L4 18.6V20Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg><span>Modifier</span>';
+			editButton.classList.toggle('gap-2', !enabled);
+			editButton.classList.toggle('bg-slate-200', enabled);
+			editButton.classList.toggle('text-slate-700', enabled);
+			editButton.classList.toggle('bg-[#08b37d]', !enabled);
+			editButton.classList.toggle('text-white', !enabled);
+		}
+	}
+
+	async function loadProfile() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const response = await fetch('/api/profile', {
+			headers: {
+				Authorization: `Bearer ${auth.token}`,
+			},
+		});
+		const result = await response.json();
+
+		if (!response.ok) {
+			localStorage.removeItem(authKey);
+			throw new Error(result.message || 'Impossible de charger le profil.');
+		}
+
+		setStoredAuth({
+			...auth,
+			token: result.token,
+			record: result.user,
+		});
+
+		renderProfile(result);
+	}
+
+	editButton?.addEventListener('click', () => {
+		clearProfileError();
+		if (editMode) {
+			renderProfile(profileData);
+		}
+		setEditMode(!editMode);
+	});
+
+	logoutButton?.addEventListener('click', logout);
+
+	profileForm?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		clearProfileError();
+
+		const auth = getStoredAuth();
+		if (!auth?.token || !(profileForm instanceof HTMLFormElement)) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const formData = new FormData(profileForm);
+		const payload = Object.fromEntries(formData.entries());
+
+		try {
+			const response = await fetch('/api/profile', {
+				method: 'PATCH',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${auth.token}`,
+				},
+				body: JSON.stringify(payload),
+			});
+			const result = await response.json();
+
+			if (!response.ok) {
+				throw new Error(result.message || 'Impossible de mettre à jour le profil.');
+			}
+
+			setStoredAuth({
+				...auth,
+				token: result.token,
+				record: result.user,
+			});
+			renderProfile(result);
+			setEditMode(false);
+		} catch (error) {
+			showProfileError(error instanceof Error ? error.message : 'Impossible de mettre à jour le profil.');
+		}
+	});
+
+	loadProfile().catch((error) => {
+		showProfileError(error instanceof Error ? error.message : 'Impossible de charger le profil.');
+	});
+</script>

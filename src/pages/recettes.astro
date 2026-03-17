@@ -1,0 +1,527 @@
+---
+import Layout from "../layouts/Layout.astro";
+---
+
+<Layout title="Recettes - Nutrivia">
+	<section
+		class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.8),transparent_30%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_32%),linear-gradient(180deg,#f6fdf9_0%,#fbfdff_64%,#f4f9ff_100%)] py-8 lg:py-10"
+	>
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
+			<div class="mx-auto max-w-[1080px]">
+				<div class="mb-7">
+					<h1
+						class="text-[2.35rem] font-semibold tracking-[-0.04em] text-[#16223c]"
+					>
+						Recettes
+					</h1>
+					<p class="mt-2 text-[1.05rem] text-slate-500">
+						Découvrez des recettes adaptées à vos objectifs
+						nutritionnels
+					</p>
+				</div>
+
+				<p
+					id="recipes-error"
+					class="mb-5 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"
+				>
+				</p>
+
+				<div
+					class="rounded-[24px] border border-[#dbe7f2] bg-white/65 p-4 shadow-[0_16px_42px_rgba(71,104,145,0.08)] backdrop-blur-sm sm:p-5"
+				>
+					<div class="relative">
+						<svg
+							viewBox="0 0 24 24"
+							class="pointer-events-none absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-slate-400"
+							fill="none"
+							aria-hidden="true"
+						>
+							<path
+								d="M21 21l-4.35-4.35M10.5 18a7.5 7.5 0 1 1 0-15 7.5 7.5 0 0 1 0 15Z"
+								stroke="currentColor"
+								stroke-width="1.8"
+								stroke-linecap="round"
+								stroke-linejoin="round"></path>
+						</svg>
+						<input
+							id="recipes-search"
+							type="search"
+							placeholder="Rechercher une recette..."
+							class="h-[54px] w-full rounded-[18px] border border-[#cad8e7] bg-white pl-12 pr-4 text-[1rem] text-slate-700 outline-none transition placeholder:text-slate-400 focus:border-[#08b37d]"
+						/>
+					</div>
+
+					<div class="mt-6">
+						<div
+							class="flex items-center gap-2 text-[1rem] font-medium text-[#324765]"
+						>
+							<svg
+								viewBox="0 0 24 24"
+								class="h-5 w-5 text-slate-500"
+								fill="none"
+								aria-hidden="true"
+							>
+								<path
+									d="M4 5h16l-6 7v6l-4-2v-4L4 5Z"
+									stroke="currentColor"
+									stroke-width="1.8"
+									stroke-linecap="round"
+									stroke-linejoin="round"></path>
+							</svg>
+							<span>Filtres</span>
+						</div>
+
+						<div class="mt-4 grid gap-4 lg:grid-cols-3">
+							<div class="grid gap-2">
+								<label
+									for="recipes-goal"
+									class="text-[0.98rem] font-medium text-[#324765]"
+									>Objectif</label
+								>
+								<div class="relative">
+									<select
+										id="recipes-goal"
+										class="h-[46px] w-full appearance-none rounded-[16px] border border-[#cad8e7] bg-white px-4 pr-11 text-[0.98rem] text-slate-700 outline-none transition focus:border-[#08b37d]"
+									>
+										<option value=""
+											>Tous les objectifs</option
+										>
+									</select>
+									<button
+										id="recipes-goal-clear"
+										type="button"
+										class="absolute top-1/2 right-10 hidden h-6 w-6 -translate-y-1/2 rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+										>×</button
+									>
+									<svg
+										viewBox="0 0 24 24"
+										class="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-slate-400"
+										fill="none"
+										aria-hidden="true"
+									>
+										<path
+											d="m6 9 6 6 6-6"
+											stroke="currentColor"
+											stroke-width="1.8"
+											stroke-linecap="round"
+											stroke-linejoin="round"></path>
+									</svg>
+								</div>
+							</div>
+
+							<div class="grid gap-2">
+								<label
+									for="recipes-diet"
+									class="text-[0.98rem] font-medium text-[#324765]"
+									>Régime alimentaire</label
+								>
+								<div class="relative">
+									<select
+										id="recipes-diet"
+										class="h-[46px] w-full appearance-none rounded-[16px] border border-[#cad8e7] bg-white px-4 pr-11 text-[0.98rem] text-slate-700 outline-none transition focus:border-[#08b37d]"
+									>
+										<option value=""
+											>Tous les régimes</option
+										>
+									</select>
+									<button
+										id="recipes-diet-clear"
+										type="button"
+										class="absolute top-1/2 right-10 hidden h-6 w-6 -translate-y-1/2 rounded-full text-slate-400 transition hover:bg-slate-100 hover:text-slate-600"
+										>×</button
+									>
+									<svg
+										viewBox="0 0 24 24"
+										class="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-slate-400"
+										fill="none"
+										aria-hidden="true"
+									>
+										<path
+											d="m6 9 6 6 6-6"
+											stroke="currentColor"
+											stroke-width="1.8"
+											stroke-linecap="round"
+											stroke-linejoin="round"></path>
+									</svg>
+								</div>
+							</div>
+
+							<div class="grid gap-2">
+								<label
+									for="recipes-calories"
+									class="text-[0.98rem] font-medium text-[#324765]"
+									>Calories</label
+								>
+								<div class="relative">
+									<select
+										id="recipes-calories"
+										class="h-[46px] w-full appearance-none rounded-[16px] border border-[#cad8e7] bg-white px-4 pr-11 text-[0.98rem] text-slate-700 outline-none transition focus:border-[#08b37d]"
+									>
+										<option value=""
+											>Toutes les plages</option
+										>
+										<option value="lt-350"
+											>Moins de 350 kcal</option
+										>
+										<option value="350-450"
+											>350 à 450 kcal</option
+										>
+										<option value="451-550"
+											>451 à 550 kcal</option
+										>
+										<option value="gt-550"
+											>Plus de 550 kcal</option
+										>
+									</select>
+									<svg
+										viewBox="0 0 24 24"
+										class="pointer-events-none absolute top-1/2 right-4 h-4 w-4 -translate-y-1/2 text-slate-400"
+										fill="none"
+										aria-hidden="true"
+									>
+										<path
+											d="m6 9 6 6 6-6"
+											stroke="currentColor"
+											stroke-width="1.8"
+											stroke-linecap="round"
+											stroke-linejoin="round"></path>
+									</svg>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+
+				<p
+					id="recipes-count"
+					class="mt-7 text-[1.02rem] font-medium text-[#324765]"
+				>
+					0 recette trouvée
+				</p>
+
+				<div
+					id="recipes-grid"
+					class="mt-6 grid gap-5 sm:grid-cols-2 xl:grid-cols-4"
+				>
+				</div>
+
+				<div
+					id="recipes-empty"
+					class="mt-8 hidden rounded-[24px] border border-dashed border-[#cad8e7] bg-white/70 px-6 py-10 text-center text-slate-500"
+				>
+					Aucune recette ne correspond aux filtres sélectionnés.
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = "nutrivia_auth";
+	const recipesError = document.querySelector("#recipes-error");
+	const recipesGrid = document.querySelector("#recipes-grid");
+	const recipesCount = document.querySelector("#recipes-count");
+	const recipesEmpty = document.querySelector("#recipes-empty");
+	const searchInput = document.querySelector("#recipes-search");
+	const goalSelect = document.querySelector("#recipes-goal");
+	const dietSelect = document.querySelector("#recipes-diet");
+	const caloriesSelect = document.querySelector("#recipes-calories");
+	const goalClear = document.querySelector("#recipes-goal-clear");
+	const dietClear = document.querySelector("#recipes-diet-clear");
+
+	let catalog = null;
+	let filteredRecipes = [];
+
+	function getStoredAuth() {
+		try {
+			const raw = localStorage.getItem(authKey);
+			return raw ? JSON.parse(raw) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function setStoredAuth(payload) {
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function showError(message) {
+		if (!(recipesError instanceof HTMLElement)) return;
+		recipesError.textContent = message;
+		recipesError.classList.remove("hidden");
+	}
+
+	function clearError() {
+		if (!(recipesError instanceof HTMLElement)) return;
+		recipesError.textContent = "";
+		recipesError.classList.add("hidden");
+	}
+
+	function escapeHtml(value) {
+		return String(value)
+			.replaceAll("&", "&amp;")
+			.replaceAll("<", "&lt;")
+			.replaceAll(">", "&gt;")
+			.replaceAll('"', "&quot;")
+			.replaceAll("'", "&#39;");
+	}
+
+	function formatCount(count) {
+		return `${count} recette${count > 1 ? "s" : ""} trouvée${count > 1 ? "s" : ""}`;
+	}
+
+	function updateClearButtons() {
+		if (
+			goalClear instanceof HTMLElement &&
+			goalSelect instanceof HTMLSelectElement
+		) {
+			goalClear.classList.toggle("hidden", !goalSelect.value);
+		}
+
+		if (
+			dietClear instanceof HTMLElement &&
+			dietSelect instanceof HTMLSelectElement
+		) {
+			dietClear.classList.toggle("hidden", !dietSelect.value);
+		}
+	}
+
+	function matchesCaloriesRange(recipeCalories, range) {
+		if (!range) return true;
+		if (range === "lt-350") return recipeCalories < 350;
+		if (range === "350-450")
+			return recipeCalories >= 350 && recipeCalories <= 450;
+		if (range === "451-550")
+			return recipeCalories >= 451 && recipeCalories <= 550;
+		if (range === "gt-550") return recipeCalories > 550;
+		return true;
+	}
+
+	function getVisibleChips(recipe) {
+		const chips = [];
+
+		for (const tag of recipe.tags ?? []) {
+			chips.push({
+				label: tag.libelle,
+				color: tag.couleur || "#e8f9ef",
+			});
+		}
+
+		for (const regime of recipe.regimes ?? []) {
+			if (!chips.find((chip) => chip.label === regime.libelle)) {
+				chips.push({
+					label: regime.libelle,
+					color: "#eefbf5",
+				});
+			}
+		}
+
+		return chips.slice(0, 2);
+	}
+
+	function renderRecipes(items) {
+		if (
+			!(recipesGrid instanceof HTMLElement) ||
+			!(recipesCount instanceof HTMLElement) ||
+			!(recipesEmpty instanceof HTMLElement)
+		) {
+			return;
+		}
+
+		recipesCount.textContent = formatCount(items.length);
+		recipesEmpty.classList.toggle("hidden", items.length !== 0);
+		recipesGrid.innerHTML = "";
+
+		items.forEach((recipe) => {
+			const chips = getVisibleChips(recipe)
+				.map(
+					(chip) =>
+						`<span class="inline-flex items-center rounded-full px-3 py-1 text-[0.82rem] font-medium text-[#0c8f68]" style="background:${escapeHtml(chip.color)}">${escapeHtml(chip.label)}</span>`,
+				)
+				.join("");
+
+			const card = document.createElement("article");
+			card.className =
+				"overflow-hidden rounded-[22px] border border-[#d8e2ee] bg-white shadow-[0_16px_38px_rgba(71,104,145,0.10)]";
+			card.innerHTML = `
+				<div class="relative">
+					<div class="aspect-[1.24/1] overflow-hidden bg-slate-100">
+						<img src="${escapeHtml(recipe.photoUrl || "")}" alt="${escapeHtml(recipe.titre)}" class="h-full w-full object-cover" />
+					</div>
+					<button type="button" class="absolute top-3 right-3 inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-600 shadow-[0_8px_18px_rgba(51,73,107,0.14)]">
+						<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+							<path d="m12 20-1.4-1.27C5.6 14.2 2 10.94 2 7A4.5 4.5 0 0 1 6.5 2.5c2.04 0 3.38 1.02 4.16 2.08A5.03 5.03 0 0 1 14.82 2.5 4.68 4.68 0 0 1 19.5 7c0 3.94-3.6 7.2-8.6 11.73L12 20Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+						</svg>
+					</button>
+				</div>
+				<div class="p-5">
+					<h2 class="text-[1.05rem] font-semibold leading-7 text-[#16223c]">${escapeHtml(recipe.titre)}</h2>
+					<div class="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[0.95rem] text-slate-500">
+						<span class="inline-flex items-center gap-1.5">
+							<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+								<path d="M12 7v5l3 3M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+							</svg>
+							${escapeHtml(String(recipe.tempsPreparationMin))} min
+						</span>
+						<span class="inline-flex items-center gap-1.5">
+							<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+								<path d="M12 3c2.2 2.9 4 5 4 8a4 4 0 1 1-8 0c0-3 1.8-5.1 4-8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+							</svg>
+							${escapeHtml(String(recipe.caloriesParPortion))} kcal
+						</span>
+					</div>
+					<div class="mt-4 flex min-h-[34px] flex-wrap gap-2">${chips}</div>
+					<div class="mt-4 flex items-center gap-2">
+						<a href="/recette/${escapeHtml(recipe.slug)}" class="inline-flex min-h-[46px] flex-1 items-center justify-center rounded-[14px] bg-[#08b37d] px-4 py-3 text-[0.98rem] font-semibold text-white">Voir la recette</a>
+						<button type="button" class="inline-flex h-[46px] w-[46px] items-center justify-center rounded-[14px] border border-[#cad8e7] text-slate-600">
+							<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+								<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+							</svg>
+						</button>
+					</div>
+				</div>
+			`;
+			recipesGrid.appendChild(card);
+		});
+	}
+
+	function applyFilters() {
+		if (
+			!catalog ||
+			!(goalSelect instanceof HTMLSelectElement) ||
+			!(dietSelect instanceof HTMLSelectElement) ||
+			!(caloriesSelect instanceof HTMLSelectElement) ||
+			!(searchInput instanceof HTMLInputElement)
+		) {
+			return;
+		}
+
+		const search = searchInput.value.trim().toLowerCase();
+		const selectedGoal = goalSelect.value;
+		const selectedDiet = dietSelect.value;
+		const selectedCalories = caloriesSelect.value;
+
+		filteredRecipes = catalog.recipes.filter((recipe) => {
+			const matchesSearch =
+				!search ||
+				recipe.titre.toLowerCase().includes(search) ||
+				recipe.description.toLowerCase().includes(search) ||
+				(recipe.tags ?? []).some((tag) =>
+					tag.libelle.toLowerCase().includes(search),
+				);
+			const matchesGoal =
+				!selectedGoal || recipe.objectif?.slug === selectedGoal;
+			const matchesDiet =
+				!selectedDiet ||
+				(recipe.regimes ?? []).some(
+					(regime) => regime.slug === selectedDiet,
+				);
+			const matchesCalories = matchesCaloriesRange(
+				recipe.caloriesParPortion,
+				selectedCalories,
+			);
+			return (
+				matchesSearch && matchesGoal && matchesDiet && matchesCalories
+			);
+		});
+
+		updateClearButtons();
+		renderRecipes(filteredRecipes);
+	}
+
+	function populateFilters(data) {
+		if (
+			!(goalSelect instanceof HTMLSelectElement) ||
+			!(dietSelect instanceof HTMLSelectElement)
+		) {
+			return;
+		}
+
+		data.filters.objectives.forEach((goal) => {
+			const option = document.createElement("option");
+			option.value = goal.slug;
+			option.textContent = goal.libelle;
+			goalSelect.appendChild(option);
+		});
+
+		data.filters.diets.forEach((diet) => {
+			const option = document.createElement("option");
+			option.value = diet.slug;
+			option.textContent = diet.libelle;
+			dietSelect.appendChild(option);
+		});
+
+		if (data.userDefaults.objectifSlug) {
+			goalSelect.value = data.userDefaults.objectifSlug;
+		}
+
+		if (data.userDefaults.regimeSlug) {
+			dietSelect.value = data.userDefaults.regimeSlug;
+		}
+	}
+
+	async function loadRecipes() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = "/auth/login";
+			return;
+		}
+
+		const response = await fetch("/api/recipes", {
+			headers: {
+				Authorization: `Bearer ${auth.token}`,
+			},
+		});
+		const result = await response.json();
+
+		if (!response.ok) {
+			if (response.status === 401) {
+				localStorage.removeItem(authKey);
+				window.location.href = "/auth/login";
+				return;
+			}
+			throw new Error(
+				result.message || "Impossible de charger les recettes.",
+			);
+		}
+
+		setStoredAuth({
+			...auth,
+			token: result.token,
+			record: auth.record,
+		});
+
+		catalog = result;
+		populateFilters(result);
+		applyFilters();
+	}
+
+	searchInput?.addEventListener("input", applyFilters);
+	goalSelect?.addEventListener("change", applyFilters);
+	dietSelect?.addEventListener("change", applyFilters);
+	caloriesSelect?.addEventListener("change", applyFilters);
+
+	goalClear?.addEventListener("click", () => {
+		if (goalSelect instanceof HTMLSelectElement) {
+			goalSelect.value = "";
+			applyFilters();
+		}
+	});
+
+	dietClear?.addEventListener("click", () => {
+		if (dietSelect instanceof HTMLSelectElement) {
+			dietSelect.value = "";
+			applyFilters();
+		}
+	});
+
+	loadRecipes()
+		.then(clearError)
+		.catch((error) => {
+			showError(
+				error instanceof Error
+					? error.message
+					: "Impossible de charger les recettes.",
+			);
+		});
+</script>

@@ -1,0 +1,340 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+type DietCard = {
+	slug: string;
+	title: string;
+	shortDescription: string;
+	fullDescription: string;
+	count: string;
+	primaryCta: string;
+	iconBackground: string;
+	iconColor: string;
+	badgeBackground: string;
+	badgeColor: string;
+	buttonBackground: string;
+	buttonText: string;
+	advantages: string[];
+	watchouts: string[];
+	recommendedFoods: string[];
+	icon: 'leaf' | 'sprout' | 'fish' | 'grain' | 'utensils';
+};
+
+const diets: DietCard[] = [
+	{
+		slug: 'vegetarien',
+		title: 'Végétarien',
+		shortDescription: 'Sans viande ni poisson',
+		fullDescription:
+			'Le régime végétarien exclut la viande et le poisson mais autorise les produits laitiers et les oeufs. Riche en fibres, vitamines et minéraux.',
+		count: '450+ recettes',
+		primaryCta: 'Voir les recettes',
+		iconBackground: 'bg-[#dff8eb]',
+		iconColor: 'text-[#08b37d]',
+		badgeBackground: 'bg-[#ebfbf3]',
+		badgeColor: 'text-[#0b8c5f]',
+		buttonBackground: 'bg-[#08b37d]',
+		buttonText: 'text-white',
+		advantages: [
+			'Riche en fibres et antioxydants',
+			'Réduction du risque cardiovasculaire',
+			'Impact environnemental réduit',
+			'Coût généralement plus faible',
+		],
+		watchouts: [
+			'Attention aux apports en fer et vitamine B12',
+			'Varier les sources de protéines végétales',
+			'Surveiller les apports en zinc et iode',
+		],
+		recommendedFoods: ['Légumineuses', 'Tofu et tempeh', 'Oeufs', 'Produits laitiers', 'Fruits et légumes', 'Céréales complètes'],
+		icon: 'leaf',
+	},
+	{
+		slug: 'vegetalien',
+		title: 'Végétalien',
+		shortDescription: '100% végétal',
+		fullDescription:
+			"Le régime végétalien exclut tous les produits d'origine animale. Basé sur les végétaux, il nécessite une attention particulière aux apports nutritionnels.",
+		count: '380+ recettes',
+		primaryCta: 'Voir les recettes',
+		iconBackground: 'bg-[#f3f8ff]',
+		iconColor: 'text-[#111827]',
+		badgeBackground: 'bg-[#f6f7fb]',
+		badgeColor: 'text-[#374151]',
+		buttonBackground: 'bg-[#111827]',
+		buttonText: 'text-white',
+		advantages: [
+			'Très riche en fibres',
+			'Faible en graisses saturées',
+			'Riche en antioxydants',
+			'Impact écologique minimal',
+		],
+		watchouts: [
+			'Supplémentation en B12 recommandée',
+			'Surveiller les apports en calcium et vitamine D',
+			'Combiner les protéines végétales',
+			'Attention aux oméga-3',
+		],
+		recommendedFoods: ['Légumineuses', 'Tofu, tempeh, seitan', 'Fruits à coque', 'Graines', 'Légumes variés', 'Céréales complètes'],
+		icon: 'sprout',
+	},
+	{
+		slug: 'mediterraneen',
+		title: 'Méditerranéen',
+		shortDescription: 'Fruits, légumes, poisson',
+		fullDescription:
+			"Inspiré des habitudes alimentaires des pays méditerranéens. Privilégie l'huile d'olive, les poissons, les fruits et légumes frais.",
+		count: '520+ recettes',
+		primaryCta: 'Voir les recettes',
+		iconBackground: 'bg-[#e9f1ff]',
+		iconColor: 'text-[#2d63ff]',
+		badgeBackground: 'bg-[#f0f5ff]',
+		badgeColor: 'text-[#2d63ff]',
+		buttonBackground: 'bg-[#2d63ff]',
+		buttonText: 'text-white',
+		advantages: [
+			'Protection cardiovasculaire prouvée',
+			'Riche en oméga-3 et antioxydants',
+			'Équilibré et varié',
+			'Facile à suivre au quotidien',
+		],
+		watchouts: [
+			'Contrôler les portions d’huile d’olive',
+			'Limiter la consommation de vin',
+			'Attention au sel dans certains aliments',
+		],
+		recommendedFoods: ['Poissons gras', "Huile d'olive", 'Légumes frais', 'Fruits', 'Céréales complètes', 'Légumineuses'],
+		icon: 'fish',
+	},
+	{
+		slug: 'faible-glucides',
+		title: 'Faible en glucides',
+		shortDescription: 'Réduction des sucres',
+		fullDescription:
+			'Ce régime réduit significativement les apports en glucides pour favoriser la combustion des graisses. Riche en protéines et lipides.',
+		count: '340+ recettes',
+		primaryCta: 'Voir les recettes',
+		iconBackground: 'bg-[#fff1e5]',
+		iconColor: 'text-[#ff6a00]',
+		badgeBackground: 'bg-[#fff3ea]',
+		badgeColor: 'text-[#ff6a00]',
+		buttonBackground: 'bg-[#ff6a00]',
+		buttonText: 'text-white',
+		advantages: [
+			'Perte de poids facilitée',
+			'Stabilisation de la glycémie',
+			'Réduction des fringales',
+			'Amélioration de la concentration',
+		],
+		watchouts: [
+			'Adaptation progressive nécessaire',
+			'Risque de fatigue initiale',
+			'Surveiller les apports en fibres',
+			'Hydratation importante',
+		],
+		recommendedFoods: ['Viandes et poissons', 'Oeufs', 'Légumes verts', 'Avocats', 'Noix', 'Huiles saines'],
+		icon: 'grain',
+	},
+	{
+		slug: 'classique',
+		title: 'Alimentation classique',
+		shortDescription: 'Alimentation variée',
+		fullDescription:
+			'Une alimentation équilibrée et variée sans restriction particulière. Privilégie la qualité et la diversité des aliments.',
+		count: '680+ recettes',
+		primaryCta: 'Voir les recettes',
+		iconBackground: 'bg-[#f5edff]',
+		iconColor: 'text-[#a855f7]',
+		badgeBackground: 'bg-[#faf3ff]',
+		badgeColor: 'text-[#a855f7]',
+		buttonBackground: 'bg-[#a855f7]',
+		buttonText: 'text-white',
+		advantages: [
+			'Grande variété alimentaire',
+			'Facile à suivre socialement',
+			'Pas de restriction stricte',
+			'Adapté à tous les âges',
+		],
+		watchouts: [
+			'Contrôler les portions',
+			'Limiter les aliments ultra-transformés',
+			'Équilibrer les repas',
+			'Surveiller les apports en sucres',
+		],
+		recommendedFoods: ['Tous les groupes alimentaires', 'Viandes et poissons', 'Produits laitiers', 'Fruits et légumes', 'Céréales', 'Légumineuses'],
+		icon: 'utensils',
+	},
+];
+
+function renderDietIcon(icon: DietCard['icon']) {
+	if (icon === 'leaf') {
+		return `
+			<path d="M19 5c-5.5 0-10 3.6-10 9 0 2.8 2.2 5 5 5 5.4 0 8-4.5 8-10V5h-3Z"></path>
+			<path d="M8 16c1.8-1.8 4.4-3.4 8-4.7"></path>
+		`;
+	}
+
+	if (icon === 'sprout') {
+		return `
+			<path d="M12 20V11"></path>
+			<path d="M12 13c-3.6 0-6-2.5-6-6 3.5 0 6 2.3 6 5.6"></path>
+			<path d="M12 10.6C12 7.3 14.5 5 18 5c0 3.5-2.4 6-6 6"></path>
+		`;
+	}
+
+	if (icon === 'fish') {
+		return `
+			<path d="M20 12s-2.5-4-8-4c-2.2 0-4.7 1-7 4 2.3 3 4.8 4 7 4 5.5 0 8-4 8-4Z"></path>
+			<path d="M8 12h.01M17 9l2-2M17 15l2 2"></path>
+		`;
+	}
+
+	if (icon === 'grain') {
+		return `
+			<path d="M8 18c0-4 2-7 6-10M10 20c0-4.5 2-8 6-11M6 16c0-3.5 1.5-6.5 4.5-9.5"></path>
+			<path d="M14 10c2 0 4-1 5-3M12 14c2.5 0 4.5-1 6-3M10 18c2.5 0 4.5-1 6-3"></path>
+		`;
+	}
+
+	return `
+		<path d="M4 6h16M7 6v10a4 4 0 0 0 4 4h2a4 4 0 0 0 4-4V6"></path>
+		<path d="M9 10h6M10 14h4"></path>
+	`;
+}
+---
+
+<Layout title="Régimes alimentaires - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)] py-8 lg:py-10">
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
+			<div class="mx-auto max-w-[980px]">
+				<div class="mb-8 text-center">
+					<h1 class="text-[2.3rem] font-semibold tracking-[-0.04em] text-[#16223c]">Régimes alimentaires</h1>
+					<p class="mx-auto mt-3 max-w-[46rem] text-[1.02rem] leading-7 text-slate-500">
+						Découvrez les différents régimes alimentaires et trouvez celui qui correspond le mieux à vos objectifs et préférences.
+					</p>
+				</div>
+
+				<div class="grid gap-5">
+					{
+						diets.map((diet) => (
+							<section class="rounded-[22px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)] sm:px-6 sm:py-6">
+								<div class="flex flex-col gap-5">
+									<div class="flex flex-wrap items-start justify-between gap-4">
+										<div class="flex min-w-0 items-start gap-4">
+											<div class:list={['flex h-[50px] w-[50px] shrink-0 items-center justify-center rounded-[16px]', diet.iconBackground]}>
+												<svg viewBox="0 0 24 24" class:list={['h-6 w-6', diet.iconColor]} fill="none" aria-hidden="true">
+													<Fragment set:html={renderDietIcon(diet.icon)} />
+												</svg>
+											</div>
+											<div class="min-w-0">
+												<h2 class="text-[1.85rem] font-semibold tracking-[-0.03em] text-[#16223c]">{diet.title}</h2>
+												<p class="mt-1 max-w-[44rem] text-[0.98rem] leading-7 text-slate-500">{diet.fullDescription}</p>
+											</div>
+										</div>
+
+										<div class:list={['inline-flex rounded-full px-4 py-2 text-[0.88rem] font-semibold', diet.badgeBackground, diet.badgeColor]}>
+											{diet.count}
+										</div>
+									</div>
+
+									<div class="grid gap-6 lg:grid-cols-2">
+										<div>
+											<h3 class="flex items-center gap-2 text-[1rem] font-semibold text-[#16223c]">
+												<svg viewBox="0 0 24 24" class="h-4 w-4 text-[#08b37d]" fill="none" aria-hidden="true">
+													<circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.8"></circle>
+													<path d="m8.5 12 2.2 2.2 4.8-4.8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+												</svg>
+												<span>Avantages</span>
+											</h3>
+											<ul class="mt-3 grid gap-2.5 text-[0.95rem] text-slate-500">
+												{diet.advantages.map((item) => (
+													<li class="flex items-start gap-2.5">
+														<svg viewBox="0 0 24 24" class="mt-1 h-3.5 w-3.5 shrink-0 text-[#3bc792]" fill="none" aria-hidden="true">
+															<path d="m5 12 4 4 10-10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+														</svg>
+														<span>{item}</span>
+													</li>
+												))}
+											</ul>
+										</div>
+
+										<div>
+											<h3 class="flex items-center gap-2 text-[1rem] font-semibold text-[#16223c]">
+												<svg viewBox="0 0 24 24" class="h-4 w-4 text-[#ff7a1a]" fill="none" aria-hidden="true">
+													<circle cx="12" cy="12" r="8.2" stroke="currentColor" stroke-width="1.8"></circle>
+													<path d="M12 8v4M12 16h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+												</svg>
+												<span>Points de vigilance</span>
+											</h3>
+											<ul class="mt-3 grid gap-2.5 text-[0.95rem] text-slate-500">
+												{diet.watchouts.map((item) => (
+													<li class="flex items-start gap-2.5">
+														<svg viewBox="0 0 24 24" class="mt-1 h-3.5 w-3.5 shrink-0 text-[#ff7a1a]" fill="none" aria-hidden="true">
+															<path d="M12 5 19 18H5L12 5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+															<path d="M12 10v3M12 15h.01" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+														</svg>
+														<span>{item}</span>
+													</li>
+												))}
+											</ul>
+										</div>
+									</div>
+
+									<div>
+										<h3 class="flex items-center gap-2 text-[1rem] font-semibold text-[#16223c]">
+											<svg viewBox="0 0 24 24" class="h-4 w-4 text-[#2d63ff]" fill="none" aria-hidden="true">
+												<path d="M7 7h10v10H7z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+												<path d="M9 4v3M15 4v3M9 17v3M15 17v3M4 9h3M17 9h3M4 15h3M17 15h3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+											</svg>
+											<span>Aliments conseillés</span>
+										</h3>
+										<div class="mt-3 flex flex-wrap gap-2">
+											{diet.recommendedFoods.map((food) => (
+												<span class="inline-flex rounded-full bg-[#f3f7fb] px-3 py-1.5 text-[0.85rem] font-medium text-slate-500">{food}</span>
+											))}
+										</div>
+									</div>
+
+									<div class="border-t border-[#e7eef6] pt-4">
+										<div class="flex flex-wrap gap-3">
+											<a href={`/recettes?diet=${diet.slug}`} class:list={['inline-flex min-h-[46px] items-center justify-center rounded-[14px] px-5 py-3 text-[0.96rem] font-semibold', diet.buttonBackground, diet.buttonText]}>
+												{diet.primaryCta}
+											</a>
+											<a href="#" class="inline-flex min-h-[46px] items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.96rem] font-medium text-slate-600">
+												En savoir plus
+											</a>
+										</div>
+									</div>
+								</div>
+							</section>
+						))
+					}
+				</div>
+
+				<section class="mt-8 rounded-[22px] border border-[#d5e2ff] bg-[linear-gradient(135deg,#eef4ff_0%,#f3f7ff_100%)] px-6 py-6 shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+					<div class="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+						<div class="flex items-start gap-4">
+							<div class="flex h-[48px] w-[48px] shrink-0 items-center justify-center rounded-[16px] bg-[#2d63ff] text-white">
+								<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+									<path d="M12 17h.01M9.1 9a3 3 0 1 1 5.3 1.9c-.8.9-1.4 1.4-1.4 2.6" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+									<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"></circle>
+								</svg>
+							</div>
+							<div>
+								<h2 class="text-[1.35rem] font-semibold text-[#16223c]">Besoin de conseils personnalisés ?</h2>
+								<p class="mt-2 max-w-[44rem] text-[0.98rem] leading-7 text-slate-500">
+									Notre assistant IA peut vous aider à choisir le régime le plus adapté à vos objectifs, votre mode de vie et vos contraintes.
+									Posez vos questions et obtenez des recommandations sur mesure.
+								</p>
+							</div>
+						</div>
+
+						<a href="/auth/login" class="inline-flex min-h-[46px] items-center justify-center rounded-[14px] bg-[#2d63ff] px-5 py-3 text-[0.96rem] font-semibold text-white">
+							Parler à l’assistant IA
+						</a>
+					</div>
+				</section>
+			</div>
+		</div>
+	</section>
+</Layout>

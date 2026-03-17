@@ -1,0 +1,803 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Suivi alimentaire - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)] py-8 lg:py-10">
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
+			<div class="mx-auto max-w-[1080px]">
+				<div class="mb-8">
+					<h1 class="text-[2.3rem] font-semibold tracking-[-0.04em] text-[#16223c]">Suivi alimentaire</h1>
+					<p class="mt-2 text-[1.05rem] text-slate-500">Visualisez votre progression et vos habitudes nutritionnelles</p>
+				</div>
+
+				<p id="tracking-error" class="mb-5 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+
+				<div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+					<button id="tracking-prev-week" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600 sm:w-auto">
+						<span>‹</span><span>Précédent</span>
+					</button>
+					<div class="text-center">
+						<p class="text-[1.1rem] font-semibold text-[#16223c]">Semaine actuelle</p>
+						<p id="tracking-week-label" class="mt-1 text-[1rem] text-slate-500">-</p>
+					</div>
+					<button id="tracking-next-week" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600 sm:w-auto">
+						<span>Suivant</span><span>›</span>
+					</button>
+				</div>
+
+				<div id="tracking-days" class="mb-6 flex snap-x gap-2 overflow-x-auto pb-1 sm:grid sm:grid-cols-4 sm:gap-3 sm:overflow-visible sm:pb-0 lg:grid-cols-7"></div>
+
+				<section class="mb-6 rounded-[24px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)] sm:px-6">
+					<div class="flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between">
+						<div>
+							<h2 class="text-[1.45rem] font-semibold text-[#16223c]">Ajouter au suivi</h2>
+							<p class="mt-2 max-w-[40rem] text-[0.98rem] leading-7 text-slate-500">
+								Sélectionnez un jour, puis ajoutez une recette complète ou un snack/aliment via une fenêtre dédiée plus simple à utiliser.
+							</p>
+						</div>
+						<div class="rounded-[16px] bg-[#f3faf7] px-4 py-3 text-[0.95rem] font-medium text-[#0b8c5f]">
+							Jour sélectionné : <span id="tracking-selected-day-label">-</span>
+						</div>
+					</div>
+
+					<div class="mt-5 flex flex-col gap-4 rounded-[20px] border border-[#e7eef6] bg-[#fbfdff] p-4 sm:flex-row sm:items-center sm:justify-between">
+						<div>
+							<p class="text-[1rem] font-semibold text-[#16223c]">Ajouter une consommation</p>
+							<p class="mt-1 text-[0.92rem] text-slate-500">Choisissez la catégorie, puis l’élément et sa quantité dans une pop-up.</p>
+						</div>
+						<button id="tracking-open-modal" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[0.98rem] font-semibold text-white shadow-[0_16px_35px_rgba(8,179,125,0.22)] sm:w-auto">
+							Ajouter un aliment ou une recette
+						</button>
+					</div>
+
+					<div class="mt-6 border-t border-[#e7eef6] pt-5">
+						<div class="mb-3 flex items-center justify-between gap-3">
+							<h3 class="text-[1.08rem] font-semibold text-[#16223c]">Repas du jour</h3>
+							<p id="tracking-day-entry-count" class="text-[0.92rem] text-slate-400">0 élément</p>
+						</div>
+						<div id="tracking-day-entries" class="grid gap-3"></div>
+					</div>
+				</section>
+
+				<div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_354px]">
+					<div class="grid gap-5">
+						<section class="rounded-[24px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)] sm:px-6">
+							<div class="flex flex-wrap items-center justify-between gap-3">
+								<h2 id="tracking-today-title" class="text-[1.65rem] font-semibold text-[#16223c]">Aujourd'hui</h2>
+								<div class="inline-flex items-center gap-2 text-[0.98rem] text-slate-500">
+									<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+										<path d="M8 3v3M16 3v3M4 9h16M6 5h12a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+									</svg>
+									<span id="tracking-today-date">-</span>
+								</div>
+							</div>
+
+							<div class="mt-6">
+								<div class="mb-2 flex items-center justify-between gap-3 text-[0.98rem] text-slate-500">
+									<span>Calories</span>
+									<span id="tracking-calories-label">0 / 0 kcal</span>
+								</div>
+								<div class="h-4 overflow-hidden rounded-full bg-[#edf2f9]">
+									<div id="tracking-calories-bar" class="h-full rounded-full bg-[#08b37d]" style="width:0%"></div>
+								</div>
+							</div>
+
+							<div class="mt-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
+								<div class="rounded-[18px] bg-[#edf4ff] px-4 py-4 text-center">
+									<p class="text-[0.92rem] font-medium text-[#4f7df4]">Protéines</p>
+									<p id="tracking-proteins-value" class="mt-1 text-[1.95rem] font-semibold text-[#1d58eb]">0g</p>
+									<p id="tracking-proteins-rate" class="mt-1 text-[0.9rem] text-[#4f7df4]">0% de l'objectif</p>
+								</div>
+								<div class="rounded-[18px] bg-[#fff5ea] px-4 py-4 text-center">
+									<p class="text-[0.92rem] font-medium text-[#ff8a2a]">Glucides</p>
+									<p id="tracking-carbs-value" class="mt-1 text-[1.95rem] font-semibold text-[#e35a00]">0g</p>
+									<p id="tracking-carbs-rate" class="mt-1 text-[0.9rem] text-[#ff8a2a]">0% de l'objectif</p>
+								</div>
+								<div class="rounded-[18px] bg-[#f8efff] px-4 py-4 text-center">
+									<p class="text-[0.92rem] font-medium text-[#b66cff]">Lipides</p>
+									<p id="tracking-fats-value" class="mt-1 text-[1.95rem] font-semibold text-[#8527ff]">0g</p>
+									<p id="tracking-fats-rate" class="mt-1 text-[0.9rem] text-[#b66cff]">0% de l'objectif</p>
+								</div>
+							</div>
+						</section>
+
+						<section class="rounded-[24px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)] sm:px-6">
+							<h2 class="text-[1.55rem] font-semibold text-[#16223c]">Évolution hebdomadaire</h2>
+							<div id="tracking-week-bars" class="mt-8 flex h-[180px] items-end justify-between gap-2 sm:h-[220px] sm:gap-3"></div>
+							<div class="mt-5 flex flex-col items-start gap-3 text-[0.92rem] text-slate-500 sm:flex-row sm:flex-wrap sm:items-center sm:justify-center sm:gap-5">
+								<div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#08b37d]"></span><span>≥ 95% objectif</span></div>
+								<div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#f3b11f]"></span><span>80-95% objectif</span></div>
+								<div class="flex items-center gap-2"><span class="h-3 w-3 rounded-full bg-[#ff6b6b]"></span><span>&lt; 80% objectif</span></div>
+							</div>
+						</section>
+
+						<section class="rounded-[24px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)] sm:px-6">
+							<h2 class="text-[1.55rem] font-semibold text-[#16223c]">Répartition des macronutriments</h2>
+							<div class="mt-6 grid gap-5">
+								<div>
+									<div class="mb-2 flex items-center justify-between gap-3 text-[0.98rem] text-slate-500">
+										<span>Protéines</span>
+										<span id="tracking-proteins-average">Moyenne: 0g  Objectif: 0g</span>
+									</div>
+									<div class="h-3 overflow-hidden rounded-full bg-[#edf2f9]"><div id="tracking-proteins-average-bar" class="h-full rounded-full bg-[#2d63ff]" style="width:0%"></div></div>
+								</div>
+								<div>
+									<div class="mb-2 flex items-center justify-between gap-3 text-[0.98rem] text-slate-500">
+										<span>Glucides</span>
+										<span id="tracking-carbs-average">Moyenne: 0g  Objectif: 0g</span>
+									</div>
+									<div class="h-3 overflow-hidden rounded-full bg-[#edf2f9]"><div id="tracking-carbs-average-bar" class="h-full rounded-full bg-[#f3b11f]" style="width:0%"></div></div>
+								</div>
+								<div>
+									<div class="mb-2 flex items-center justify-between gap-3 text-[0.98rem] text-slate-500">
+										<span>Lipides</span>
+										<span id="tracking-fats-average">Moyenne: 0g  Objectif: 0g</span>
+									</div>
+									<div class="h-3 overflow-hidden rounded-full bg-[#edf2f9]"><div id="tracking-fats-average-bar" class="h-full rounded-full bg-[#a855f7]" style="width:0%"></div></div>
+								</div>
+							</div>
+						</section>
+					</div>
+
+					<div class="grid content-start gap-5">
+						<section class="rounded-[24px] bg-[linear-gradient(180deg,#10b389_0%,#0ca985_100%)] px-5 py-5 text-white shadow-[0_20px_45px_rgba(16,179,137,0.28)] sm:px-6">
+							<div class="mb-8 flex items-center gap-4">
+								<div class="flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-white/15">
+									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+										<path d="M4 14h4l3-4 4 5 5-7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+									</svg>
+								</div>
+								<h2 class="text-[1.35rem] font-semibold">Résumé hebdomadaire</h2>
+							</div>
+							<p class="text-[1rem] text-white/80">Moyenne calories</p>
+							<p id="tracking-weekly-calories" class="mt-2 text-[2.6rem] leading-none font-semibold sm:text-[3.4rem]">0</p>
+							<p class="mt-2 text-[1rem] text-white/80">kcal / jour</p>
+							<div class="my-6 h-px bg-white/20"></div>
+							<div class="grid grid-cols-3 gap-2 text-center sm:gap-3">
+								<div><p class="text-[0.92rem] text-white/70">Protéines</p><p id="tracking-weekly-proteins" class="mt-2 text-[1.8rem] font-semibold">0g</p></div>
+								<div><p class="text-[0.92rem] text-white/70">Glucides</p><p id="tracking-weekly-carbs" class="mt-2 text-[1.8rem] font-semibold">0g</p></div>
+								<div><p class="text-[0.92rem] text-white/70">Lipides</p><p id="tracking-weekly-fats" class="mt-2 text-[1.8rem] font-semibold">0g</p></div>
+							</div>
+						</section>
+
+						<section class="rounded-[24px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)] sm:px-6">
+							<div class="mb-5 flex items-center gap-3">
+								<div class="flex h-[44px] w-[44px] items-center justify-center rounded-[14px] bg-[#edf4ff] text-[#2d63ff]">
+									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+										<path d="M12 7v10M7 12h10" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+										<circle cx="12" cy="12" r="9" stroke="currentColor" stroke-width="1.8"></circle>
+									</svg>
+								</div>
+								<h2 class="text-[1.35rem] font-semibold text-[#16223c]">Objectifs</h2>
+							</div>
+							<div class="grid gap-4 text-[1rem] text-slate-500">
+								<div class="flex items-center justify-between gap-3"><span>Calories quotidiennes</span><strong id="tracking-goal-calories" class="text-[#16223c]">0 kcal</strong></div>
+								<div class="flex items-center justify-between gap-3"><span>Protéines</span><strong id="tracking-goal-proteins" class="text-[#16223c]">0g</strong></div>
+								<div class="flex items-center justify-between gap-3"><span>Glucides</span><strong id="tracking-goal-carbs" class="text-[#16223c]">0g</strong></div>
+								<div class="flex items-center justify-between gap-3"><span>Lipides</span><strong id="tracking-goal-fats" class="text-[#16223c]">0g</strong></div>
+							</div>
+							<a href="/profile" class="mt-6 inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600">Modifier mes objectifs</a>
+						</section>
+
+						<section class="rounded-[24px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)] sm:px-6">
+							<h2 class="text-[1.35rem] font-semibold text-[#16223c]">Statistiques</h2>
+							<div class="mt-6 grid gap-5">
+								<div>
+									<div class="mb-2 flex items-center justify-between text-[0.98rem] text-slate-500">
+										<span>Jours respectés</span><strong id="tracking-stat-days" class="text-[#08b37d]">0/7</strong>
+									</div>
+									<div class="h-3 overflow-hidden rounded-full bg-[#edf2f9]"><div id="tracking-stat-days-bar" class="h-full rounded-full bg-[#08b37d]" style="width:0%"></div></div>
+								</div>
+								<div>
+									<div class="mb-2 flex items-center justify-between text-[0.98rem] text-slate-500">
+										<span>Objectif protéines</span><strong id="tracking-stat-proteins" class="text-[#2d63ff]">0%</strong>
+									</div>
+									<div class="h-3 overflow-hidden rounded-full bg-[#edf2f9]"><div id="tracking-stat-proteins-bar" class="h-full rounded-full bg-[#2d63ff]" style="width:0%"></div></div>
+								</div>
+								<div>
+									<div class="mb-2 flex items-center justify-between text-[0.98rem] text-slate-500">
+										<span>Régularité</span><strong id="tracking-stat-regularity" class="text-[#a855f7]">-</strong>
+									</div>
+									<div class="h-3 overflow-hidden rounded-full bg-[#edf2f9]"><div id="tracking-stat-regularity-bar" class="h-full rounded-full bg-[#a855f7]" style="width:0%"></div></div>
+								</div>
+							</div>
+						</section>
+
+						<a
+							href="#"
+							class="block rounded-[24px] border border-[#cfe5db] bg-[linear-gradient(135deg,#f4fbf7_0%,#eef9ff_100%)] px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)] transition hover:border-[#9fd6bf] sm:px-6"
+						>
+							<div class="inline-flex rounded-full bg-[#daf5e7] px-3 py-1 text-[0.76rem] font-semibold uppercase tracking-[0.14em] text-[#0b8c5f]">
+								Sponsorisé
+							</div>
+							<h2 class="mt-4 text-[1.3rem] font-semibold text-[#16223c]">Programme nutrition 30 jours</h2>
+							<p class="mt-2 text-[0.96rem] leading-7 text-slate-500">
+								Recevez un accompagnement structuré, des idées de menus et un suivi hebdomadaire pour rester régulier dans vos objectifs.
+							</p>
+							<div class="mt-5 flex items-center justify-between gap-3">
+								<span class="inline-flex min-h-[42px] items-center justify-center rounded-[14px] bg-[#08b37d] px-4 py-2.5 text-[0.94rem] font-semibold text-white">
+									Découvrir l'offre
+								</span>
+								<span class="text-[0.98rem] font-medium text-[#16223c]">À partir de 19,90€/mois</span>
+							</div>
+						</a>
+					</div>
+				</div>
+
+				<div id="tracking-modal" class="pointer-events-none fixed inset-0 z-50 hidden bg-slate-950/40 opacity-0 transition duration-200">
+					<div class="flex min-h-full items-end justify-center p-0 sm:p-4 md:items-center">
+						<div id="tracking-modal-panel" class="w-full max-w-[920px] translate-y-6 rounded-t-[28px] border border-[#d8e2ee] bg-white p-4 shadow-[0_28px_60px_rgba(15,23,42,0.24)] transition duration-200 sm:rounded-[28px] sm:p-6">
+							<div class="flex items-start justify-between gap-4">
+								<div>
+									<p class="text-[1.45rem] font-semibold text-[#16223c]">Ajouter au suivi</p>
+									<p class="mt-2 text-[0.96rem] text-slate-500">Choisissez la catégorie, recherchez l'élément, puis confirmez la quantité.</p>
+								</div>
+								<button id="tracking-close-modal" type="button" class="inline-flex h-[44px] w-[44px] items-center justify-center rounded-[14px] border border-[#d8e2ee] text-[1.4rem] text-slate-500">×</button>
+							</div>
+
+							<div class="mt-5 grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+								<div class="space-y-5">
+									<div>
+										<p class="mb-2 text-[0.94rem] font-medium text-[#324765]">Type de repas</p>
+										<div id="tracking-meal-types" class="grid grid-cols-2 gap-2 lg:grid-cols-1"></div>
+									</div>
+									<div>
+										<p class="mb-2 text-[0.94rem] font-medium text-[#324765]">Catégorie</p>
+										<div id="tracking-source-types" class="grid gap-2"></div>
+									</div>
+									<div>
+										<p class="mb-2 text-[0.94rem] font-medium text-[#324765]">Quantité</p>
+										<input id="tracking-quantity" type="number" min="1" step="0.5" value="1" class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.98rem] text-slate-700 outline-none focus:border-[#08b37d]" />
+										<p id="tracking-quantity-help" class="mt-2 text-[0.86rem] text-slate-400">1 portion</p>
+									</div>
+								</div>
+
+								<div>
+									<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+										<label class="sr-only" for="tracking-search">Recherche</label>
+										<input id="tracking-search" type="search" placeholder="Chercher une recette ou un snack..." class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.98rem] text-slate-700 outline-none focus:border-[#08b37d]" />
+										<p id="tracking-modal-selection" class="text-[0.88rem] text-slate-400 sm:whitespace-nowrap">Aucune sélection</p>
+									</div>
+										<div id="tracking-suggestions" class="mt-4 grid max-h-[48vh] gap-3 overflow-y-auto pr-1 sm:max-h-[420px] sm:grid-cols-2"></div>
+								</div>
+							</div>
+
+							<div class="mt-6 flex flex-col-reverse gap-3 border-t border-[#e7eef6] pt-5 sm:flex-row sm:items-center sm:justify-between">
+								<p class="text-[0.9rem] text-slate-400">Les recettes s'ajoutent en portions, les aliments en grammes.</p>
+								<div class="flex flex-col gap-3 sm:flex-row">
+									<button id="tracking-cancel-modal" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600 sm:w-auto">Annuler</button>
+									<button id="tracking-add-button" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[0.98rem] font-semibold text-white sm:w-auto">
+										Ajouter au suivi
+									</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const trackingError = document.querySelector('#tracking-error');
+	const weekLabel = document.querySelector('#tracking-week-label');
+	const daysContainer = document.querySelector('#tracking-days');
+	const selectedDayLabel = document.querySelector('#tracking-selected-day-label');
+	const mealTypesContainer = document.querySelector('#tracking-meal-types');
+	const sourceTypesContainer = document.querySelector('#tracking-source-types');
+	const searchInput = document.querySelector('#tracking-search');
+	const suggestionsContainer = document.querySelector('#tracking-suggestions');
+	const quantityInput = document.querySelector('#tracking-quantity');
+	const quantityHelp = document.querySelector('#tracking-quantity-help');
+	const addButton = document.querySelector('#tracking-add-button');
+	const entriesContainer = document.querySelector('#tracking-day-entries');
+	const entryCount = document.querySelector('#tracking-day-entry-count');
+	const prevWeekButton = document.querySelector('#tracking-prev-week');
+	const nextWeekButton = document.querySelector('#tracking-next-week');
+	const modal = document.querySelector('#tracking-modal');
+	const modalPanel = document.querySelector('#tracking-modal-panel');
+	const openModalButton = document.querySelector('#tracking-open-modal');
+	const closeModalButton = document.querySelector('#tracking-close-modal');
+	const cancelModalButton = document.querySelector('#tracking-cancel-modal');
+	const modalSelection = document.querySelector('#tracking-modal-selection');
+
+	const mealTypes = [
+		{ value: 'petit_dejeuner', label: 'Petit-déjeuner' },
+		{ value: 'dejeuner', label: 'Déjeuner' },
+		{ value: 'collation', label: 'Collation' },
+		{ value: 'diner', label: 'Dîner' },
+	];
+
+	const sourceTypes = [
+		{ value: 'recipe', label: 'Recettes' },
+		{ value: 'food', label: 'Snacks / aliments' },
+	];
+
+	let dashboard = null;
+	let currentDate = new Date().toISOString().slice(0, 10);
+	let activeMealType = 'dejeuner';
+	let activeSourceType = 'recipe';
+	let selectedSuggestion = null;
+
+	function getStoredAuth() {
+		try {
+			const raw = localStorage.getItem(authKey);
+			return raw ? JSON.parse(raw) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function setStoredAuth(payload) {
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function clearStoredAuth() {
+		localStorage.removeItem(authKey);
+	}
+
+	function showError(message) {
+		if (!(trackingError instanceof HTMLElement)) return;
+		trackingError.textContent = message;
+		trackingError.classList.remove('hidden');
+	}
+
+	function clearError() {
+		if (!(trackingError instanceof HTMLElement)) return;
+		trackingError.textContent = '';
+		trackingError.classList.add('hidden');
+	}
+
+	function escapeHtml(value) {
+		return String(value)
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#39;');
+	}
+
+	function round(value) {
+		return Math.round(value * 10) / 10;
+	}
+
+	function formatNumber(value) {
+		return Number.isInteger(value) ? String(value) : round(value).toFixed(1).replace('.0', '');
+	}
+
+	function formatPercent(consumed, target) {
+		if (!target) return 0;
+		return Math.min(999, Math.round((consumed / target) * 100));
+	}
+
+	function clampPercent(value) {
+		return `${Math.max(0, Math.min(100, value))}%`;
+	}
+
+	function shiftDate(dateString, days) {
+		const date = new Date(`${dateString}T12:00:00`);
+		date.setDate(date.getDate() + days);
+		return date.toISOString().slice(0, 10);
+	}
+
+	function getStatusColor(status) {
+		if (status === 'good') return 'bg-[#08b37d]';
+		if (status === 'medium') return 'bg-[#f3b11f]';
+		return 'bg-[#ff6b6b]';
+	}
+
+	function closeModal() {
+		if (!(modal instanceof HTMLElement) || !(modalPanel instanceof HTMLElement)) return;
+		modal.classList.add('pointer-events-none', 'opacity-0');
+		modal.classList.remove('opacity-100');
+		modalPanel.classList.add('translate-y-6');
+		window.setTimeout(() => {
+			modal.classList.add('hidden');
+		}, 180);
+	}
+
+	function openModal() {
+		if (!(modal instanceof HTMLElement) || !(modalPanel instanceof HTMLElement) || !dashboard) return;
+		clearError();
+		modal.classList.remove('hidden', 'pointer-events-none', 'opacity-0');
+		modal.classList.add('opacity-100');
+		window.requestAnimationFrame(() => {
+			modalPanel.classList.remove('translate-y-6');
+		});
+		renderSuggestions();
+		updateQuantityUi();
+		updateModalSelection();
+		if (searchInput instanceof HTMLInputElement) {
+			searchInput.focus();
+		}
+	}
+
+	function updateModalSelection() {
+		if (!(modalSelection instanceof HTMLElement)) return;
+		if (!selectedSuggestion) {
+			modalSelection.textContent = 'Aucune sélection';
+			return;
+		}
+
+		modalSelection.textContent = activeSourceType === 'recipe' ? selectedSuggestion.title : selectedSuggestion.name;
+	}
+
+	function getFilteredSuggestions() {
+		if (!dashboard) return [];
+		const search = searchInput instanceof HTMLInputElement ? searchInput.value.trim().toLowerCase() : '';
+		const baseItems = activeSourceType === 'recipe' ? dashboard.suggestions.recipes : dashboard.suggestions.foods;
+		return baseItems.filter((item) => {
+			const text = activeSourceType === 'recipe' ? item.title.toLowerCase() : item.name.toLowerCase();
+			return !search || text.includes(search);
+		});
+	}
+
+	function updateQuantityUi() {
+		if (!(quantityInput instanceof HTMLInputElement) || !(quantityHelp instanceof HTMLElement)) return;
+		if (!selectedSuggestion) {
+			quantityHelp.textContent = activeSourceType === 'recipe' ? '1 portion' : 'Quantité en grammes';
+			return;
+		}
+
+		quantityHelp.textContent =
+			activeSourceType === 'recipe'
+				? 'Quantité en portions'
+				: `Quantité en grammes, défaut ${selectedSuggestion.defaultQuantityG} g`;
+	}
+
+	function renderMealTypes() {
+		if (!(mealTypesContainer instanceof HTMLElement)) return;
+		mealTypesContainer.innerHTML = '';
+		mealTypes.forEach((item) => {
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.className =
+				'inline-flex min-h-[42px] items-center justify-center rounded-[14px] border px-4 py-2.5 text-[0.94rem] font-medium transition';
+			if (item.value === activeMealType) {
+				button.classList.add('border-[#53d7ad]', 'bg-[#e8fbf2]', 'text-[#0b8c5f]');
+			} else {
+				button.classList.add('border-[#d8e2ee]', 'bg-white', 'text-slate-600');
+			}
+			button.textContent = item.label;
+			button.addEventListener('click', () => {
+				activeMealType = item.value;
+				renderMealTypes();
+			});
+			mealTypesContainer.appendChild(button);
+		});
+	}
+
+	function renderSourceTypes() {
+		if (!(sourceTypesContainer instanceof HTMLElement)) return;
+		sourceTypesContainer.innerHTML = '';
+		sourceTypes.forEach((item) => {
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.className =
+				'inline-flex min-h-[42px] items-center justify-center rounded-[14px] border px-4 py-2.5 text-[0.94rem] font-medium transition';
+			if (item.value === activeSourceType) {
+				button.classList.add('border-[#53d7ad]', 'bg-[#e8fbf2]', 'text-[#0b8c5f]');
+			} else {
+				button.classList.add('border-[#d8e2ee]', 'bg-white', 'text-slate-600');
+			}
+			button.textContent = item.label;
+			button.addEventListener('click', () => {
+				activeSourceType = item.value;
+				selectedSuggestion = null;
+				if (quantityInput instanceof HTMLInputElement) {
+					quantityInput.value = activeSourceType === 'recipe' ? '1' : '100';
+				}
+				renderSourceTypes();
+				renderSuggestions();
+				updateQuantityUi();
+				updateModalSelection();
+			});
+			sourceTypesContainer.appendChild(button);
+		});
+	}
+
+	function renderSuggestions() {
+		if (!(suggestionsContainer instanceof HTMLElement)) return;
+		const suggestions = getFilteredSuggestions();
+		suggestionsContainer.innerHTML = '';
+
+		if (suggestions.length === 0) {
+			suggestionsContainer.innerHTML = '<p class="rounded-[16px] border border-dashed border-[#d8e2ee] px-4 py-4 text-[0.92rem] text-slate-400 sm:col-span-2">Aucun élément trouvé pour cette recherche.</p>';
+			return;
+		}
+
+		suggestions.forEach((item) => {
+			const isSelected = selectedSuggestion?.id === item.id && selectedSuggestion?.sourceType === activeSourceType;
+			const card = document.createElement('button');
+			card.type = 'button';
+			card.className = 'flex items-center gap-3 rounded-[16px] border p-3 text-left transition';
+			if (isSelected) {
+				card.classList.add('border-[#53d7ad]', 'bg-[#eefbf5]');
+			} else {
+				card.classList.add('border-[#d8e2ee]', 'bg-white', 'hover:border-[#bcd1e6]');
+			}
+
+			const title = activeSourceType === 'recipe' ? item.title : item.name;
+			const secondary = activeSourceType === 'recipe'
+				? `${formatNumber(item.calories)} kcal / portion`
+				: `${formatNumber(item.calories100g)} kcal / 100g`;
+
+			card.innerHTML = `
+				${item.imageUrl ? `<img src="${escapeHtml(item.imageUrl)}" alt="${escapeHtml(title)}" class="h-[52px] w-[52px] rounded-[14px] object-cover" />` : '<div class="h-[52px] w-[52px] rounded-[14px] bg-slate-100"></div>'}
+				<div class="min-w-0">
+					<p class="truncate text-[0.96rem] font-semibold text-[#16223c]">${escapeHtml(title)}</p>
+					<p class="mt-1 text-[0.88rem] text-slate-500">${escapeHtml(secondary)}</p>
+				</div>
+			`;
+			card.addEventListener('click', () => {
+				selectedSuggestion = { ...item, sourceType: activeSourceType };
+				if (quantityInput instanceof HTMLInputElement) {
+					quantityInput.value = String(activeSourceType === 'recipe' ? item.quantityDefault : item.defaultQuantityG);
+				}
+				renderSuggestions();
+				updateQuantityUi();
+				updateModalSelection();
+			});
+			suggestionsContainer.appendChild(card);
+		});
+	}
+
+	function renderWeekDays() {
+		if (!(daysContainer instanceof HTMLElement) || !dashboard) return;
+		daysContainer.innerHTML = '';
+		dashboard.week.days.forEach((day) => {
+			const button = document.createElement('button');
+			button.type = 'button';
+			button.className =
+				'shrink-0 snap-start rounded-[16px] border px-3 py-3 text-left transition w-[112px] min-w-[112px] sm:w-auto sm:min-w-0 sm:rounded-[18px] sm:px-4 sm:py-4';
+			if (day.isSelected) {
+				button.classList.add('border-[#53d7ad]', 'bg-[#eefbf5]');
+			} else {
+				button.classList.add('border-[#d8e2ee]', 'bg-white');
+			}
+			button.innerHTML = `
+				<div class="flex items-start justify-between gap-2">
+					<div>
+						<p class="text-[0.74rem] uppercase tracking-[0.12em] text-slate-400 sm:text-[0.88rem]">${escapeHtml(day.label)}</p>
+						<p class="mt-1 text-[1rem] font-semibold text-[#16223c] sm:text-[1.1rem]">${escapeHtml(day.dayNumber)}</p>
+					</div>
+					<div class="mt-1 h-2.5 w-2.5 rounded-full sm:h-3 sm:w-3 ${getStatusColor(day.status)}"></div>
+				</div>
+				<p class="mt-3 text-[0.8rem] text-slate-500 sm:mt-3 sm:text-[0.9rem]">${formatNumber(day.calories)} kcal</p>
+			`;
+			button.addEventListener('click', () => {
+				currentDate = day.date;
+				loadDashboard(currentDate);
+			});
+			daysContainer.appendChild(button);
+		});
+	}
+
+	function renderSelectedDayEntries(entries) {
+		if (!(entriesContainer instanceof HTMLElement) || !(entryCount instanceof HTMLElement)) return;
+		entryCount.textContent = `${entries.length} élément${entries.length > 1 ? 's' : ''}`;
+		entriesContainer.innerHTML = '';
+
+		if (entries.length === 0) {
+			entriesContainer.innerHTML = '<div class="rounded-[16px] border border-dashed border-[#d8e2ee] px-4 py-4 text-[0.94rem] text-slate-400">Aucune consommation enregistrée pour ce jour.</div>';
+			return;
+		}
+
+		entries.forEach((entry) => {
+			const item = document.createElement('div');
+			item.className = 'flex flex-col gap-3 rounded-[18px] border border-[#e7eef6] bg-[#fbfdff] p-4 sm:flex-row sm:items-center sm:justify-between';
+			item.innerHTML = `
+				<div class="flex items-center gap-3">
+					${entry.imageUrl ? `<img src="${escapeHtml(entry.imageUrl)}" alt="${escapeHtml(entry.title)}" class="h-[52px] w-[52px] rounded-[14px] object-cover" />` : '<div class="h-[52px] w-[52px] rounded-[14px] bg-slate-100"></div>'}
+					<div>
+						<p class="text-[1rem] font-semibold text-[#16223c]">${escapeHtml(entry.title)}</p>
+						<p class="mt-1 text-[0.9rem] text-slate-500">${escapeHtml(entry.mealLabel)} · ${escapeHtml(entry.quantityLabel)}</p>
+					</div>
+				</div>
+				<div class="flex items-center gap-4">
+					<div class="text-right">
+						<p class="text-[1rem] font-semibold text-[#16223c]">${formatNumber(entry.calories)} kcal</p>
+						<p class="mt-1 text-[0.84rem] text-slate-400">P ${formatNumber(entry.proteins)} · G ${formatNumber(entry.carbs)} · L ${formatNumber(entry.fats)}</p>
+					</div>
+					<button type="button" data-entry-id="${escapeHtml(entry.id)}" data-source-type="${escapeHtml(entry.sourceType)}" class="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[14px] border border-[#ead0d0] text-[#d45b5b]">×</button>
+				</div>
+			`;
+			item.querySelector('button')?.addEventListener('click', async () => {
+				await mutateTracking('DELETE', {
+					date: dashboard.selectedDate,
+					entryId: entry.id,
+					sourceType: entry.sourceType,
+				});
+			});
+			entriesContainer.appendChild(item);
+		});
+	}
+
+	function renderDashboard() {
+		if (!dashboard) return;
+		if (weekLabel instanceof HTMLElement) {
+			weekLabel.textContent = dashboard.week.label;
+		}
+
+		const day = dashboard.selectedDay;
+		document.querySelector('#tracking-today-title').textContent = day.title;
+		document.querySelector('#tracking-today-date').textContent = day.formattedDate;
+		document.querySelector('#tracking-calories-label').textContent = `${formatNumber(day.caloriesConsumed)} / ${formatNumber(day.caloriesTarget)} kcal`;
+		document.querySelector('#tracking-calories-bar').style.width = clampPercent(formatPercent(day.caloriesConsumed, day.caloriesTarget));
+		document.querySelector('#tracking-proteins-value').textContent = `${formatNumber(day.proteinsConsumed)}g`;
+		document.querySelector('#tracking-proteins-rate').textContent = `${formatPercent(day.proteinsConsumed, day.proteinsTarget)}% de l'objectif`;
+		document.querySelector('#tracking-carbs-value').textContent = `${formatNumber(day.carbsConsumed)}g`;
+		document.querySelector('#tracking-carbs-rate').textContent = `${formatPercent(day.carbsConsumed, day.carbsTarget)}% de l'objectif`;
+		document.querySelector('#tracking-fats-value').textContent = `${formatNumber(day.fatsConsumed)}g`;
+		document.querySelector('#tracking-fats-rate').textContent = `${formatPercent(day.fatsConsumed, day.fatsTarget)}% de l'objectif`;
+
+		if (selectedDayLabel instanceof HTMLElement) {
+			selectedDayLabel.textContent = day.formattedDate;
+		}
+
+		document.querySelector('#tracking-weekly-calories').textContent = formatNumber(dashboard.weeklySummary.averageCalories);
+		document.querySelector('#tracking-weekly-proteins').textContent = `${formatNumber(dashboard.weeklySummary.averageProteins)}g`;
+		document.querySelector('#tracking-weekly-carbs').textContent = `${formatNumber(dashboard.weeklySummary.averageCarbs)}g`;
+		document.querySelector('#tracking-weekly-fats').textContent = `${formatNumber(dashboard.weeklySummary.averageFats)}g`;
+		document.querySelector('#tracking-goal-calories').textContent = `${formatNumber(dashboard.goals.calories)} kcal`;
+		document.querySelector('#tracking-goal-proteins').textContent = `${formatNumber(dashboard.goals.proteins)}g`;
+		document.querySelector('#tracking-goal-carbs').textContent = `${formatNumber(dashboard.goals.carbs)}g`;
+		document.querySelector('#tracking-goal-fats').textContent = `${formatNumber(dashboard.goals.fats)}g`;
+		document.querySelector('#tracking-stat-days').textContent = `${dashboard.weeklySummary.complianceDays}/7`;
+		document.querySelector('#tracking-stat-days-bar').style.width = clampPercent((dashboard.weeklySummary.complianceDays / 7) * 100);
+		document.querySelector('#tracking-stat-proteins').textContent = `${dashboard.weeklySummary.proteinRate}%`;
+		document.querySelector('#tracking-stat-proteins-bar').style.width = clampPercent(dashboard.weeklySummary.proteinRate);
+		document.querySelector('#tracking-stat-regularity').textContent = dashboard.weeklySummary.regularityLabel;
+		document.querySelector('#tracking-stat-regularity-bar').style.width = clampPercent(dashboard.weeklySummary.regularityRate);
+		document.querySelector('#tracking-proteins-average').textContent = `Moyenne: ${formatNumber(dashboard.weeklySummary.averageProteins)}g  Objectif: ${formatNumber(dashboard.goals.proteins)}g`;
+		document.querySelector('#tracking-proteins-average-bar').style.width = clampPercent(formatPercent(dashboard.weeklySummary.averageProteins, dashboard.goals.proteins));
+		document.querySelector('#tracking-carbs-average').textContent = `Moyenne: ${formatNumber(dashboard.weeklySummary.averageCarbs)}g  Objectif: ${formatNumber(dashboard.goals.carbs)}g`;
+		document.querySelector('#tracking-carbs-average-bar').style.width = clampPercent(formatPercent(dashboard.weeklySummary.averageCarbs, dashboard.goals.carbs));
+		document.querySelector('#tracking-fats-average').textContent = `Moyenne: ${formatNumber(dashboard.weeklySummary.averageFats)}g  Objectif: ${formatNumber(dashboard.goals.fats)}g`;
+		document.querySelector('#tracking-fats-average-bar').style.width = clampPercent(formatPercent(dashboard.weeklySummary.averageFats, dashboard.goals.fats));
+
+		const weekBars = document.querySelector('#tracking-week-bars');
+		if (weekBars instanceof HTMLElement) {
+			weekBars.innerHTML = '';
+			dashboard.week.days.forEach((dayItem) => {
+				const ratio = dayItem.targetCalories > 0 ? Math.min(1, dayItem.calories / dayItem.targetCalories) : 0;
+				const height = 36 + ratio * 120;
+				const wrapper = document.createElement('div');
+				wrapper.className = 'flex flex-1 flex-col items-center justify-end gap-2';
+				wrapper.innerHTML = `
+					<div class="flex w-full items-end justify-center rounded-t-[12px] ${getStatusColor(dayItem.status)}" style="height:${height}px">
+						<span class="pb-2 text-[0.82rem] font-semibold text-white">${formatNumber(dayItem.calories)}</span>
+					</div>
+					<p class="text-[0.92rem] ${dayItem.isSelected ? 'font-semibold text-[#08b37d]' : 'text-slate-500'}">${escapeHtml(dayItem.label)}</p>
+				`;
+				weekBars.appendChild(wrapper);
+			});
+		}
+
+		renderWeekDays();
+		renderSelectedDayEntries(day.entries);
+		renderSuggestions();
+		updateQuantityUi();
+		updateModalSelection();
+	}
+
+	async function handleUnauthorized() {
+		clearStoredAuth();
+		window.location.href = '/auth/login';
+	}
+
+	async function loadDashboard(date) {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const response = await fetch(`/api/tracking?date=${encodeURIComponent(date)}`, {
+			headers: { Authorization: `Bearer ${auth.token}` },
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				await handleUnauthorized();
+				return;
+			}
+
+			throw new Error(result.message || 'Impossible de charger le suivi.');
+		}
+
+		setStoredAuth({ ...auth, token: result.token, record: auth.record });
+		currentDate = result.selectedDate;
+		dashboard = result;
+		renderDashboard();
+	}
+
+	async function mutateTracking(method, payload) {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const response = await fetch('/api/tracking', {
+			method,
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${auth.token}`,
+			},
+			body: JSON.stringify(payload),
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				await handleUnauthorized();
+				return;
+			}
+
+			throw new Error(result.message || 'Action impossible sur le suivi.');
+		}
+
+		setStoredAuth({ ...auth, token: result.token, record: auth.record });
+		dashboard = result;
+		currentDate = result.selectedDate;
+		selectedSuggestion = null;
+		if (quantityInput instanceof HTMLInputElement) {
+			quantityInput.value = activeSourceType === 'recipe' ? '1' : '100';
+		}
+		renderDashboard();
+		closeModal();
+	}
+
+	searchInput?.addEventListener('input', renderSuggestions);
+	prevWeekButton?.addEventListener('click', () => loadDashboard(shiftDate(currentDate, -7)).catch((error) => showError(error instanceof Error ? error.message : 'Impossible de charger la semaine.')));
+	nextWeekButton?.addEventListener('click', () => loadDashboard(shiftDate(currentDate, 7)).catch((error) => showError(error instanceof Error ? error.message : 'Impossible de charger la semaine.')));
+	openModalButton?.addEventListener('click', openModal);
+	closeModalButton?.addEventListener('click', closeModal);
+	cancelModalButton?.addEventListener('click', closeModal);
+	modal?.addEventListener('click', (event) => {
+		if (event.target === modal) {
+			closeModal();
+		}
+	});
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') {
+			closeModal();
+		}
+	});
+
+	addButton?.addEventListener('click', async () => {
+		if (!(quantityInput instanceof HTMLInputElement) || !selectedSuggestion || !dashboard) {
+			showError('Sélectionnez d’abord une recette ou un aliment à ajouter.');
+			return;
+		}
+
+		clearError();
+		const quantity = Number(quantityInput.value);
+		if (!Number.isFinite(quantity) || quantity <= 0) {
+			showError('La quantité saisie est invalide.');
+			return;
+		}
+
+		try {
+			await mutateTracking('POST', {
+				date: dashboard.selectedDate,
+				typeRepas: activeMealType,
+				sourceType: activeSourceType,
+				sourceId: selectedSuggestion.id,
+				quantity,
+			});
+		} catch (error) {
+			showError(error instanceof Error ? error.message : 'Impossible d’ajouter cette consommation.');
+		}
+	});
+
+	renderMealTypes();
+	renderSourceTypes();
+	if (quantityInput instanceof HTMLInputElement) {
+		quantityInput.value = '1';
+	}
+	loadDashboard(currentDate).then(clearError).catch((error) => showError(error instanceof Error ? error.message : 'Impossible de charger le suivi.'));
+</script>

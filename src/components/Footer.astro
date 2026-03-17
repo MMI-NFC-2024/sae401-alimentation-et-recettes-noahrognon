@@ -1,0 +1,46 @@
+---
+import logo from '../assets/logonutriviafooter.svg';
+
+const footerSections = [
+	{
+		title: 'Navigation',
+		links: ['Recettes', 'Régimes', 'Aliments', 'Planificateur'],
+	},
+	{
+		title: 'Support',
+		links: ["Centre d'aide", 'FAQ', 'Contactez-nous', 'Blog'],
+	},
+	{
+		title: 'Légal',
+		links: ['Mentions légales', 'Politique de confidentialité', 'CGU', 'Cookies'],
+	},
+];
+---
+
+<footer class="mt-auto bg-[#131b33] text-slate-300">
+	<div class="mx-auto grid max-w-[1240px] gap-9 px-5 pt-10 pb-8 md:px-8 md:pt-[50px] md:pb-[42px] lg:grid-cols-[260px_1fr] lg:gap-12">
+		<div>
+			<img src={logo.src} alt="Nutrivia" class="mb-[26px] block h-auto w-[108px]" />
+			<p class="max-w-[320px] text-base leading-[1.45] text-slate-400 lg:max-w-[220px]">
+				Votre plateforme de nutrition personnalisée pour atteindre vos objectifs santé.
+			</p>
+		</div>
+
+		<div class="grid gap-7 md:grid-cols-3 md:gap-10">
+			{
+				footerSections.map((section) => (
+					<section>
+						<h2 class="mb-[18px] text-base font-bold text-white">{section.title}</h2>
+						<ul class="grid gap-[14px]">
+							{section.links.map((link) => <li><a href="#" class="text-base text-slate-300 transition-colors hover:text-white">{link}</a></li>)}
+						</ul>
+					</section>
+				))
+			}
+		</div>
+	</div>
+
+	<div class="border-t border-white/10 px-5 pt-6 pb-12 text-center md:px-8 md:pt-[30px] md:pb-[92px]">
+		<p class="text-base text-slate-400">© 2026 NutriPlan. Tous droits réservés.</p>
+	</div>
+</footer>

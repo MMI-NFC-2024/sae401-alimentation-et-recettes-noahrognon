@@ -1,11 +1,260 @@
 ---
-import Welcome from '../components/Welcome.astro';
 import Layout from '../layouts/Layout.astro';
 
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+const goals = [
+	{
+		title: 'Perte de poids',
+		text: 'Atteignez votre poids idéal avec des recettes faibles en calories',
+		className: 'bg-[linear-gradient(135deg,#fff0e4_0%,#fff8f0_100%)] text-[#ff6b00]',
+	},
+	{
+		title: 'Prise de masse',
+		text: 'Développez votre musculature avec des repas riches en protéines',
+		className: 'bg-[linear-gradient(135deg,#e9f1ff_0%,#f5f9ff_100%)] text-[#2a65f2]',
+	},
+	{
+		title: 'Maintien',
+		text: 'Maintenez votre forme avec une alimentation équilibrée',
+		className: 'bg-[linear-gradient(135deg,#ddf8ef_0%,#eefbf6_100%)] text-[#0d8e69]',
+	},
+	{
+		title: 'Équilibre',
+		text: 'Adoptez une alimentation saine et variée au quotidien',
+		className: 'bg-[linear-gradient(135deg,#f5eafe_0%,#fbf5ff_100%)] text-[#932eff]',
+	},
+];
+
+const diets = [
+	{ name: 'Végétarien', count: '450+ recettes' },
+	{ name: 'Végétalien', count: '380+ recettes' },
+	{ name: 'Méditerranéen', count: '520+ recettes' },
+	{ name: 'Faible en glucides', count: '340+ recettes' },
+	{ name: 'Classique', count: '680+ recettes' },
+];
+
+const steps = [
+	{
+		number: '01',
+		title: 'Créez votre profil',
+		text: 'Renseignez vos informations personnelles et vos objectifs nutritionnels en quelques minutes.',
+	},
+	{
+		number: '02',
+		title: 'Recevez vos recommandations',
+		text: 'Notre IA calcule vos besoins et vous propose des recettes personnalisées.',
+	},
+	{
+		number: '03',
+		title: 'Planifiez vos repas',
+		text: 'Organisez votre semaine avec notre planificateur intelligent et générez votre liste de courses.',
+	},
+	{
+		number: '04',
+		title: 'Suivez vos progrès',
+		text: 'Consultez votre dashboard pour visualiser votre évolution et ajuster vos habitudes.',
+	},
+];
+
+const features = [
+	{
+		title: 'Calculateur nutritionnel',
+		text: 'Ajustez dynamiquement les portions et calories de vos recettes. Les ingrédients se recalculent automatiquement.',
+		link: 'Découvrir →',
+		cardClass: 'bg-[linear-gradient(135deg,#edf3ff_0%,#f8fbff_100%)]',
+		iconClass: 'bg-[#2c67f3]',
+		linkClass: 'text-[#2c67f3]',
+		icon: '◫',
+	},
+	{
+		title: 'Planificateur hebdomadaire',
+		text: 'Organisez vos repas de la semaine, générez votre liste de courses automatiquement et gagnez du temps.',
+		link: 'Planifier →',
+		cardClass: 'bg-[linear-gradient(135deg,#e8fbf3_0%,#f7fffb_100%)]',
+		iconClass: 'bg-[#08a968]',
+		linkClass: 'text-[#08a968]',
+		icon: '◧',
+	},
+	{
+		title: 'IA nutritionnelle',
+		text: 'Posez vos questions, obtenez des suggestions de recettes personnalisées et des conseils nutrition adaptés.',
+		link: 'Essayer l’IA →',
+		cardClass: 'bg-[linear-gradient(135deg,#f6ecff_0%,#fff8ff_100%)]',
+		iconClass: 'bg-[#9621ff]',
+		linkClass: 'text-[#9621ff]',
+		icon: '✦',
+	},
+	{
+		title: 'Communauté active',
+		text: 'Partagez vos recettes, échangez des conseils et inspirez-vous des expériences des autres membres.',
+		link: 'Rejoindre →',
+		cardClass: 'bg-[linear-gradient(135deg,#fff1e7_0%,#fffaf6_100%)]',
+		iconClass: 'bg-[#ff6600]',
+		linkClass: 'text-[#ff6600]',
+		icon: '◌',
+	},
+];
 ---
 
-<Layout>
-	<Welcome />
+<Layout title="Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(200,248,224,0.8),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(207,230,255,0.75),transparent_28%),linear-gradient(180deg,#ecfbf4_0%,#f8fdff_72%,#eef6ff_100%)] py-10 md:py-14 lg:py-[72px] lg:pb-[88px]">
+		<div class="mx-auto grid w-full max-w-[1180px] gap-8 px-4 md:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.95fr)] lg:gap-[52px]">
+			<div class="grid gap-5 self-center">
+				<div class="inline-flex w-fit items-center gap-2 rounded-full bg-[#d5f8de] px-[14px] py-2.5 text-[0.84rem] font-semibold text-[#0b8c5f]">
+					<span class="text-[0.95rem]">✦</span>
+					<span>Nutrition personnalisée par IA</span>
+				</div>
+				<h1 class="max-w-[11ch] text-[2.6rem] leading-[0.98] font-semibold tracking-[-0.05em] text-[#16223c] sm:text-[3.2rem] lg:text-[4.35rem]">
+					Votre nutrition <span class="text-[#06a57a]">personnalisée</span>
+				</h1>
+				<p class="max-w-[31rem] text-base leading-[1.7] text-slate-500">
+					Découvrez des recettes adaptées à vos objectifs, planifiez vos repas et suivez votre progression nutritionnelle avec notre plateforme intelligente.
+				</p>
+				<div class="flex flex-col gap-3 sm:flex-row sm:flex-wrap">
+					<a href="/auth/register" class="inline-flex min-h-12 items-center justify-center rounded-[14px] bg-[#08b37d] px-[18px] py-3 text-sm font-semibold text-white shadow-[0_14px_28px_rgba(8,179,125,0.18)]">Commencer mon profil →</a>
+					<a href="/auth/login" class="inline-flex min-h-12 items-center justify-center rounded-[14px] border border-slate-200 bg-white/80 px-[18px] py-3 text-sm font-semibold text-slate-700">Découvrir les recettes</a>
+				</div>
+				<div class="grid grid-cols-2 gap-4 pt-1">
+					<div class="grid justify-items-start gap-2">
+						<span class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[10px] bg-[#d9fce4] text-[0.95rem] font-bold text-[#0b8c5f]">◎</span>
+						<p class="text-[0.82rem] leading-[1.4] text-[#243650]">Recettes adaptées</p>
+					</div>
+					<div class="grid justify-items-start gap-2">
+						<span class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[10px] bg-[#d8fff0] text-[0.95rem] font-bold text-[#0b9f84]">↗</span>
+						<p class="text-[0.82rem] leading-[1.4] text-[#243650]">Suivi nutritionnel</p>
+					</div>
+					<div class="grid justify-items-start gap-2">
+						<span class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[10px] bg-[#def9e7] text-[0.95rem] font-bold text-[#18a36d]">◫</span>
+						<p class="text-[0.82rem] leading-[1.4] text-[#243650]">Planification simple</p>
+					</div>
+					<div class="grid justify-items-start gap-2">
+						<span class="inline-flex h-[30px] w-[30px] items-center justify-center rounded-[10px] bg-[#daf7ef] text-[0.95rem] font-bold text-[#0b9b77]">✧</span>
+						<p class="text-[0.82rem] leading-[1.4] text-[#243650]">IA nutritionnelle</p>
+					</div>
+				</div>
+			</div>
+
+			<div class="relative px-0 pt-5 pb-[30px] lg:px-2 lg:pt-6 lg:pb-9">
+				<div class="absolute top-0 right-2 inline-flex items-center gap-2 rounded-xl bg-white/95 px-[14px] py-2.5 text-[0.8rem] text-[#1b2a42] shadow-[0_14px_28px_rgba(61,87,128,0.14)]">
+					<span class="text-[#ff5c78]">♡</span>
+					<p>+25 recettes aimées</p>
+				</div>
+				<div class="rounded-[18px] border border-slate-200/80 bg-white/90 px-4 pt-[22px] pb-4 shadow-[0_24px_55px_rgba(58,91,133,0.16)] lg:px-[22px]">
+					<div class="flex items-center justify-between gap-4">
+						<h2 class="text-base font-semibold text-[#1d2a41]">Aujourd’hui</h2>
+						<p class="text-[0.8rem] text-slate-400">18 Mars 2026</p>
+					</div>
+					<div class="flex justify-center py-4">
+						<div class="h-[150px] w-[150px] rounded-full bg-[conic-gradient(#10b87a_0deg_72deg,#e8eef5_72deg_108deg,#10b87a_108deg_168deg,#e8eef5_168deg_204deg,#10b87a_204deg_264deg,#e8eef5_264deg_300deg,#10b87a_300deg_360deg)] p-2">
+							<div class="flex h-full w-full flex-col items-center justify-center rounded-full bg-white shadow-[inset_0_0_0_12px_#f6f8fb]">
+								<strong class="text-[2rem] font-semibold text-[#18233f]">1650</strong>
+								<span class="text-[0.75rem] text-slate-500">sur 2200 kcal</span>
+							</div>
+						</div>
+					</div>
+					<div class="grid gap-2.5 md:grid-cols-3">
+						<div class="rounded-[14px] bg-[#edf3ff] px-3 py-[14px] text-center text-[#2b67f3]">
+							<span class="mb-1.5 block text-[0.82rem]">Protéines</span>
+							<strong class="text-[1.15rem] font-semibold">85g</strong>
+						</div>
+						<div class="rounded-[14px] bg-[#fff3e8] px-3 py-[14px] text-center text-[#ff6b00]">
+							<span class="mb-1.5 block text-[0.82rem]">Glucides</span>
+							<strong class="text-[1.15rem] font-semibold">180g</strong>
+						</div>
+						<div class="rounded-[14px] bg-[#f5ebff] px-3 py-[14px] text-center text-[#9a35ff]">
+							<span class="mb-1.5 block text-[0.82rem]">Lipides</span>
+							<strong class="text-[1.15rem] font-semibold">62g</strong>
+						</div>
+					</div>
+				</div>
+				<div class="absolute bottom-0 left-0 inline-flex items-center gap-2 rounded-xl bg-white/95 px-[14px] py-2.5 text-[0.8rem] text-[#1b2a42] shadow-[0_14px_28px_rgba(61,87,128,0.14)]">
+					<span class="text-[#ffb02e]">¤</span>
+					<p>7 jours de suivi</p>
+				</div>
+			</div>
+		</div>
+	</section>
+
+	<section class="py-14 lg:py-[76px]">
+		<div class="mx-auto w-full max-w-[860px] px-4 md:px-6">
+			<div class="mb-[30px] grid gap-3 text-center">
+				<h2 class="text-[2rem] leading-[1.05] font-semibold tracking-[-0.04em] text-[#17233d] sm:text-[2.4rem] lg:text-[3rem]">Quel est votre<span class="text-[#06a57a]">objectif</span>?</h2>
+				<p class="mx-auto max-w-[38rem] text-[0.98rem] leading-[1.65] text-slate-500">Choisissez votre objectif et recevez des recommandations nutritionnelles adaptées à vos besoins.</p>
+			</div>
+			<div class="grid gap-[14px] md:grid-cols-2 lg:grid-cols-4">
+				{
+					goals.map((goal) => (
+						<article class={`rounded-[18px] border border-slate-200 px-4 py-[18px] ${goal.className}`}>
+							<h3 class="text-[1.1rem] font-semibold">{goal.title}</h3>
+							<p class="mt-2 text-[0.92rem] leading-[1.6] text-slate-500">{goal.text}</p>
+						</article>
+					))
+				}
+			</div>
+		</div>
+	</section>
+
+	<section class="pt-[22px] pb-14 lg:pb-[76px]">
+		<div class="mx-auto w-full max-w-[860px] px-4 md:px-6">
+			<div class="mb-[30px] grid gap-3 text-center">
+				<h2 class="text-[2rem] leading-[1.05] font-semibold tracking-[-0.04em] text-[#17233d] sm:text-[2.4rem] lg:text-[3rem]">Régimes alimentaires disponibles</h2>
+				<p class="mx-auto max-w-[38rem] text-[0.98rem] leading-[1.65] text-slate-500">Trouvez des recettes adaptées à vos préférences alimentaires et restrictions.</p>
+			</div>
+			<div class="grid gap-[14px] md:grid-cols-2 lg:grid-cols-5">
+				{
+					diets.map((diet) => (
+						<article class="rounded-[18px] border border-slate-200 bg-white px-4 py-[18px]">
+							<h3 class="text-[1.1rem] font-semibold text-[#1a2540]">{diet.name}</h3>
+							<p class="mt-2 text-[0.92rem] leading-[1.6] text-[#0ead75]">{diet.count}</p>
+						</article>
+					))
+				}
+			</div>
+		</div>
+	</section>
+
+	<section class="py-14 lg:py-[76px]">
+		<div class="mx-auto w-full max-w-[860px] px-4 md:px-6">
+			<div class="mb-[30px] grid gap-3 text-center">
+				<h2 class="text-[2rem] leading-[1.05] font-semibold tracking-[-0.04em] text-[#17233d] sm:text-[2.4rem] lg:text-[3rem]">Comment ça<span class="text-[#06a57a]">fonctionne</span>?</h2>
+				<p class="mx-auto max-w-[38rem] text-[0.98rem] leading-[1.65] text-slate-500">Quatre étapes simples pour transformer votre alimentation et atteindre vos objectifs.</p>
+			</div>
+			<div class="grid gap-7 lg:grid-cols-4 lg:gap-[18px]">
+				{
+					steps.map((step, index) => (
+						<article class="relative pt-1 lg:pt-[18px]">
+							{index < steps.length - 1 && <div class="absolute top-[46px] left-[58px] right-[-16px] hidden h-px bg-slate-300 lg:block"></div>}
+							<div class="mb-[14px] flex h-[54px] w-[54px] items-center justify-center rounded-xl bg-[#08b37d] text-[1.55rem] font-bold text-white shadow-[0_12px_22px_rgba(8,179,125,0.24)]">{step.number}</div>
+							<h3 class="text-[1.1rem] font-semibold text-[#1a2540]">{step.title}</h3>
+							<p class="mt-2 text-[0.92rem] leading-[1.6] text-slate-500">{step.text}</p>
+						</article>
+					))
+				}
+			</div>
+		</div>
+	</section>
+
+	<section class="pt-[22px] pb-14 lg:pb-[76px]">
+		<div class="mx-auto w-full max-w-[860px] px-4 md:px-6">
+			<div class="grid gap-[18px] md:grid-cols-2">
+				{
+					features.map((feature) => (
+						<article class={`rounded-[18px] border border-slate-200 p-[18px] ${feature.cardClass}`}>
+							<div class={`mb-3 flex h-7 w-7 items-center justify-center rounded-[9px] text-sm text-white ${feature.iconClass}`}>{feature.icon}</div>
+							<h3 class="text-[1.1rem] font-semibold text-[#1a2540]">{feature.title}</h3>
+							<p class="mt-2 text-[0.92rem] leading-[1.6] text-slate-500">{feature.text}</p>
+							<a href="/auth/login" class={`mt-[14px] inline-flex text-[0.9rem] font-semibold ${feature.linkClass}`}>{feature.link}</a>
+						</article>
+					))
+				}
+			</div>
+		</div>
+	</section>
+
+	<section class="mt-5 bg-[linear-gradient(180deg,#0ea47a_0%,#079970_100%)] py-16 text-white">
+		<div class="mx-auto grid w-full max-w-[760px] justify-items-center gap-[18px] px-4 text-center md:px-6">
+			<h2 class="text-[2rem] leading-[1.05] font-semibold tracking-[-0.04em] sm:text-[2.4rem] lg:text-[3rem]">Prêt à transformer votre alimentation ?</h2>
+			<p class="max-w-[38rem] text-base leading-[1.7] text-white/85">Rejoignez des milliers d’utilisateurs qui ont déjà amélioré leur nutrition avec NutriPlan.</p>
+			<a href="/auth/register" class="inline-flex min-h-[50px] items-center justify-center rounded-xl bg-white px-[18px] py-[14px] font-bold text-[#079970] shadow-[0_20px_40px_rgba(8,65,50,0.18)]">Commencer gratuitement →</a>
+		</div>
+	</section>
 </Layout>

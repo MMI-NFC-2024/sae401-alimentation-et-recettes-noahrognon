@@ -1,0 +1,462 @@
+---
+import Layout from '../../layouts/Layout.astro';
+
+export const prerender = false;
+---
+
+<Layout title="Recette - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.78),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_32%),linear-gradient(180deg,#f6fdf9_0%,#fbfdff_64%,#f4f9ff_100%)] py-8 lg:py-10">
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
+			<div class="mx-auto max-w-[1080px]">
+				<a href="/recettes" class="mb-5 inline-flex items-center gap-2 text-[0.95rem] font-medium text-slate-500 transition hover:text-slate-700">
+					<span>&larr;</span>
+					<span>Retour aux recettes</span>
+				</a>
+
+				<p id="recipe-error" class="mb-5 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+
+				<div id="recipe-loading" class="rounded-[24px] border border-[#d8e2ee] bg-white px-6 py-12 text-center text-slate-500 shadow-[0_16px_42px_rgba(71,104,145,0.08)]">
+					Chargement de la recette...
+				</div>
+
+				<div id="recipe-shell" class="hidden">
+					<div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_296px]">
+						<div class="grid gap-5">
+							<section class="overflow-hidden rounded-[26px] border border-[#d8e2ee] bg-white shadow-[0_16px_42px_rgba(71,104,145,0.10)]">
+								<div class="relative">
+									<div class="aspect-[16/8] overflow-hidden bg-slate-100">
+										<img id="recipe-photo" src="" alt="" class="h-full w-full object-cover" />
+									</div>
+									<div class="absolute top-4 right-4 flex items-center gap-2">
+										<button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-600 shadow-[0_10px_22px_rgba(51,73,107,0.16)]">
+											<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+												<path d="m12 20-1.4-1.27C5.6 14.2 2 10.94 2 7A4.5 4.5 0 0 1 6.5 2.5c2.04 0 3.38 1.02 4.16 2.08A5.03 5.03 0 0 1 14.82 2.5 4.68 4.68 0 0 1 19.5 7c0 3.94-3.6 7.2-8.6 11.73L12 20Z" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+											</svg>
+										</button>
+										<button type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-600 shadow-[0_10px_22px_rgba(51,73,107,0.16)]">
+											<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+												<path d="M8 12a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm8 7a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm0-14a3.5 3.5 0 1 0 0 7M11.5 8.5h1M11.5 15.5h1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></path>
+											</svg>
+										</button>
+									</div>
+								</div>
+								<div class="p-5 sm:p-6">
+									<h1 id="recipe-title" class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c]"></h1>
+									<p id="recipe-description" class="mt-3 max-w-[46rem] text-[1.02rem] leading-7 text-slate-600"></p>
+									<div id="recipe-chips" class="mt-4 flex flex-wrap gap-2"></div>
+									<div class="mt-5 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+										<div class="rounded-[18px] bg-[#edf4ff] px-4 py-4">
+											<p class="text-[0.82rem] font-medium text-[#4f7df4]">Temps total</p>
+											<p id="recipe-time" class="mt-1 text-[1.18rem] font-semibold text-[#1d58eb]">0 min</p>
+										</div>
+										<div class="rounded-[18px] bg-[#eefbf5] px-4 py-4">
+											<p class="text-[0.82rem] font-medium text-[#0b8c5f]">Portions</p>
+											<p id="recipe-servings-label" class="mt-1 text-[1.18rem] font-semibold text-[#0b8c5f]">0 pers.</p>
+										</div>
+										<div class="rounded-[18px] bg-[#fff5ea] px-4 py-4">
+											<p class="text-[0.82rem] font-medium text-[#e35a00]">Calories</p>
+											<p id="recipe-kcal-label" class="mt-1 text-[1.18rem] font-semibold text-[#e35a00]">0 kcal</p>
+										</div>
+										<div class="rounded-[18px] bg-[#f8efff] px-4 py-4">
+											<p class="text-[0.82rem] font-medium text-[#8527ff]">Difficulté</p>
+											<p id="recipe-difficulty" class="mt-1 text-[1.18rem] font-semibold text-[#8527ff]">-</p>
+										</div>
+									</div>
+								</div>
+							</section>
+
+							<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-5 shadow-[0_16px_42px_rgba(71,104,145,0.08)] sm:p-6">
+								<h2 class="text-[1.7rem] font-semibold text-[#16223c]">Ingrédients</h2>
+								<div id="ingredients-list" class="mt-5 grid gap-3"></div>
+							</section>
+
+							<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-5 shadow-[0_16px_42px_rgba(71,104,145,0.08)] sm:p-6">
+								<h2 class="text-[1.7rem] font-semibold text-[#16223c]">Préparation</h2>
+								<div id="steps-list" class="mt-5 grid gap-4"></div>
+							</section>
+
+							<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-5 shadow-[0_16px_42px_rgba(71,104,145,0.08)] sm:p-6">
+								<div class="flex items-center justify-between gap-3">
+									<h2 id="reviews-title" class="text-[1.7rem] font-semibold text-[#16223c]">Avis</h2>
+									<p id="recipe-rating" class="text-[0.98rem] font-medium text-slate-500">-</p>
+								</div>
+								<div id="reviews-list" class="mt-5 grid gap-4"></div>
+								<button type="button" class="mt-5 inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600">
+									Ajouter un avis
+								</button>
+							</section>
+
+							<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-5 shadow-[0_16px_42px_rgba(71,104,145,0.08)] sm:p-6">
+								<h2 class="text-[1.7rem] font-semibold text-[#16223c]">Recettes similaires</h2>
+								<div id="similars-grid" class="mt-5 grid gap-4 sm:grid-cols-2 xl:grid-cols-3"></div>
+							</section>
+						</div>
+
+						<aside class="grid content-start gap-5">
+							<section class="rounded-[24px] bg-[linear-gradient(180deg,#0fb487_0%,#0ca985_100%)] p-5 text-white shadow-[0_20px_45px_rgba(16,179,137,0.24)] sm:p-6">
+								<h2 class="text-[1.5rem] font-semibold">Calculateur nutritionnel</h2>
+								<p class="mt-5 text-[0.9rem] text-white/80">Nombre de portions</p>
+								<div class="mt-3 flex items-center justify-between gap-3">
+									<button id="recipe-decrease-servings" type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-[14px] bg-white/15 text-[1.5rem]">−</button>
+									<div class="text-center">
+										<p id="recipe-servings" class="text-[2.2rem] leading-none font-semibold">1</p>
+										<p class="mt-1 text-[0.85rem] text-white/75">personnes</p>
+									</div>
+									<button id="recipe-increase-servings" type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-[14px] bg-white/15 text-[1.5rem]">+</button>
+								</div>
+								<p id="recipe-kcal-portion" class="mt-6 text-[0.98rem] text-white/90">Calories par portion: 0 kcal</p>
+								<div class="mt-4 h-1 rounded-full bg-white/20"></div>
+								<div class="mt-5 space-y-3 text-[0.98rem]">
+									<div class="flex items-center justify-between gap-3"><span>Calories totales</span><strong id="macro-kcal">0 kcal</strong></div>
+									<div class="flex items-center justify-between gap-3"><span>Protéines</span><strong id="macro-proteins">0 g</strong></div>
+									<div class="flex items-center justify-between gap-3"><span>Glucides</span><strong id="macro-carbs">0 g</strong></div>
+									<div class="flex items-center justify-between gap-3"><span>Lipides</span><strong id="macro-fats">0 g</strong></div>
+								</div>
+								<div class="mt-5 rounded-[16px] bg-white/12 px-4 py-3 text-[0.84rem] text-white/80">
+									Les ingrédients s&apos;ajustent automatiquement selon vos modifications.
+								</div>
+							</section>
+
+							<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-4 shadow-[0_16px_42px_rgba(71,104,145,0.08)]">
+								<button type="button" class="inline-flex min-h-[48px] w-full items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[0.98rem] font-semibold text-white">
+									Ajouter au planning
+								</button>
+								<button type="button" class="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600">
+									Enregistrer la recette
+								</button>
+							</section>
+
+							<a href="#" class="block rounded-[24px] border border-[#d7e1f3] bg-[linear-gradient(135deg,#eef4ff_0%,#f6f9ff_100%)] p-5 shadow-[0_16px_42px_rgba(71,104,145,0.08)]">
+								<p class="text-[0.82rem] font-medium text-[#4d7cf5]">Partenaire</p>
+								<h3 class="mt-3 text-[1.15rem] font-semibold text-[#16223c]">Complément protéiné</h3>
+								<p class="mt-2 text-[0.92rem] leading-6 text-slate-500">Optimisez vos apports avec une whey premium bio adaptée aux objectifs sportifs.</p>
+								<span class="mt-4 inline-flex rounded-[12px] bg-[#2d63ff] px-4 py-2 text-[0.88rem] font-semibold text-white">En savoir plus</span>
+							</a>
+						</aside>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const recipeError = document.querySelector('#recipe-error');
+	const recipeShell = document.querySelector('#recipe-shell');
+	const recipeLoading = document.querySelector('#recipe-loading');
+	const servingsValue = document.querySelector('#recipe-servings');
+	const servingsLabel = document.querySelector('#recipe-servings-label');
+	const decreaseServingsButton = document.querySelector('#recipe-decrease-servings');
+	const increaseServingsButton = document.querySelector('#recipe-increase-servings');
+
+	let recipeData = null;
+	let selectedServings = 1;
+
+	function getStoredAuth() {
+		try {
+			const raw = localStorage.getItem(authKey);
+			return raw ? JSON.parse(raw) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function setStoredAuth(payload) {
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function clearStoredAuth() {
+		localStorage.removeItem(authKey);
+	}
+
+	function showError(message) {
+		if (!(recipeError instanceof HTMLElement)) return;
+		recipeError.textContent = message;
+		recipeError.classList.remove('hidden');
+	}
+
+	function hideLoading() {
+		if (recipeLoading instanceof HTMLElement) {
+			recipeLoading.classList.add('hidden');
+		}
+	}
+
+	function escapeHtml(value) {
+		return String(value)
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#39;');
+	}
+
+	function formatNumber(value) {
+		return Number.isInteger(value) ? String(value) : Number(value).toFixed(1).replace('.0', '');
+	}
+
+	function formatUnit(unit) {
+		const labels = {
+			g: 'g',
+			kg: 'kg',
+			ml: 'ml',
+			l: 'l',
+			pcs: 'pcs',
+			cuillere_a_soupe: 'c.s.',
+			cuillere_a_cafe: 'c.c.',
+			gousse: 'gousse',
+			au_gout: 'au goût',
+		};
+		return labels[unit] ?? unit;
+	}
+
+	function formatDifficulty(value) {
+		const labels = {
+			facile: 'Facile',
+			moyen: 'Moyen',
+			difficile: 'Difficile',
+		};
+		return labels[value] ?? value ?? '-';
+	}
+
+	function formatRelativeReviewDate(rawValue) {
+		if (!rawValue) return '';
+		const diff = Date.now() - new Date(rawValue).getTime();
+		const days = Math.max(0, Math.floor(diff / (1000 * 60 * 60 * 24)));
+		if (days === 0) return "Aujourd'hui";
+		if (days === 1) return 'Il y a 1 jour';
+		if (days < 7) return `Il y a ${days} jours`;
+		const weeks = Math.floor(days / 7);
+		if (weeks <= 1) return 'Il y a 1 semaine';
+		return `Il y a ${weeks} semaines`;
+	}
+
+	function renderStars(note) {
+		const safeNote = Math.max(0, Math.min(5, Number(note) || 0));
+		const fullStars = Math.round(safeNote);
+		return Array.from({ length: 5 }, (_, index) => {
+			const filled = index < fullStars;
+			return `<span class="${filled ? 'text-[#f8b517]' : 'text-slate-300'}">&#9733;</span>`;
+		}).join('');
+	}
+
+	function getPortionRatio() {
+		const baseServings = Number(recipeData?.nombrePortions ?? 1) || 1;
+		return selectedServings / baseServings;
+	}
+
+	function updateNutritionCalculator() {
+		if (!recipeData) return;
+		const ratio = getPortionRatio();
+
+		if (servingsValue instanceof HTMLElement) {
+			servingsValue.textContent = String(selectedServings);
+		}
+		if (servingsLabel instanceof HTMLElement) {
+			servingsLabel.textContent = `${selectedServings} pers.`;
+		}
+
+		document.querySelector('#recipe-kcal-portion').textContent = `Calories par portion: ${formatNumber(recipeData.caloriesParPortion)} kcal`;
+		document.querySelector('#macro-kcal').textContent = `${formatNumber(recipeData.caloriesParPortion * selectedServings)} kcal`;
+		document.querySelector('#macro-proteins').textContent = `${formatNumber(recipeData.proteinesParPortionG * selectedServings)} g`;
+		document.querySelector('#macro-carbs').textContent = `${formatNumber(recipeData.glucidesParPortionG * selectedServings)} g`;
+		document.querySelector('#macro-fats').textContent = `${formatNumber(recipeData.lipidesParPortionG * selectedServings)} g`;
+
+		const ingredientsList = document.querySelector('#ingredients-list');
+		if (ingredientsList instanceof HTMLElement) {
+			ingredientsList.innerHTML = (recipeData.ingredients || [])
+				.sort((a, b) => Number(a.ordre) - Number(b.ordre))
+				.map((ingredient) => {
+					const quantity = Number(ingredient.quantite ?? 0) * ratio;
+					return `
+						<div class="flex items-start justify-between gap-4 rounded-[16px] border border-[#e7eef6] bg-[#fbfdff] px-4 py-4">
+							<div class="min-w-0">
+								<p class="text-[0.98rem] font-medium text-[#16223c]">${escapeHtml(ingredient.nom)}</p>
+								${ingredient.preparation ? `<p class="mt-1 text-[0.88rem] text-slate-500">${escapeHtml(ingredient.preparation)}</p>` : ''}
+								${ingredient.isOptionnel ? '<p class="mt-1 text-[0.82rem] text-[#0b8c5f]">Optionnel</p>' : ''}
+							</div>
+							<p class="shrink-0 text-[0.94rem] font-medium text-slate-600">${escapeHtml(formatNumber(quantity))} ${escapeHtml(formatUnit(ingredient.unite || ''))}</p>
+						</div>
+					`;
+				})
+				.join('');
+		}
+	}
+
+	function renderRecipe(recipe) {
+		recipeData = recipe;
+		selectedServings = Math.max(1, Number(recipe.nombrePortions ?? 1));
+
+		const photo = document.querySelector('#recipe-photo');
+		const title = document.querySelector('#recipe-title');
+		const description = document.querySelector('#recipe-description');
+		const chips = document.querySelector('#recipe-chips');
+		const time = document.querySelector('#recipe-time');
+		const kcalLabel = document.querySelector('#recipe-kcal-label');
+		const difficulty = document.querySelector('#recipe-difficulty');
+		const stepsList = document.querySelector('#steps-list');
+		const reviewsTitle = document.querySelector('#reviews-title');
+		const rating = document.querySelector('#recipe-rating');
+		const reviewsList = document.querySelector('#reviews-list');
+		const similarsGrid = document.querySelector('#similars-grid');
+
+		if (
+			!(photo instanceof HTMLImageElement) ||
+			!(title instanceof HTMLElement) ||
+			!(description instanceof HTMLElement) ||
+			!(chips instanceof HTMLElement) ||
+			!(time instanceof HTMLElement) ||
+			!(kcalLabel instanceof HTMLElement) ||
+			!(difficulty instanceof HTMLElement) ||
+			!(stepsList instanceof HTMLElement) ||
+			!(reviewsTitle instanceof HTMLElement) ||
+			!(rating instanceof HTMLElement) ||
+			!(reviewsList instanceof HTMLElement) ||
+			!(similarsGrid instanceof HTMLElement)
+		) {
+			return;
+		}
+
+		document.title = `${recipe.titre} - Nutrivia`;
+		photo.src = recipe.photoUrl || '';
+		photo.alt = recipe.titre;
+		title.textContent = recipe.titre;
+		description.textContent = recipe.description || 'Aucune description disponible pour cette recette.';
+		time.textContent = `${formatNumber(recipe.tempsTotalMin || recipe.tempsPreparationMin || 0)} min`;
+		kcalLabel.textContent = `${formatNumber(recipe.caloriesParPortion || 0)} kcal`;
+		difficulty.textContent = formatDifficulty(recipe.difficulte);
+		rating.textContent = `${formatNumber(recipe.noteMoyenne || 0)}/5 · ${recipe.nombreAvis || 0} avis`;
+		reviewsTitle.textContent = `Avis (${recipe.nombreAvis || 0})`;
+
+		const chipData = [
+			...(recipe.tags || []).map((tag) => ({ label: tag.libelle, color: tag.couleur || '#e8f9ef' })),
+			...(recipe.regimes || []).map((regime) => ({ label: regime.libelle, color: '#eefbf5' })),
+		];
+
+		chips.innerHTML = chipData
+			.slice(0, 6)
+			.map((chip) => `<span class="inline-flex items-center rounded-full px-3 py-1 text-[0.82rem] font-medium text-[#0c8f68]" style="background:${escapeHtml(chip.color)}">${escapeHtml(chip.label)}</span>`)
+			.join('');
+
+		stepsList.innerHTML = (recipe.etapes || [])
+			.sort((a, b) => Number(a.ordre) - Number(b.ordre))
+			.map(
+				(step) => `
+					<div class="flex gap-4 rounded-[18px] border border-[#e7eef6] bg-[#fbfdff] px-4 py-4">
+						<div class="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#08b37d] text-[0.92rem] font-semibold text-white">${escapeHtml(String(step.ordre))}</div>
+						<div>
+							<p class="text-[0.96rem] font-medium text-[#16223c]">${escapeHtml(step.instruction || step.titre || '')}</p>
+							${step.dureeMin ? `<p class="mt-1 text-[0.84rem] text-slate-400">${escapeHtml(formatNumber(step.dureeMin))} min</p>` : ''}
+						</div>
+					</div>
+				`,
+			)
+			.join('');
+
+		reviewsList.innerHTML = (recipe.avis || [])
+			.map(
+				(review) => `
+					<div class="rounded-[18px] border border-[#e7eef6] bg-[#fbfdff] px-4 py-4">
+						<div class="flex items-start justify-between gap-4">
+							<div class="flex items-center gap-3">
+								<div class="inline-flex h-10 w-10 items-center justify-center rounded-full bg-[#08b37d] text-[0.82rem] font-semibold text-white">${escapeHtml(String(review.auteur || 'U').slice(0, 2).toUpperCase())}</div>
+								<div>
+									<p class="text-[0.96rem] font-medium text-[#16223c]">${escapeHtml(review.auteur || 'Utilisateur')}</p>
+									<p class="text-[0.82rem] text-slate-400">${escapeHtml(formatRelativeReviewDate(review.dateAvis))}</p>
+								</div>
+							</div>
+							<p class="shrink-0 text-[1rem]">${renderStars(review.note)}</p>
+						</div>
+						<p class="mt-3 text-[0.95rem] leading-7 text-slate-600">${escapeHtml(review.commentaire || '')}</p>
+					</div>
+				`,
+			)
+			.join('');
+
+		if (!recipe.avis?.length) {
+			reviewsList.innerHTML = '<div class="rounded-[18px] border border-dashed border-[#d8e2ee] px-4 py-4 text-[0.95rem] text-slate-400">Aucun avis pour le moment.</div>';
+		}
+
+		similarsGrid.innerHTML = (recipe.similaires || [])
+			.map(
+				(similar) => `
+					<a href="/recette/${escapeHtml(similar.slug)}" class="overflow-hidden rounded-[18px] border border-[#d8e2ee] bg-white shadow-[0_12px_26px_rgba(71,104,145,0.08)] transition hover:border-[#bcd1e6]">
+						<div class="aspect-[1.4/1] overflow-hidden bg-slate-100">
+							${similar.photoUrl ? `<img src="${escapeHtml(similar.photoUrl)}" alt="${escapeHtml(similar.titre)}" class="h-full w-full object-cover" />` : ''}
+						</div>
+						<div class="p-4">
+							<p class="text-[0.98rem] font-semibold text-[#16223c]">${escapeHtml(similar.titre)}</p>
+							<p class="mt-2 text-[0.86rem] text-slate-500">${escapeHtml(formatNumber(similar.caloriesParPortion))} kcal · ${escapeHtml(formatNumber(similar.tempsPreparationMin))} min</p>
+						</div>
+					</a>
+				`,
+			)
+			.join('');
+
+		if (!recipe.similaires?.length) {
+			similarsGrid.innerHTML = '<div class="rounded-[18px] border border-dashed border-[#d8e2ee] px-4 py-4 text-[0.95rem] text-slate-400">Aucune recette similaire disponible.</div>';
+		}
+
+		updateNutritionCalculator();
+
+		if (recipeShell instanceof HTMLElement) {
+			recipeShell.classList.remove('hidden');
+		}
+	}
+
+	async function loadRecipe() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const slug = window.location.pathname.split('/').filter(Boolean).at(-1);
+		if (!slug) {
+			throw new Error('Slug de recette manquant.');
+		}
+
+		const response = await fetch(`/api/recipes/${encodeURIComponent(slug)}`, {
+			headers: {
+				Authorization: `Bearer ${auth.token}`,
+			},
+		});
+		const result = await response.json();
+
+		if (!response.ok) {
+			if (response.status === 401) {
+				clearStoredAuth();
+				window.location.href = '/auth/login';
+				return;
+			}
+
+			throw new Error(result.message || 'Impossible de charger la recette.');
+		}
+
+		setStoredAuth({
+			...auth,
+			token: result.token,
+			record: auth.record,
+		});
+
+		renderRecipe(result.recipe);
+	}
+
+	decreaseServingsButton?.addEventListener('click', () => {
+		selectedServings = Math.max(1, selectedServings - 1);
+		updateNutritionCalculator();
+	});
+
+	increaseServingsButton?.addEventListener('click', () => {
+		selectedServings += 1;
+		updateNutritionCalculator();
+	});
+
+	loadRecipe()
+		.catch((error) => {
+			showError(error instanceof Error ? error.message : 'Impossible de charger la recette.');
+		})
+		.finally(() => {
+			hideLoading();
+		});
+</script>

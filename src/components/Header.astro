@@ -1,0 +1,115 @@
+---
+import logo from '../assets/logonutrivia.svg';
+import iconIA from '../assets/iconia.svg';
+import iconUser from '../assets/iconuser.svg';
+import iconMenuOpen from '../assets/iconmenuferme.svg';
+import iconMenuClose from '../assets/iconmenuouvert.svg';
+import HeaderNavIcon from './HeaderNavIcon.astro';
+
+const currentPath = Astro.url.pathname;
+
+const navItems = [
+	{ label: 'Accueil', href: '/', icon: 'home' },
+	{ label: 'Tableau de bord', href: '/auth/login', icon: 'dashboard' },
+	{ label: 'Recettes', href: '/recettes', icon: 'recipes' },
+	{ label: 'Planificateur', href: '/auth/login', icon: 'planner' },
+	{ label: 'Suivi', href: '/suivi', icon: 'progress' },
+	{ label: 'Communauté', href: '/auth/login', icon: 'community' },
+	{ label: 'Liste de courses', href: '/auth/login', icon: 'shopping' },
+	{ label: 'Aliments', href: '/aliments', icon: 'foods' },
+	{ label: 'Régimes', href: '/regimes', icon: 'diets' },
+] as const;
+---
+
+<header class="sticky top-0 z-20 border-b border-slate-100 bg-white/95 backdrop-blur-md">
+	<input id="mobile-menu-toggle" type="checkbox" class="peer sr-only" />
+
+	<div class="mx-auto flex items-center justify-between gap-3 bg-white/95 px-4 py-3 lg:max-w-[1380px] lg:gap-[18px] lg:px-6 lg:py-[15px]">
+		<a href="/" aria-label="Nutrivia - Accueil" class="inline-flex items-center">
+			<img src={logo.src} alt="Nutrivia" class="block h-auto w-[110px] lg:w-[124px]" />
+		</a>
+
+		<nav aria-label="Navigation principale" class="hidden min-w-0 flex-1 justify-center lg:flex">
+			<ul class="flex items-center justify-center gap-0.5 whitespace-nowrap">
+				{
+					navItems.map((item) => (
+						<li>
+							<a
+								href={item.href}
+								class:list={[
+									'inline-flex items-center justify-center rounded-[14px] px-[11px] py-2.5 text-[0.92rem] font-medium text-slate-700 transition-colors hover:bg-slate-50',
+									{ 'bg-[#d6f7df] text-[#0b8c5f]': currentPath === item.href },
+								]}
+							>
+								{item.label}
+							</a>
+						</li>
+					))
+				}
+			</ul>
+		</nav>
+
+		<div class="flex shrink-0 items-center gap-2.5">
+			<a
+				href="/auth/login"
+				class="hidden items-center gap-2.5 rounded-2xl bg-[#06b37a] px-4 py-2.5 text-[0.95rem] font-semibold whitespace-nowrap text-white shadow-[0_8px_18px_rgba(6,179,122,0.18)] lg:inline-flex"
+			>
+				<img src={iconIA.src} alt="" aria-hidden="true" class="block h-4 w-4" />
+				<span>Assistant IA</span>
+			</a>
+
+			<a
+				href="/profile"
+				aria-label="Mon compte"
+				class="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[15px] bg-slate-50 lg:h-12 lg:w-12 lg:rounded-2xl"
+			>
+				<img src={iconUser.src} alt="" aria-hidden="true" class="block h-5 w-5" />
+			</a>
+
+			<label
+				for="mobile-menu-toggle"
+				aria-label="Ouvrir le menu"
+				class="inline-flex h-[42px] w-[42px] cursor-pointer items-center justify-center rounded-[15px] bg-slate-50 peer-checked:hidden lg:hidden"
+			>
+				<img src={iconMenuOpen.src} alt="" aria-hidden="true" class="block h-5 w-5" />
+			</label>
+
+			<label
+				for="mobile-menu-toggle"
+				aria-label="Fermer le menu"
+				class="hidden h-[42px] w-[42px] cursor-pointer items-center justify-center rounded-[15px] bg-slate-50 peer-checked:inline-flex lg:hidden"
+			>
+				<img src={iconMenuClose.src} alt="" aria-hidden="true" class="block h-5 w-5" />
+			</label>
+		</div>
+	</div>
+
+	<div class="hidden border-t border-slate-100 bg-[linear-gradient(180deg,#ffffff_0%,#ffffff_84%,#f5fbff_100%)] peer-checked:block lg:hidden">
+		<nav aria-label="Navigation mobile" class="min-h-[calc(100vh-74px)] px-4 pt-[18px] pb-[30px]">
+			<ul class="grid gap-3">
+				{
+					navItems.map((item) => (
+						<li>
+							<a
+								href={item.href}
+								class:list={[
+									'flex items-center gap-[14px] rounded-[14px] px-[14px] py-3 text-base font-medium text-slate-700',
+									{ 'bg-[linear-gradient(90deg,#d5f8de_0%,#c8f6df_100%)] text-[#0b8c5f]': currentPath === item.href },
+								]}
+							>
+								<HeaderNavIcon name={item.icon} active={currentPath === item.href} />
+								<span>{item.label}</span>
+							</a>
+						</li>
+					))
+				}
+				<li>
+					<a href="/auth/login" class="flex items-center gap-[14px] rounded-[14px] px-[14px] py-3 text-base font-medium text-slate-700">
+						<HeaderNavIcon name="assistant" />
+						<span>Assistant IA</span>
+					</a>
+				</li>
+			</ul>
+		</nav>
+	</div>
+</header>
