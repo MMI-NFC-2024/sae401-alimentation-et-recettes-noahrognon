@@ -81,9 +81,25 @@ export const prerender = false;
 									<p id="recipe-rating" class="text-[0.98rem] font-medium text-slate-500">-</p>
 								</div>
 								<div id="reviews-list" class="mt-5 grid gap-4"></div>
-								<button type="button" class="mt-5 inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600">
+								<button id="recipe-open-review" type="button" class="mt-5 inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600">
 									Ajouter un avis
 								</button>
+								<form id="recipe-review-form" class="mt-4 hidden rounded-[18px] border border-[#d8e2ee] bg-[#fbfdff] p-4">
+									<label for="recipe-review-rating" class="text-[0.9rem] font-medium text-slate-600">Note</label>
+									<select id="recipe-review-rating" class="mt-2 h-[44px] w-full rounded-[12px] border border-[#cad8e7] bg-white px-4 text-[0.95rem] text-slate-700 outline-none focus:border-[#08b37d]">
+										<option value="5">5 / 5</option>
+										<option value="4">4 / 5</option>
+										<option value="3">3 / 5</option>
+										<option value="2">2 / 5</option>
+										<option value="1">1 / 5</option>
+									</select>
+									<label for="recipe-review-comment" class="mt-4 block text-[0.9rem] font-medium text-slate-600">Commentaire</label>
+									<textarea id="recipe-review-comment" rows="4" class="mt-2 w-full rounded-[12px] border border-[#cad8e7] bg-white px-4 py-3 text-[0.95rem] text-slate-700 outline-none focus:border-[#08b37d]" placeholder="Partagez votre retour sur cette recette..."></textarea>
+									<div class="mt-4 flex flex-col gap-3 sm:flex-row">
+										<button id="recipe-submit-review" type="submit" class="inline-flex min-h-[44px] items-center justify-center rounded-[12px] bg-[#08b37d] px-4 py-2.5 text-[0.94rem] font-semibold text-white">Publier l'avis</button>
+										<button id="recipe-cancel-review" type="button" class="inline-flex min-h-[44px] items-center justify-center rounded-[12px] border border-[#cad8e7] bg-white px-4 py-2.5 text-[0.94rem] font-medium text-slate-600">Annuler</button>
+									</div>
+								</form>
 							</section>
 
 							<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-5 shadow-[0_16px_42px_rgba(71,104,145,0.08)] sm:p-6">
@@ -118,12 +134,25 @@ export const prerender = false;
 							</section>
 
 							<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-4 shadow-[0_16px_42px_rgba(71,104,145,0.08)]">
+								<div class="mb-3 grid gap-2">
+									<label for="recipe-tracking-meal" class="text-[0.9rem] font-medium text-slate-500">Ajouter au suivi dans</label>
+									<select id="recipe-tracking-meal" class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.96rem] text-slate-700 outline-none focus:border-[#08b37d]">
+										<option value="petit_dejeuner">Petit-déjeuner</option>
+										<option value="dejeuner" selected>Déjeuner</option>
+										<option value="collation">Collation</option>
+										<option value="diner">Dîner</option>
+									</select>
+								</div>
 								<button type="button" class="inline-flex min-h-[48px] w-full items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[0.98rem] font-semibold text-white">
 									Ajouter au planning
 								</button>
 								<button type="button" class="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600">
 									Enregistrer la recette
 								</button>
+								<button id="recipe-add-tracking" type="button" class="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-[14px] border border-[#53d7ad] bg-[#eefbf5] px-5 py-3 text-[0.98rem] font-semibold text-[#0b8c5f]">
+									Ajouter au suivi
+								</button>
+								<p id="recipe-action-message" class="mt-3 hidden rounded-[14px] bg-[#f4fbf7] px-4 py-3 text-[0.9rem] text-[#0b8c5f]"></p>
 							</section>
 
 							<a href="#" class="block rounded-[24px] border border-[#d7e1f3] bg-[linear-gradient(135deg,#eef4ff_0%,#f6f9ff_100%)] p-5 shadow-[0_16px_42px_rgba(71,104,145,0.08)]">
@@ -149,9 +178,18 @@ export const prerender = false;
 	const servingsLabel = document.querySelector('#recipe-servings-label');
 	const decreaseServingsButton = document.querySelector('#recipe-decrease-servings');
 	const increaseServingsButton = document.querySelector('#recipe-increase-servings');
+	const reviewOpenButton = document.querySelector('#recipe-open-review');
+	const reviewForm = document.querySelector('#recipe-review-form');
+	const reviewCancelButton = document.querySelector('#recipe-cancel-review');
+	const reviewRating = document.querySelector('#recipe-review-rating');
+	const reviewComment = document.querySelector('#recipe-review-comment');
+	const trackingMeal = document.querySelector('#recipe-tracking-meal');
+	const trackingButton = document.querySelector('#recipe-add-tracking');
+	const actionMessage = document.querySelector('#recipe-action-message');
 
 	let recipeData = null;
 	let selectedServings = 1;
+	let currentSlug = '';
 
 	function getStoredAuth() {
 		try {
@@ -176,9 +214,28 @@ export const prerender = false;
 		recipeError.classList.remove('hidden');
 	}
 
+	function showActionMessage(message, isError = false) {
+		if (!(actionMessage instanceof HTMLElement)) return;
+		actionMessage.textContent = message;
+		actionMessage.classList.remove('hidden', 'bg-[#f4fbf7]', 'text-[#0b8c5f]', 'bg-red-50', 'text-red-600');
+		actionMessage.classList.add(isError ? 'bg-red-50' : 'bg-[#f4fbf7]', isError ? 'text-red-600' : 'text-[#0b8c5f]');
+	}
+
 	function hideLoading() {
 		if (recipeLoading instanceof HTMLElement) {
 			recipeLoading.classList.add('hidden');
+		}
+	}
+
+	function hideReviewForm() {
+		if (reviewForm instanceof HTMLElement) {
+			reviewForm.classList.add('hidden');
+		}
+	}
+
+	function showReviewForm() {
+		if (reviewForm instanceof HTMLElement) {
+			reviewForm.classList.remove('hidden');
 		}
 	}
 
@@ -404,6 +461,102 @@ export const prerender = false;
 		}
 	}
 
+	async function submitReview() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		if (!(reviewRating instanceof HTMLSelectElement) || !(reviewComment instanceof HTMLTextAreaElement)) {
+			return;
+		}
+
+		const commentaire = reviewComment.value.trim();
+		if (!commentaire) {
+			showActionMessage('Ajoutez un commentaire avant de publier votre avis.', true);
+			return;
+		}
+
+		const response = await fetch(`/api/recipes/${encodeURIComponent(currentSlug)}/reviews`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${auth.token}`,
+			},
+			body: JSON.stringify({
+				note: Number(reviewRating.value),
+				commentaire,
+			}),
+		});
+		const result = await response.json();
+
+		if (!response.ok) {
+			if (response.status === 401) {
+				clearStoredAuth();
+				window.location.href = '/auth/login';
+				return;
+			}
+			throw new Error(result.message || "Impossible d'ajouter l'avis.");
+		}
+
+		setStoredAuth({
+			...auth,
+			token: result.token,
+			record: auth.record,
+		});
+
+		reviewComment.value = '';
+		reviewRating.value = '5';
+		hideReviewForm();
+		renderRecipe(result.recipe);
+		showActionMessage('Votre avis a bien été publié.');
+	}
+
+	async function addRecipeToTracking() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		if (!(trackingMeal instanceof HTMLSelectElement) || !recipeData?.id) {
+			return;
+		}
+
+		const response = await fetch('/api/tracking', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${auth.token}`,
+			},
+			body: JSON.stringify({
+				date: new Date().toISOString().slice(0, 10),
+				typeRepas: trackingMeal.value,
+				sourceType: 'recipe',
+				sourceId: recipeData.id,
+				quantity: selectedServings,
+			}),
+		});
+		const result = await response.json();
+
+		if (!response.ok) {
+			if (response.status === 401) {
+				clearStoredAuth();
+				window.location.href = '/auth/login';
+				return;
+			}
+			throw new Error(result.message || "Impossible d'ajouter la recette au suivi.");
+		}
+
+		setStoredAuth({
+			...auth,
+			token: result.token,
+			record: auth.record,
+		});
+		showActionMessage(`La recette a été ajoutée au suivi avec ${selectedServings} portion${selectedServings > 1 ? 's' : ''}.`);
+	}
+
 	async function loadRecipe() {
 		const auth = getStoredAuth();
 		if (!auth?.token) {
@@ -415,6 +568,7 @@ export const prerender = false;
 		if (!slug) {
 			throw new Error('Slug de recette manquant.');
 		}
+		currentSlug = slug;
 
 		const response = await fetch(`/api/recipes/${encodeURIComponent(slug)}`, {
 			headers: {
@@ -450,6 +604,25 @@ export const prerender = false;
 	increaseServingsButton?.addEventListener('click', () => {
 		selectedServings += 1;
 		updateNutritionCalculator();
+	});
+
+	reviewOpenButton?.addEventListener('click', showReviewForm);
+	reviewCancelButton?.addEventListener('click', hideReviewForm);
+	reviewForm?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		try {
+			await submitReview();
+		} catch (error) {
+			showActionMessage(error instanceof Error ? error.message : "Impossible d'ajouter l'avis.", true);
+		}
+	});
+
+	trackingButton?.addEventListener('click', async () => {
+		try {
+			await addRecipeToTracking();
+		} catch (error) {
+			showActionMessage(error instanceof Error ? error.message : "Impossible d'ajouter la recette au suivi.", true);
+		}
 	});
 
 	loadRecipe()

@@ -751,7 +751,7 @@ export async function getRecipeDetailBySlug(userToken: string, slug: string) {
 				return { candidate, score };
 			})
 			.sort((left, right) => right.score - left.score)
-			slice(0, 3);
+			.slice(0, 3);
 
 		similarRecipes = await Promise.all(
 			fallbackCandidates.map(async ({ candidate }) => ({
