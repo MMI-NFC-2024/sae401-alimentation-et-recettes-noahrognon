@@ -10,12 +10,12 @@ const currentPath = Astro.url.pathname;
 
 const navItems = [
 	{ label: 'Accueil', href: '/', icon: 'home' },
-	{ label: 'Tableau de bord', href: '/auth/login', icon: 'dashboard' },
+	{ label: 'Tableau de bord', href: '/dashboard', icon: 'dashboard' },
 	{ label: 'Recettes', href: '/recettes', icon: 'recipes' },
-	{ label: 'Planificateur', href: '/auth/login', icon: 'planner' },
+	{ label: 'Planificateur', href: '/planificateur', icon: 'planner' },
 	{ label: 'Suivi', href: '/suivi', icon: 'progress' },
-	{ label: 'Communauté', href: '/auth/login', icon: 'community' },
-	{ label: 'Liste de courses', href: '/auth/login', icon: 'shopping' },
+	{ label: 'Communauté', href: '/communaute', icon: 'community' },
+	{ label: 'Liste de courses', href: '/liste-courses', icon: 'shopping' },
 	{ label: 'Aliments', href: '/aliments', icon: 'foods' },
 	{ label: 'Régimes', href: '/regimes', icon: 'diets' },
 ] as const;
@@ -51,7 +51,7 @@ const navItems = [
 
 		<div class="flex shrink-0 items-center gap-2.5">
 			<a
-				href="/auth/login"
+				href="/assistant"
 				class="hidden items-center gap-2.5 rounded-2xl bg-[#06b37a] px-4 py-2.5 text-[0.95rem] font-semibold whitespace-nowrap text-white shadow-[0_8px_18px_rgba(6,179,122,0.18)] lg:inline-flex"
 			>
 				<img src={iconIA.src} alt="" aria-hidden="true" class="block h-4 w-4" />
@@ -104,7 +104,7 @@ const navItems = [
 					))
 				}
 				<li>
-					<a href="/auth/login" class="flex items-center gap-[14px] rounded-[14px] px-[14px] py-3 text-base font-medium text-slate-700">
+					<a href="/assistant" class="flex items-center gap-[14px] rounded-[14px] px-[14px] py-3 text-base font-medium text-slate-700">
 						<HeaderNavIcon name="assistant" />
 						<span>Assistant IA</span>
 					</a>

@@ -216,6 +216,64 @@ async function updateRecord(
 	}, token);
 }
 
+async function deleteRecord(collection: string, recordId: string, token: string) {
+	return pbFetch(`/api/collections/${collection}/records/${recordId}`, {
+		method: 'DELETE',
+	}, token);
+}
+
+async function getCollectionMeta(collection: string, token: string) {
+	return pbFetch<Record<string, any>>(`/api/collections/${collection}`, undefined, token);
+}
+
+async function ensureBaseCollection(
+	name: string,
+	fields: Array<Record<string, unknown>>,
+	token: string,
+) {
+	try {
+		await getCollectionMeta(name, token);
+		return;
+	} catch {
+		await pbFetch('/api/collections', {
+			method: 'POST',
+			body: JSON.stringify({
+				name,
+				type: 'base',
+				listRule: null,
+				viewRule: null,
+				createRule: null,
+				updateRule: null,
+				deleteRule: null,
+				fields,
+			}),
+		}, token);
+	}
+}
+
+async function ensureCollectionFields(
+	collectionName: string,
+	fieldsToAdd: Array<Record<string, unknown>>,
+	token: string,
+) {
+	const meta = await getCollectionMeta(collectionName, token);
+	const existingNames = new Set((meta.fields ?? []).map((field: Record<string, any>) => String(field.name)));
+	const missingFields = fieldsToAdd.filter((field) => !existingNames.has(String(field.name ?? '')));
+
+	if (!missingFields.length) {
+		return meta;
+	}
+
+	await pbFetch(`/api/collections/${collectionName}`, {
+		method: 'PATCH',
+		body: JSON.stringify({
+			fields: [...(meta.fields ?? []).filter((field: Record<string, any>) => !field.system), ...missingFields],
+		}),
+	}, token);
+
+	return getCollectionMeta(collectionName, token);
+}
+
 async function ensureCollectionSeeded(
 	collection: keyof typeof defaultReferenceData,
 	token: string,
@@ -536,6 +594,9 @@ export async function getRecipesCatalog(userToken: string) {
 				photoUrl: imageUrl,
 				tempsPreparationMin: Number(recipe.temps_preparation_min ?? 0),
 				caloriesParPortion: Number(recipe.calories_par_portion ?? 0),
+				proteinesParPortion: Number(recipe.proteines_par_portion_g ?? 0),
+				glucidesParPortion: Number(recipe.glucides_par_portion_g ?? 0),
+				lipidesParPortion: Number(recipe.lipides_par_portion_g ?? 0),
 				objectif: recipe.expand?.objectif_id
 					? {
 						id: String(recipe.expand.objectif_id.id),
@@ -900,6 +961,14 @@ const mealTypeLabels: Record<(typeof mealTypeOrder)[number], string> = {
 	petit_dejeuner: 'Petit-déjeuner',
 	dejeuner: 'Déjeuner',
 	collation: 'Collation',
+	diner: 'Dîner',
+};
+
+const plannerMealTypeOrder = ['petit_dejeuner', 'dejeuner', 'diner'] as const;
+
+const plannerMealTypeLabels: Record<(typeof plannerMealTypeOrder)[number], string> = {
+	petit_dejeuner: 'Petit-déjeuner',
+	dejeuner: 'Déjeuner',
 	diner: 'Dîner',
 };
 
@@ -1275,6 +1344,230 @@ export async function getTrackingDashboard(userToken: string, selectedDateInput?
 	};
 }
 
+function getDashboardRecipeScore(
+	recipe: Record<string, any>,
+	defaults: { objectifSlug?: string; regimeSlug?: string },
+) {
+	let score = 0;
+	if (defaults.objectifSlug && recipe.objectif?.slug === defaults.objectifSlug) {
+		score += 3;
+	}
+	if (defaults.regimeSlug && Array.isArray(recipe.regimes) && recipe.regimes.some((item: Record<string, any>) => item.slug === defaults.regimeSlug)) {
+		score += 3;
+	}
+
+	const title = String(recipe.titre ?? '').toLowerCase();
+	const tags = Array.isArray(recipe.tags) ? recipe.tags.map((item: Record<string, any>) => String(item.slug ?? '')) : [];
+	const calories = Number(recipe.caloriesParPortion ?? 0);
+	const proteins = Number(recipe.proteinesParPortion ?? 0);
+
+	if (defaults.objectifSlug === 'prise-masse') {
+		score += proteins / 20;
+		if (tags.includes('riche-proteines')) score += 2;
+		if (calories >= 420) score += 1;
+	}
+
+	if (defaults.objectifSlug === 'perte-poids') {
+		score += Math.max(0, 450 - calories) / 100;
+		if (tags.includes('faible-calories')) score += 2;
+	}
+
+	if (defaults.objectifSlug === 'equilibre' || defaults.objectifSlug === 'maintien') {
+		if (tags.includes('equilibre')) score += 2;
+		if (calories >= 320 && calories <= 560) score += 1;
+	}
+
+	if (title.includes('salade') || title.includes('bowl') || title.includes('saumon')) {
+		score += 0.5;
+	}
+
+	return score;
+}
+
+export async function getUserDashboard(userToken: string) {
+	const today = normalizeDateInput();
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	const userId = String(refreshedAuth.record.id);
+
+	const [user, nutritionProfile, trackingDashboard, plannerDashboard, recipesCatalog] = await Promise.all([
+		getUserRecordById(userId, adminToken),
+		getNutritionProfileByUserId(userId, adminToken),
+		getTrackingDashboard(refreshedAuth.token, today),
+		getMealPlannerDashboard(refreshedAuth.token, today),
+		getRecipesCatalog(refreshedAuth.token),
+	]);
+
+	const avatarUrl = await getFileUrl('users', String(user.id), user.avatar);
+	const firstName = String(user.prenom || user.name || 'Utilisateur').trim().split(' ')[0];
+	const fullName = String(`${user.prenom ?? ''} ${user.nom ?? ''}`.trim() || user.name || 'Utilisateur');
+	const activityLabel = String(user.expand?.niveau_activite_id?.libelle ?? 'Actif');
+	const goalLabel = String(user.expand?.objectif_id?.libelle ?? 'Équilibre');
+	const goalSlug = String(user.expand?.objectif_id?.slug ?? '');
+	const dietLabel = String(user.expand?.regime_id?.libelle ?? 'Classique');
+	const sessions = Number(user.seances_par_semaine ?? 0);
+	const currentWeight = Number(user.poids_actuel_kg ?? 0);
+	const targetWeight = Number(user.poids_objectif_kg ?? currentWeight);
+	const caloriesTarget = Number(nutritionProfile?.calories_journalieres ?? trackingDashboard.goals.calories ?? 0);
+	const proteinsTarget = Number(nutritionProfile?.proteines_journalieres_g ?? trackingDashboard.goals.proteins ?? 0);
+	const carbsTarget = Number(nutritionProfile?.glucides_journaliers_g ?? trackingDashboard.goals.carbs ?? 0);
+	const fatsTarget = Number(nutritionProfile?.lipides_journaliers_g ?? trackingDashboard.goals.fats ?? 0);
+
+	const todayPlanning =
+		plannerDashboard.week.days.find((day) => day.date === today)?.meals.filter((meal) => meal.entry).map((meal) => ({
+			mealType: meal.mealType,
+			mealLabel: meal.mealLabel,
+			id: String(meal.entry.id),
+			recipeId: String(meal.entry.recipeId),
+			slug: String(meal.entry.slug ?? ''),
+			title: String(meal.entry.title),
+			calories: Number(meal.entry.calories ?? 0),
+			portions: Number(meal.entry.portions ?? 1),
+			imageUrl: meal.entry.imageUrl,
+		})) ?? [];
+
+	const recommendedRecipes = [...recipesCatalog.recipes]
+		.sort((left, right) => getDashboardRecipeScore(right, recipesCatalog.userDefaults) - getDashboardRecipeScore(left, recipesCatalog.userDefaults))
+		.slice(0, 3)
+		.map((recipe) => ({
+			id: recipe.id,
+			slug: recipe.slug,
+			title: recipe.titre,
+			calories: Number(recipe.caloriesParPortion ?? 0),
+			duration: Number(recipe.tempsPreparationMin ?? 0),
+			imageUrl: recipe.photoUrl,
+			badge: recipe.tags?.[0]?.libelle ?? recipe.objectif?.libelle ?? 'Recommandée',
+		}));
+
+	const weightGap = round(Math.abs(currentWeight - targetWeight));
+	const weeklyPace =
+		goalSlug === 'prise-masse' ? 0.3 :
+		goalSlug === 'perte-poids' ? 0.5 :
+		0.2;
+	const weeklyPaceLabel =
+		goalSlug === 'prise-masse' ? `${formatSignedNumber(0.3)} kg/semaine` :
+		goalSlug === 'perte-poids' ? `-${formatDisplayNumber(0.5)} kg/semaine` :
+		`${formatSignedNumber(0.2)} kg/semaine`;
+
+	const rewards = [
+		{
+			id: 'streak',
+			title: `${trackingDashboard.weeklySummary.daysWithEntries}/7 jours actifs`,
+			subtitle: trackingDashboard.weeklySummary.regularityLabel,
+			tone: 'green',
+		},
+		{
+			id: 'planner',
+			title: `${plannerDashboard.summary.plannedMeals} repas planifiés`,
+			subtitle: 'Semaine en cours',
+			tone: 'blue',
+		},
+		{
+			id: 'goal',
+			title: weightGap > 0 ? `${formatDisplayNumber(weightGap)} kg restants` : 'Objectif atteint',
+			subtitle: goalLabel,
+			tone: 'amber',
+		},
+	];
+
+	const caloriesAdjustment =
+		goalSlug === 'prise-masse' ? '+300 kcal' :
+		goalSlug === 'perte-poids' ? '-450 kcal' :
+		'Plan équilibré';
+
+	const todayDateLabel = new Intl.DateTimeFormat('fr-FR', {
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+	}).format(new Date(`${today}T12:00:00`));
+
+	return {
+		token: recipesCatalog.token,
+		user: {
+			firstName,
+			fullName,
+			avatarUrl,
+			initials: `${String(user.prenom ?? '')[0] ?? ''}${String(user.nom ?? '')[0] ?? ''}`.toUpperCase() || 'NU',
+			goalLabel,
+			goalSlug,
+			dietLabel,
+			activityLabel,
+			sessions,
+			currentWeight,
+			targetWeight,
+		},
+		today: {
+			dateLabel: todayDateLabel,
+			caloriesConsumed: trackingDashboard.selectedDay.caloriesConsumed,
+			caloriesTarget,
+			caloriesRemaining: Math.max(0, caloriesTarget - trackingDashboard.selectedDay.caloriesConsumed),
+			proteinsConsumed: trackingDashboard.selectedDay.proteinsConsumed,
+			proteinsTarget,
+			carbsConsumed: trackingDashboard.selectedDay.carbsConsumed,
+			carbsTarget,
+			fatsConsumed: trackingDashboard.selectedDay.fatsConsumed,
+			fatsTarget,
+		},
+		sportMode: {
+			title: activityLabel,
+			subtitle: `${goalLabel} · ${sessions} séance${sessions > 1 ? 's' : ''}/semaine`,
+			proteinsPerKg: currentWeight > 0 ? round(proteinsTarget / currentWeight) : 0,
+			calorieAdjustment: caloriesAdjustment,
+			waterLiters: round(Math.max(1.8, currentWeight * 0.035)),
+		},
+		planningToday: todayPlanning,
+		weekly: {
+			averageCalories: trackingDashboard.weeklySummary.averageCalories,
+			averageProteins: trackingDashboard.weeklySummary.averageProteins,
+			averageCarbs: trackingDashboard.weeklySummary.averageCarbs,
+			averageFats: trackingDashboard.weeklySummary.averageFats,
+			complianceDays: trackingDashboard.weeklySummary.complianceDays,
+			daysWithEntries: trackingDashboard.weeklySummary.daysWithEntries,
+			proteinRate: trackingDashboard.weeklySummary.proteinRate,
+			regularityLabel: trackingDashboard.weeklySummary.regularityLabel,
+			regularityRate: trackingDashboard.weeklySummary.regularityRate,
+			days: trackingDashboard.week.days,
+		},
+		goals: {
+			calories: caloriesTarget,
+			proteins: proteinsTarget,
+			carbs: carbsTarget,
+			fats: fatsTarget,
+		},
+		rewards,
+		recommendedRecipes,
+		products: [
+			{
+				id: 'whey-bio',
+				brand: 'NutriMax Pro',
+				title: 'Whey Protéine Bio',
+				price: '39,99€',
+				badge: 'Best-seller',
+			},
+			{
+				id: 'omega-premium',
+				brand: 'HealthFirst',
+				title: 'Oméga 3 Premium',
+				price: '24,99€',
+				badge: '-15%',
+			},
+		],
+		projection: {
+			weeklyPace: weeklyPaceLabel,
+			weightGap,
+		},
+	};
+}
+
+function formatSignedNumber(value: number) {
+	const formatted = Number.isInteger(value) ? String(value) : value.toFixed(1).replace('.0', '');
+	return value > 0 ? `+${formatted}` : formatted;
+}
+
+function formatDisplayNumber(value: number) {
+	return Number.isInteger(value) ? String(value) : value.toFixed(1).replace('.0', '');
+}
+
 export async function addTrackingEntry(
 	userToken: string,
 	data: {
@@ -1369,4 +1662,1570 @@ export async function removeTrackingEntry(
 	}
 
 	return getTrackingDashboard(refreshedAuth.token, data.date);
+}
+
+async function ensurePlannerCollections(token: string) {
+	const [usersCollection, recipesCollection] = await Promise.all([
+		getCollectionMeta('users', token),
+		getCollectionMeta('recettes', token),
+	]);
+
+	await ensureBaseCollection(
+		'planning_repas',
+		[
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'date_repas',
+				type: 'date',
+				required: true,
+				min: '',
+				max: '',
+			},
+			{
+				name: 'type_repas',
+				type: 'select',
+				required: true,
+				maxSelect: 1,
+				values: [...plannerMealTypeOrder],
+			},
+			{
+				name: 'recette_id',
+				type: 'relation',
+				required: true,
+				collectionId: recipesCollection.id,
+				cascadeDelete: false,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'portions',
+				type: 'number',
+				required: true,
+				min: 0.5,
+				max: 20,
+				noDecimal: false,
+			},
+		],
+		token,
+	);
+}
+
+async function getUserPlannerEntries(userId: string, token: string) {
+	return listRecordsWithQuery<Record<string, any>>(
+		'planning_repas',
+		`perPage=500&sort=date_repas&filter=${encodeURIComponent(`user_id="${userId}"`)}&expand=recette_id`,
+		token,
+	);
+}
+
+function getPlannerSuggestionScore(
+	recipe: Record<string, any>,
+	goals: { calories: number; proteins: number; carbs: number; fats: number },
+	userRegimeId?: string,
+) {
+	let score = 0;
+	const calories = Number(recipe.calories_par_portion ?? 0);
+	const proteins = Number(recipe.proteines_par_portion_g ?? 0);
+
+	if (goals.calories > 0) {
+		score += Math.max(0, 1 - Math.abs(calories - goals.calories / 3) / Math.max(goals.calories / 3, 1));
+	}
+	score += proteins / 50;
+	if (userRegimeId && String(recipe.regime_id ?? '') === userRegimeId) {
+		score += 1.25;
+	}
+	return score;
+}
+
+export async function getMealPlannerDashboard(userToken: string, selectedDateInput?: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensurePlannerCollections(adminToken);
+
+	const userId = String(refreshedAuth.record.id);
+	const selectedDate = normalizeDateInput(selectedDateInput);
+	const weekStart = getWeekStartDate(selectedDate);
+	const weekDates = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
+	const weekDateKeys = weekDates.map((date) => date.toISOString().slice(0, 10));
+
+	const [nutritionProfile, user, recipeCatalog, plannerEntries] = await Promise.all([
+		getNutritionProfileByUserId(userId, adminToken),
+		getUserRecordById(userId, adminToken),
+		listRecordsWithQuery<Record<string, any>>(
+			'recettes',
+			'perPage=200&sort=-date_creation&filter=' + encodeURIComponent('is_published=true'),
+			adminToken,
+		),
+		getUserPlannerEntries(userId, adminToken),
+	]);
+
+	const goals = {
+		calories: Number(nutritionProfile?.calories_journalieres ?? 0),
+		proteins: Number(nutritionProfile?.proteines_journalieres_g ?? 0),
+		carbs: Number(nutritionProfile?.glucides_journaliers_g ?? 0),
+		fats: Number(nutritionProfile?.lipides_journaliers_g ?? 0),
+	};
+
+	const weekEntries = plannerEntries.filter((entry) => weekDateKeys.includes(toDateOnly(entry.date_repas)));
+	const entryBySlot = new Map<string, Record<string, any>>();
+	for (const entry of weekEntries) {
+		entryBySlot.set(`${toDateOnly(entry.date_repas)}:${entry.type_repas}`, entry);
+	}
+
+	const recipeSuggestions = await Promise.all(
+		recipeCatalog
+			.sort(
+				(left, right) =>
+					getPlannerSuggestionScore(right, goals, String(user.regime_id ?? '')) -
+					getPlannerSuggestionScore(left, goals, String(user.regime_id ?? '')),
+			)
+			.slice(0, 18)
+			.map(async (recipe) => ({
+				id: String(recipe.id),
+				title: String(recipe.titre ?? 'Recette'),
+				calories: Number(recipe.calories_par_portion ?? 0),
+				proteins: Number(recipe.proteines_par_portion_g ?? 0),
+				carbs: Number(recipe.glucides_par_portion_g ?? 0),
+				fats: Number(recipe.lipides_par_portion_g ?? 0),
+				defaultPortions: Number(recipe.nombre_portions ?? 1),
+				imageUrl: await getFileUrl('recettes', String(recipe.id), recipe.photo),
+			})),
+	);
+
+	const days = await Promise.all(
+		weekDateKeys.map(async (dateKey, index) => {
+			const meals = await Promise.all(
+				plannerMealTypeOrder.map(async (mealType) => {
+					const entry = entryBySlot.get(`${dateKey}:${mealType}`);
+					if (!entry?.expand?.recette_id) {
+						return {
+							mealType,
+							mealLabel: plannerMealTypeLabels[mealType],
+							entry: null,
+						};
+					}
+
+					const recipe = entry.expand.recette_id;
+					return {
+						mealType,
+						mealLabel: plannerMealTypeLabels[mealType],
+						entry: {
+							id: String(entry.id),
+							date: dateKey,
+							portions: Number(entry.portions ?? 1),
+							recipeId: String(recipe.id),
+							slug: String(recipe.slug ?? ''),
+							title: String(recipe.titre ?? 'Recette'),
+							calories: round(Number(recipe.calories_par_portion ?? 0) * Number(entry.portions ?? 1)),
+							proteins: round(Number(recipe.proteines_par_portion_g ?? 0) * Number(entry.portions ?? 1)),
+							carbs: round(Number(recipe.glucides_par_portion_g ?? 0) * Number(entry.portions ?? 1)),
+							fats: round(Number(recipe.lipides_par_portion_g ?? 0) * Number(entry.portions ?? 1)),
+							imageUrl: await getFileUrl('recettes', String(recipe.id), recipe.photo),
+						},
+					};
+				}),
+			);
+
+			return {
+				date: dateKey,
+				label: new Intl.DateTimeFormat('fr-FR', { weekday: 'long' }).format(weekDates[index]),
+				shortLabel: new Intl.DateTimeFormat('fr-FR', { weekday: 'short' }).format(weekDates[index]).replace('.', ''),
+				dayNumber: new Intl.DateTimeFormat('fr-FR', { day: '2-digit' }).format(weekDates[index]),
+				totalCalories: round(meals.reduce((sum, item) => sum + Number(item.entry?.calories ?? 0), 0)),
+				meals,
+			};
+		}),
+	);
+
+	const plannedMeals = days.reduce(
+		(sum, day) => sum + day.meals.reduce((mealSum, meal) => mealSum + (meal.entry ? 1 : 0), 0),
+		0,
+	);
+	const totalCalories = round(days.reduce((sum, day) => sum + day.totalCalories, 0));
+
+	return {
+		token: refreshedAuth.token,
+		week: {
+			start: weekDateKeys[0],
+			end: weekDateKeys[6],
+			label: formatWeekLabel(weekStart),
+			days,
+		},
+		goals,
+		summary: {
+			totalCalories,
+			plannedMeals,
+			totalSlots: plannerMealTypeOrder.length * 7,
+			averageCalories: round(totalCalories / 7),
+			targetCalories: goals.calories,
+		},
+		suggestions: {
+			recipes: recipeSuggestions,
+		},
+	};
+}
+
+export async function addPlannerEntry(
+	userToken: string,
+	data: {
+		date: string;
+		typeRepas: (typeof plannerMealTypeOrder)[number];
+		recipeId: string;
+		portions: number;
+	},
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensurePlannerCollections(adminToken);
+
+	const userId = String(refreshedAuth.record.id);
+	const date = normalizeDateInput(data.date);
+	const existingEntries = await getUserPlannerEntries(userId, adminToken);
+	const existing = existingEntries.find(
+		(item) => toDateOnly(item.date_repas) === date && String(item.type_repas) === data.typeRepas,
+	);
+
+	if (existing?.id) {
+		await updateRecord(
+			'planning_repas',
+			String(existing.id),
+			{
+				recette_id: data.recipeId,
+				portions: Math.max(0.5, Number(data.portions) || 1),
+			},
+			adminToken,
+		);
+	} else {
+		await createRecord(
+			'planning_repas',
+			{
+				user_id: userId,
+				date_repas: toStartOfDayIso(date),
+				type_repas: data.typeRepas,
+				recette_id: data.recipeId,
+				portions: Math.max(0.5, Number(data.portions) || 1),
+			},
+			adminToken,
+		);
+	}
+
+	return getMealPlannerDashboard(refreshedAuth.token, date);
+}
+
+export async function removePlannerEntry(
+	userToken: string,
+	data: { entryId: string; date: string },
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensurePlannerCollections(adminToken);
+
+	await deleteRecord('planning_repas', data.entryId, adminToken);
+	return getMealPlannerDashboard(refreshedAuth.token, data.date);
+}
+
+export async function syncPlannerWeekToTracking(
+	userToken: string,
+	data: { weekStart: string },
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensurePlannerCollections(adminToken);
+
+	const userId = String(refreshedAuth.record.id);
+	const nutritionProfile = await getNutritionProfileByUserId(userId, adminToken);
+	const goals = {
+		calories: Number(nutritionProfile?.calories_journalieres ?? 0),
+		proteins: Number(nutritionProfile?.proteines_journalieres_g ?? 0),
+		carbs: Number(nutritionProfile?.glucides_journaliers_g ?? 0),
+		fats: Number(nutritionProfile?.lipides_journaliers_g ?? 0),
+	};
+
+	const weekStart = getWeekStartDate(data.weekStart);
+	const weekDates = Array.from({ length: 7 }, (_, index) => addDays(weekStart, index));
+	const weekDateKeys = weekDates.map((date) => date.toISOString().slice(0, 10));
+	const plannerEntries = (await getUserPlannerEntries(userId, adminToken)).filter((entry) =>
+		weekDateKeys.includes(toDateOnly(entry.date_repas)),
+	);
+
+	const impactedSuiviIds = new Set<string>();
+
+	for (const entry of plannerEntries) {
+		const dateKey = toDateOnly(entry.date_repas);
+		const trackingDay = await getOrCreateTrackingDayRecord(userId, dateKey, goals, adminToken);
+		const suiviId = String(trackingDay.id);
+		const recipeId = String(entry.recette_id);
+		const mealType = String(entry.type_repas);
+		const portions = Number(entry.portions ?? 1);
+		const recipe = entry.expand?.recette_id ?? (await getRecordById('recettes', recipeId, adminToken));
+
+		const existingMealEntries = await listRecordsWithQuery<Record<string, any>>(
+			'repas_consommes',
+			`perPage=50&filter=${encodeURIComponent(`suivi_id="${suiviId}" && type_repas="${mealType}"`)}`,
+			adminToken,
+		);
+
+		for (const existing of existingMealEntries) {
+			await deleteRecord('repas_consommes', String(existing.id), adminToken);
+		}
+
+		await createRecord(
+			'repas_consommes',
+			{
+				suivi_id: suiviId,
+				recette_id: recipeId,
+				type_repas: mealType,
+				portions_consommees: portions,
+				calories_total: round(Number(recipe.calories_par_portion ?? 0) * portions),
+				proteines_total_g: round(Number(recipe.proteines_par_portion_g ?? 0) * portions),
+				glucides_total_g: round(Number(recipe.glucides_par_portion_g ?? 0) * portions),
+				lipides_total_g: round(Number(recipe.lipides_par_portion_g ?? 0) * portions),
+			},
+			adminToken,
+		);
+
+		impactedSuiviIds.add(suiviId);
+	}
+
+	for (const suiviId of impactedSuiviIds) {
+		await recomputeTrackingDayTotals(suiviId, goals, adminToken);
+	}
+
+	return getMealPlannerDashboard(refreshedAuth.token, data.weekStart);
+}
+
+async function ensureShoppingListCollections(token: string) {
+	const [usersCollection, foodsCollection] = await Promise.all([
+		getCollectionMeta('users', token),
+		getCollectionMeta('aliments', token),
+	]);
+
+	await ensureBaseCollection(
+		'liste_courses_items',
+		[
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'week_start',
+				type: 'date',
+				required: true,
+				min: '',
+				max: '',
+			},
+			{
+				name: 'item_key',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 255,
+			},
+			{
+				name: 'nom',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 255,
+			},
+			{
+				name: 'categorie',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 80,
+			},
+			{
+				name: 'quantite',
+				type: 'number',
+				required: false,
+				min: 0,
+				max: 100000,
+				noDecimal: false,
+			},
+			{
+				name: 'unite',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 40,
+			},
+			{
+				name: 'is_checked',
+				type: 'bool',
+				required: false,
+			},
+			{
+				name: 'is_hidden',
+				type: 'bool',
+				required: false,
+			},
+			{
+				name: 'is_manual',
+				type: 'bool',
+				required: false,
+			},
+			{
+				name: 'aliment_id',
+				type: 'relation',
+				required: false,
+				collectionId: foodsCollection.id,
+				cascadeDelete: false,
+				minSelect: 0,
+				maxSelect: 1,
+			},
+		],
+		token,
+	);
+}
+
+function normalizeShoppingCategory(value?: string) {
+	const category = String(value ?? '').toLowerCase();
+	const map: Record<string, string> = {
+		poisson: 'Poissons',
+		legume: 'Légumes',
+		fruit: 'Fruits',
+		cereale: 'Céréales',
+		viande: 'Viandes',
+		produit_laitier: 'Produits laitiers',
+		epicerie: 'Épicerie',
+		autre: 'Autres',
+	};
+	return map[category] ?? (category ? category[0].toUpperCase() + category.slice(1) : 'Autres');
+}
+
+function slugifyKey(value: string) {
+	return String(value)
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.toLowerCase()
+		.replace(/[^a-z0-9]+/g, '-')
+		.replace(/^-+|-+$/g, '');
+}
+
+function formatShoppingQuantity(quantity: number, unit: string) {
+	if (unit === 'g' && quantity >= 1000) {
+		return `${round(quantity / 1000)} kg`;
+	}
+	if (unit === 'ml' && quantity >= 1000) {
+		return `${round(quantity / 1000)} l`;
+	}
+	return `${round(quantity)} ${unit}`.trim();
+}
+
+async function getUserShoppingListOverrides(userId: string, weekStart: string, token: string) {
+	return listRecordsWithQuery<Record<string, any>>(
+		'liste_courses_items',
+		`perPage=500&sort=nom&filter=${encodeURIComponent(`user_id="${userId}" && week_start~"${weekStart}"`)}&expand=aliment_id`,
+		token,
+	);
+}
+
+export async function getShoppingList(userToken: string, selectedDateInput?: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensurePlannerCollections(adminToken);
+	await ensureShoppingListCollections(adminToken);
+
+	const userId = String(refreshedAuth.record.id);
+	const weekStartDate = getWeekStartDate(selectedDateInput);
+	const weekStart = weekStartDate.toISOString().slice(0, 10);
+	const weekDates = Array.from({ length: 7 }, (_, index) => addDays(weekStartDate, index));
+	const weekDateKeys = weekDates.map((date) => date.toISOString().slice(0, 10));
+
+	const plannerEntries = (await getUserPlannerEntries(userId, adminToken)).filter((entry) =>
+		weekDateKeys.includes(toDateOnly(entry.date_repas)),
+	);
+
+	const recipeIds = [...new Set(plannerEntries.map((entry) => String(entry.recette_id)))];
+	const ingredientLinks = recipeIds.length
+		? await listRecordsWithQuery<Record<string, any>>(
+				'ingredients_recette',
+				`perPage=800&sort=ordre&filter=${encodeURIComponent(recipeIds.map((id) => `recette_id="${id}"`).join(' || '))}&expand=aliment_id`,
+				adminToken,
+			)
+		: [];
+
+	const ingredientMapByRecipe = new Map<string, Array<Record<string, any>>>();
+	for (const item of ingredientLinks) {
+		const recipeId = String(item.recette_id);
+		const list = ingredientMapByRecipe.get(recipeId) ?? [];
+		list.push(item);
+		ingredientMapByRecipe.set(recipeId, list);
+	}
+
+	const recipesById = new Map(plannerEntries.map((entry) => [String(entry.recette_id), entry.expand?.recette_id]));
+	const aggregated = new Map<string, Record<string, any>>();
+
+	for (const entry of plannerEntries) {
+		const recipeId = String(entry.recette_id);
+		const recipe = recipesById.get(recipeId) ?? {};
+		const basePortions = Math.max(1, Number(recipe?.nombre_portions ?? 1));
+		const ratio = Number(entry.portions ?? 1) / basePortions;
+		const recipeIngredients = ingredientMapByRecipe.get(recipeId) ?? [];
+
+		for (const ingredient of recipeIngredients) {
+			const food = ingredient.expand?.aliment_id;
+			const nom = String(food?.nom ?? ingredient.nom_affiche ?? 'Ingrédient');
+			const unite = String(ingredient.unite ?? food?.unite_par_defaut ?? 'g');
+			const categorie = normalizeShoppingCategory(food?.categorie);
+			const quantite = Number(ingredient.quantite ?? 0) * ratio;
+			const foodId = String(food?.id ?? '');
+			const itemKey = `auto:${foodId || slugifyKey(nom)}:${unite}`;
+			const existing = aggregated.get(itemKey);
+
+			if (existing) {
+				existing.quantite += quantite;
+			} else {
+				aggregated.set(itemKey, {
+					itemKey,
+					nom,
+					categorie,
+					quantite,
+					unite,
+					alimentId: foodId || null,
+					isManual: false,
+				});
+			}
+		}
+	}
+
+	const overrides = await getUserShoppingListOverrides(userId, weekStart, adminToken);
+	const overrideByKey = new Map(overrides.map((item) => [String(item.item_key), item]));
+
+	const generatedItems = Array.from(aggregated.values())
+		.filter((item) => !Boolean(overrideByKey.get(item.itemKey)?.is_hidden))
+		.map((item) => ({
+			id: String(overrideByKey.get(item.itemKey)?.id ?? item.itemKey),
+			itemKey: item.itemKey,
+			nom: item.nom,
+			categorie: item.categorie,
+			quantite: round(item.quantite),
+			unite: item.unite,
+			displayQuantity: formatShoppingQuantity(round(item.quantite), item.unite),
+			isChecked: Boolean(overrideByKey.get(item.itemKey)?.is_checked ?? false),
+			isManual: false,
+		}));
+
+	const manualItems = overrides
+		.filter((item) => Boolean(item.is_manual) && !Boolean(item.is_hidden))
+		.map((item) => ({
+			id: String(item.id),
+			itemKey: String(item.item_key),
+			nom: String(item.nom ?? 'Article'),
+			categorie: normalizeShoppingCategory(String(item.categorie ?? 'autre')),
+			quantite: Number(item.quantite ?? 0),
+			unite: String(item.unite ?? ''),
+			displayQuantity: formatShoppingQuantity(Number(item.quantite ?? 0), String(item.unite ?? '')),
+			isChecked: Boolean(item.is_checked ?? false),
+			isManual: true,
+		}));
+
+	const items = [...generatedItems, ...manualItems].sort((left, right) =>
+		left.categorie.localeCompare(right.categorie, 'fr') || left.nom.localeCompare(right.nom, 'fr'),
+	);
+
+	const groupsMap = new Map<string, Array<Record<string, any>>>();
+	for (const item of items) {
+		const list = groupsMap.get(item.categorie) ?? [];
+		list.push(item);
+		groupsMap.set(item.categorie, list);
+	}
+
+	const groups = Array.from(groupsMap.entries()).map(([category, categoryItems]) => ({
+		category,
+		checkedCount: categoryItems.filter((item) => item.isChecked).length,
+		totalCount: categoryItems.length,
+		items: categoryItems,
+	}));
+
+	const checkedCount = items.filter((item) => item.isChecked).length;
+
+	return {
+		token: refreshedAuth.token,
+		week: {
+			start: weekStart,
+			end: weekDateKeys[6],
+			label: formatWeekLabel(weekStartDate),
+		},
+		progress: {
+			checkedCount,
+			totalCount: items.length,
+			rate: items.length ? Math.round((checkedCount / items.length) * 100) : 0,
+		},
+		groups,
+	};
+}
+
+export async function toggleShoppingListItem(
+	userToken: string,
+	data: { weekStart: string; itemKey: string; checked: boolean },
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureShoppingListCollections(adminToken);
+	const userId = String(refreshedAuth.record.id);
+	const weekStart = getWeekStartDate(data.weekStart).toISOString().slice(0, 10);
+	const overrides = await getUserShoppingListOverrides(userId, weekStart, adminToken);
+	const existing = overrides.find((item) => String(item.item_key) === data.itemKey);
+
+	if (existing?.id) {
+		await updateRecord('liste_courses_items', String(existing.id), { is_checked: Boolean(data.checked) }, adminToken);
+	} else {
+		await createRecord(
+			'liste_courses_items',
+			{
+				user_id: userId,
+				week_start: toStartOfDayIso(weekStart),
+				item_key: data.itemKey,
+				nom: data.itemKey,
+				categorie: 'autre',
+				quantite: 0,
+				unite: '',
+				is_checked: Boolean(data.checked),
+				is_hidden: false,
+				is_manual: false,
+			},
+			adminToken,
+		);
+	}
+
+	return getShoppingList(refreshedAuth.token, weekStart);
+}
+
+export async function addManualShoppingListItem(
+	userToken: string,
+	data: { weekStart: string; nom: string; categorie: string; quantite: number; unite: string },
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureShoppingListCollections(adminToken);
+	const userId = String(refreshedAuth.record.id);
+	const weekStart = getWeekStartDate(data.weekStart).toISOString().slice(0, 10);
+	const itemKey = `manual:${slugifyKey(data.nom)}:${Date.now()}`;
+
+	await createRecord(
+		'liste_courses_items',
+		{
+			user_id: userId,
+			week_start: toStartOfDayIso(weekStart),
+			item_key: itemKey,
+			nom: String(data.nom).trim(),
+			categorie: String(data.categorie || 'autre').trim(),
+			quantite: Math.max(0, Number(data.quantite) || 0),
+			unite: String(data.unite || '').trim(),
+			is_checked: false,
+			is_hidden: false,
+			is_manual: true,
+		},
+		adminToken,
+	);
+
+	return getShoppingList(refreshedAuth.token, weekStart);
+}
+
+export async function removeShoppingListItem(
+	userToken: string,
+	data: { weekStart: string; itemKey: string },
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureShoppingListCollections(adminToken);
+	const userId = String(refreshedAuth.record.id);
+	const weekStart = getWeekStartDate(data.weekStart).toISOString().slice(0, 10);
+	const overrides = await getUserShoppingListOverrides(userId, weekStart, adminToken);
+	const existing = overrides.find((item) => String(item.item_key) === data.itemKey);
+
+	if (existing?.id) {
+		if (Boolean(existing.is_manual)) {
+			await deleteRecord('liste_courses_items', String(existing.id), adminToken);
+		} else {
+			await updateRecord('liste_courses_items', String(existing.id), { is_hidden: true }, adminToken);
+		}
+	} else {
+		await createRecord(
+			'liste_courses_items',
+			{
+				user_id: userId,
+				week_start: toStartOfDayIso(weekStart),
+				item_key: data.itemKey,
+				nom: data.itemKey,
+				categorie: 'autre',
+				quantite: 0,
+				unite: '',
+				is_checked: false,
+				is_hidden: true,
+				is_manual: false,
+			},
+			adminToken,
+		);
+	}
+
+	return getShoppingList(refreshedAuth.token, weekStart);
+}
+
+function normalizeCommunityHashtags(value?: string) {
+	const raw = String(value ?? '').trim();
+	if (!raw) {
+		return [] as string[];
+	}
+
+	const hashtagMatches = raw.match(/#[\p{L}\p{N}_-]+/gu) ?? [];
+	const source = hashtagMatches.length
+		? hashtagMatches.map((item) => item.replace(/^#/, ''))
+		: raw.split(/[\s,;\n]+/g).map((item) => item.replace(/^#/, ''));
+
+	return [...new Set(source.map((item) => slugifyKey(item)).filter(Boolean))].slice(0, 8);
+}
+
+function formatCommunityHashtagStorage(tags: string[]) {
+	return tags.map((tag) => `#${tag}`).join(' ');
+}
+
+function getCommunityDisplayName(user?: Record<string, any> | null) {
+	if (!user) {
+		return 'Utilisateur';
+	}
+
+	const fullName = String(user.name ?? `${user.prenom ?? ''} ${user.nom ?? ''}`.trim()).trim();
+	return fullName || String(user.email ?? 'Utilisateur');
+}
+
+function getCommunityInitials(user?: Record<string, any> | null) {
+	if (!user) {
+		return 'UT';
+	}
+
+	const prenom = String(user.prenom ?? '').trim();
+	const nom = String(user.nom ?? '').trim();
+	if (prenom || nom) {
+		return `${prenom[0] ?? ''}${nom[0] ?? ''}`.toUpperCase() || 'UT';
+	}
+
+	const fallback = getCommunityDisplayName(user);
+	const parts = fallback.split(/\s+/).filter(Boolean);
+	return `${parts[0]?.[0] ?? ''}${parts[1]?.[0] ?? ''}`.toUpperCase() || 'UT';
+}
+
+async function resolveCommunityPostImage(post: Record<string, any>) {
+	if (post.image) {
+		const uploaded = await getFileUrl('communaute_posts', String(post.id), String(post.image));
+		if (uploaded) {
+			return uploaded;
+		}
+	}
+
+	const external = String(post.image_url ?? '').trim();
+	return external || null;
+}
+
+async function ensureCommunityCollections(token: string) {
+	const [usersCollection, recipesCollection] = await Promise.all([
+		getCollectionMeta('users', token),
+		getCollectionMeta('recettes', token),
+	]);
+
+	await ensureBaseCollection(
+		'communaute_posts',
+		[
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'description',
+				type: 'text',
+				required: true,
+				min: 3,
+				max: 4000,
+			},
+			{
+				name: 'hashtags',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 500,
+			},
+			{
+				name: 'image_url',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 2000,
+			},
+		],
+		token,
+	);
+
+	const postsCollection = await ensureCollectionFields(
+		'communaute_posts',
+		[
+			{
+				name: 'recette_id',
+				type: 'relation',
+				required: false,
+				collectionId: recipesCollection.id,
+				cascadeDelete: false,
+				minSelect: 0,
+				maxSelect: 1,
+			},
+		],
+		token,
+	);
+
+	await ensureBaseCollection(
+		'communaute_post_likes',
+		[
+			{
+				name: 'post_id',
+				type: 'relation',
+				required: true,
+				collectionId: postsCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+		],
+		token,
+	);
+
+	await ensureBaseCollection(
+		'communaute_commentaires',
+		[
+			{
+				name: 'post_id',
+				type: 'relation',
+				required: true,
+				collectionId: postsCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'commentaire',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 1500,
+			},
+		],
+		token,
+	);
+
+	const commentsCollection = await getCollectionMeta('communaute_commentaires', token);
+
+	await ensureBaseCollection(
+		'communaute_comment_likes',
+		[
+			{
+				name: 'comment_id',
+				type: 'relation',
+				required: true,
+				collectionId: commentsCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+		],
+		token,
+	);
+}
+
+async function seedCommunityFeedIfEmpty(token: string) {
+	const existingPosts = await listRecordsWithQuery<Record<string, any>>('communaute_posts', 'perPage=1', token);
+	if (existingPosts.length > 0) {
+		return;
+	}
+
+	const [users, recipes] = await Promise.all([
+		listRecordsWithQuery<Record<string, any>>('users', 'perPage=20', token),
+		listRecordsWithQuery<Record<string, any>>(
+			'recettes',
+			'perPage=6&sort=-date_creation&filter=' + encodeURIComponent('is_published=true'),
+			token,
+		),
+	]);
+
+	if (!users.length) {
+		return;
+	}
+
+	const sampleDescriptions = [
+		"Premier service complet avec Nutrivia. J'ai réussi à tenir mon objectif de la semaine grâce au suivi et au planificateur.",
+		"Mon bowl préféré du moment : simple, rassasiant et parfait pour bien démarrer la journée.",
+		"Recette testée ce midi, très bon équilibre entre protéines et légumes. Je la garde dans mon planning.",
+		"Salade fraîche et rapide à préparer. Idéale quand on veut manger léger sans sacrifier le goût.",
+		"Petit rappel : penser à ajuster les portions change vraiment les macros de la journée.",
+	];
+	const sampleTags = [
+		['motivation', 'suivi'],
+		['breakfast', 'proteines'],
+		['mealprep', 'recette'],
+		['healthy', 'equilibre'],
+		['astuce', 'nutrition'],
+	];
+	const createdPosts: Array<Record<string, any>> = [];
+
+	for (let index = 0; index < Math.min(5, Math.max(recipes.length, 1)); index += 1) {
+		const recipe = recipes[index] ?? recipes[0] ?? null;
+		const user = users[index % users.length];
+		const imageUrl = recipe ? await getFileUrl('recettes', String(recipe.id), recipe.photo) : null;
+		const created = await createRecord(
+			'communaute_posts',
+			{
+				user_id: String(user.id),
+				description: recipe
+					? `${sampleDescriptions[index] ?? sampleDescriptions[0]} ${String(recipe.titre ?? '').trim()} reste l'une de mes recettes du moment.`
+					: sampleDescriptions[index] ?? sampleDescriptions[0],
+				hashtags: formatCommunityHashtagStorage(sampleTags[index] ?? sampleTags[0]),
+				image_url: imageUrl ?? '',
+			},
+			token,
+		);
+		createdPosts.push(created as Record<string, any>);
+	}
+
+	const sampleComments = [
+		'Merci pour le partage, ça donne envie de tester.',
+		'Je confirme, cette recette fonctionne super bien en meal prep.',
+		'Belle assiette, très inspirant pour la semaine.',
+	];
+
+	for (let index = 0; index < createdPosts.length; index += 1) {
+		const post = createdPosts[index];
+		const likeUsers = users.slice(0, Math.min(users.length, index + 2));
+		for (const user of likeUsers) {
+			await createRecord(
+				'communaute_post_likes',
+				{
+					post_id: String(post.id),
+					user_id: String(user.id),
+				},
+				token,
+			);
+		}
+
+		if (index < 3 && users.length > 1) {
+			const commenter = users[(index + 1) % users.length];
+			const createdComment = (await createRecord(
+				'communaute_commentaires',
+				{
+					post_id: String(post.id),
+					user_id: String(commenter.id),
+					commentaire: sampleComments[index] ?? sampleComments[0],
+				},
+				token,
+			)) as Record<string, any>;
+
+			await createRecord(
+				'communaute_comment_likes',
+				{
+					comment_id: String(createdComment.id),
+					user_id: String(users[0].id),
+				},
+				token,
+			);
+		}
+	}
+}
+
+async function buildCommunityFeedPayload(
+	currentUserId: string,
+	viewer: Record<string, any>,
+	token: string,
+	sortMode: 'recent' | 'popular',
+) {
+	const [posts, comments, postLikes, commentLikes] = await Promise.all([
+		listRecordsWithQuery<Record<string, any>>('communaute_posts', 'perPage=100&expand=user_id,recette_id', token),
+		listRecordsWithQuery<Record<string, any>>('communaute_commentaires', 'perPage=300&expand=user_id,post_id', token),
+		listRecordsWithQuery<Record<string, any>>('communaute_post_likes', 'perPage=1000', token),
+		listRecordsWithQuery<Record<string, any>>('communaute_comment_likes', 'perPage=1000', token),
+	]);
+
+	const recipeSuggestions = await Promise.all(
+		(
+			await listRecordsWithQuery<Record<string, any>>(
+				'recettes',
+				'perPage=60&sort=-date_creation&filter=' + encodeURIComponent('is_published=true'),
+				token,
+			)
+		).map(async (recipe) => ({
+			id: String(recipe.id),
+			title: String(recipe.titre ?? 'Recette'),
+			slug: String(recipe.slug ?? ''),
+			imageUrl: await getFileUrl('recettes', String(recipe.id), recipe.photo),
+			calories: Number(recipe.calories_par_portion ?? 0),
+			duration: Number(recipe.temps_preparation_min ?? 0),
+		})),
+	);
+
+	const postLikesByPost = new Map<string, Array<Record<string, any>>>();
+	for (const item of postLikes) {
+		const key = String(item.post_id);
+		const list = postLikesByPost.get(key) ?? [];
+		list.push(item);
+		postLikesByPost.set(key, list);
+	}
+
+	const commentLikesByComment = new Map<string, Array<Record<string, any>>>();
+	for (const item of commentLikes) {
+		const key = String(item.comment_id);
+		const list = commentLikesByComment.get(key) ?? [];
+		list.push(item);
+		commentLikesByComment.set(key, list);
+	}
+
+	const commentsByPost = new Map<string, Array<Record<string, any>>>();
+	for (const comment of comments) {
+		const key = String(comment.post_id);
+		const list = commentsByPost.get(key) ?? [];
+		list.push(comment);
+		commentsByPost.set(key, list);
+	}
+
+	const feedPosts = await Promise.all(
+		posts.map(async (post) => {
+			const likes = postLikesByPost.get(String(post.id)) ?? [];
+			const postComments = commentsByPost.get(String(post.id)) ?? [];
+			const imageUrl = await resolveCommunityPostImage(post);
+
+			const mappedComments = await Promise.all(
+				postComments.map(async (comment) => {
+					const author = comment.expand?.user_id ?? null;
+					const likesForComment = commentLikesByComment.get(String(comment.id)) ?? [];
+					return {
+						id: String(comment.id),
+						content: String(comment.commentaire ?? ''),
+						createdAt: String(comment.created ?? ''),
+						likeCount: likesForComment.length,
+						isLiked: likesForComment.some((item) => String(item.user_id) === currentUserId),
+						author: {
+							id: String(author?.id ?? ''),
+							name: getCommunityDisplayName(author),
+							initials: getCommunityInitials(author),
+							avatarUrl: await getFileUrl('users', String(author?.id ?? ''), author?.avatar),
+						},
+					};
+				}),
+			);
+			mappedComments.sort((left, right) => new Date(left.createdAt).getTime() - new Date(right.createdAt).getTime());
+
+			const author = post.expand?.user_id ?? null;
+			const linkedRecipe = post.expand?.recette_id ?? null;
+			return {
+				id: String(post.id),
+				description: String(post.description ?? ''),
+				hashtags: normalizeCommunityHashtags(String(post.hashtags ?? '')),
+				imageUrl,
+				createdAt: String(post.created ?? ''),
+				likeCount: likes.length,
+				commentCount: mappedComments.length,
+				isLiked: likes.some((item) => String(item.user_id) === currentUserId),
+				author: {
+					id: String(author?.id ?? ''),
+					name: getCommunityDisplayName(author),
+					initials: getCommunityInitials(author),
+					avatarUrl: await getFileUrl('users', String(author?.id ?? ''), author?.avatar),
+				},
+				linkedRecipe: linkedRecipe
+					? {
+						id: String(linkedRecipe.id),
+						title: String(linkedRecipe.titre ?? 'Recette'),
+						slug: String(linkedRecipe.slug ?? ''),
+						calories: Number(linkedRecipe.calories_par_portion ?? 0),
+						duration: Number(linkedRecipe.temps_preparation_min ?? 0),
+						imageUrl: await getFileUrl('recettes', String(linkedRecipe.id), linkedRecipe.photo),
+					}
+					: null,
+				comments: mappedComments,
+			};
+		}),
+	);
+
+	feedPosts.sort((left, right) => {
+		if (sortMode === 'popular') {
+			return (
+				right.likeCount - left.likeCount ||
+				right.commentCount - left.commentCount ||
+				new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime()
+			);
+		}
+
+		return new Date(right.createdAt).getTime() - new Date(left.createdAt).getTime();
+	});
+
+	return {
+		viewer: {
+			id: String(viewer.id),
+			name: getCommunityDisplayName(viewer),
+			initials: getCommunityInitials(viewer),
+			avatarUrl: await getFileUrl('users', String(viewer.id), viewer.avatar),
+		},
+		composer: {
+			recipes: recipeSuggestions,
+		},
+		sort: sortMode,
+		posts: feedPosts,
+	};
+}
+
+export async function getCommunityFeed(userToken: string, sortMode: 'recent' | 'popular' = 'recent') {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureCommunityCollections(adminToken);
+	await seedCommunityFeedIfEmpty(adminToken);
+
+	const viewer = await getUserRecordById(String(refreshedAuth.record.id), adminToken);
+	const payload = await buildCommunityFeedPayload(String(refreshedAuth.record.id), viewer, adminToken, sortMode);
+
+	return {
+		token: refreshedAuth.token,
+		...payload,
+	};
+}
+
+export async function createCommunityPost(
+	userToken: string,
+	data: { description: string; hashtags?: string; image?: File | null; imageDataUrl?: string; recipeId?: string; sortMode?: 'recent' | 'popular' },
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureCommunityCollections(adminToken);
+
+	const description = String(data.description ?? '').trim();
+	if (description.length < 3) {
+		throw new Error('Votre publication doit contenir au moins 3 caractères.');
+	}
+
+	const hashtags = normalizeCommunityHashtags(data.hashtags);
+	const formData = new FormData();
+	formData.set('user_id', String(refreshedAuth.record.id));
+	formData.set('description', description);
+	formData.set('hashtags', formatCommunityHashtagStorage(hashtags));
+	if (String(data.recipeId ?? '').trim()) {
+		formData.set('recette_id', String(data.recipeId).trim());
+	}
+
+	if (data.image instanceof File && data.image.size > 0) {
+		formData.set('image', data.image);
+	} else if (String(data.imageDataUrl ?? '').trim()) {
+		formData.set('image_url', String(data.imageDataUrl ?? '').trim());
+	}
+
+	await createRecord('communaute_posts', formData, adminToken);
+	return getCommunityFeed(refreshedAuth.token, data.sortMode ?? 'recent');
+}
+
+export async function toggleCommunityPostLike(
+	userToken: string,
+	data: { postId: string; sortMode?: 'recent' | 'popular' },
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureCommunityCollections(adminToken);
+
+	const currentUserId = String(refreshedAuth.record.id);
+	const existing = await listRecordsWithQuery<Record<string, any>>(
+		'communaute_post_likes',
+		`perPage=1&filter=${encodeURIComponent(`post_id="${data.postId}" && user_id="${currentUserId}"`)}`,
+		adminToken,
+	);
+
+	if (existing[0]?.id) {
+		await deleteRecord('communaute_post_likes', String(existing[0].id), adminToken);
+	} else {
+		await createRecord(
+			'communaute_post_likes',
+			{
+				post_id: data.postId,
+				user_id: currentUserId,
+			},
+			adminToken,
+		);
+	}
+
+	return getCommunityFeed(refreshedAuth.token, data.sortMode ?? 'recent');
+}
+
+export async function addCommunityComment(
+	userToken: string,
+	data: { postId: string; commentaire: string; sortMode?: 'recent' | 'popular' },
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureCommunityCollections(adminToken);
+
+	const commentaire = String(data.commentaire ?? '').trim();
+	if (!commentaire) {
+		throw new Error('Le commentaire ne peut pas être vide.');
+	}
+
+	await createRecord(
+		'communaute_commentaires',
+		{
+			post_id: data.postId,
+			user_id: String(refreshedAuth.record.id),
+			commentaire,
+		},
+		adminToken,
+	);
+
+	return getCommunityFeed(refreshedAuth.token, data.sortMode ?? 'recent');
+}
+
+export async function toggleCommunityCommentLike(
+	userToken: string,
+	data: { commentId: string; sortMode?: 'recent' | 'popular' },
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureCommunityCollections(adminToken);
+
+	const currentUserId = String(refreshedAuth.record.id);
+	const existing = await listRecordsWithQuery<Record<string, any>>(
+		'communaute_comment_likes',
+		`perPage=1&filter=${encodeURIComponent(`comment_id="${data.commentId}" && user_id="${currentUserId}"`)}`,
+		adminToken,
+	);
+
+	if (existing[0]?.id) {
+		await deleteRecord('communaute_comment_likes', String(existing[0].id), adminToken);
+	} else {
+		await createRecord(
+			'communaute_comment_likes',
+			{
+				comment_id: data.commentId,
+				user_id: currentUserId,
+			},
+			adminToken,
+		);
+	}
+
+	return getCommunityFeed(refreshedAuth.token, data.sortMode ?? 'recent');
+}
+
+function sortByCreatedAsc<T extends Record<string, any>>(items: T[]) {
+	return [...items].sort(
+		(left, right) => new Date(String(left.created ?? left.date_creation ?? 0)).getTime() - new Date(String(right.created ?? right.date_creation ?? 0)).getTime(),
+	);
+}
+
+function sortByCreatedDesc<T extends Record<string, any>>(items: T[]) {
+	return [...items].sort(
+		(left, right) => new Date(String(right.created ?? right.date_creation ?? 0)).getTime() - new Date(String(left.created ?? left.date_creation ?? 0)).getTime(),
+	);
+}
+
+function buildAssistantWelcomeMessage(firstName: string) {
+	return `Bonjour ${firstName} ! Je suis Nutriv’IA. Je peux vous aider avec des recettes personnalisées, des conseils nutritionnels, la planification de vos repas et l’analyse de vos habitudes. Comment puis-je vous aider aujourd’hui ?`;
+}
+
+function buildAssistantStarterChips() {
+	return [
+		'Suggère-moi un menu pour la semaine',
+		'Je veux une recette riche en protéines',
+		'Comment atteindre mes objectifs plus rapidement ?',
+		'Analyse mes habitudes alimentaires',
+	];
+}
+
+async function ensureAssistantCollections(token: string) {
+	const usersCollection = await getCollectionMeta('users', token);
+
+	await ensureBaseCollection(
+		'assistant_conversations',
+		[
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'titre',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 180,
+			},
+			{
+				name: 'resume',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 400,
+			},
+		],
+		token,
+	);
+
+	const conversationsCollection = await getCollectionMeta('assistant_conversations', token);
+
+	await ensureBaseCollection(
+		'assistant_messages',
+		[
+			{
+				name: 'conversation_id',
+				type: 'relation',
+				required: true,
+				collectionId: conversationsCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'role',
+				type: 'select',
+				required: true,
+				maxSelect: 1,
+				values: ['user', 'assistant'],
+			},
+			{
+				name: 'content',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 12000,
+			},
+			{
+				name: 'metadata_json',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 8000,
+			},
+		],
+		token,
+	);
+}
+
+function parseAssistantMetadata(value: unknown) {
+	if (!value) return {};
+	try {
+		return JSON.parse(String(value)) as Record<string, any>;
+	} catch {
+		return {};
+	}
+}
+
+async function getLatestAssistantConversation(userId: string, token: string) {
+	const conversations = await listRecordsWithQuery<Record<string, any>>(
+		'assistant_conversations',
+		`perPage=200&filter=${encodeURIComponent(`user_id="${userId}"`)}`,
+		token,
+	);
+	return sortByCreatedDesc(conversations)[0] ?? null;
+}
+
+async function getAssistantMessages(conversationId: string, token: string) {
+	const messages = await listRecordsWithQuery<Record<string, any>>(
+		'assistant_messages',
+		`perPage=400&filter=${encodeURIComponent(`conversation_id="${conversationId}"`)}`,
+		token,
+	);
+	return sortByCreatedAsc(messages);
+}
+
+async function createAssistantConversationForUser(user: Record<string, any>, token: string) {
+	const firstName = String(user.prenom || user.name || 'Utilisateur').trim().split(' ')[0];
+	const conversation = (await createRecord(
+		'assistant_conversations',
+		{
+			user_id: String(user.id),
+			titre: `Conversation de ${firstName}`,
+			resume: 'Bienvenue dans votre assistant nutritionnel',
+		},
+		token,
+	)) as Record<string, any>;
+
+	await createRecord(
+		'assistant_messages',
+		{
+			conversation_id: String(conversation.id),
+			role: 'assistant',
+			content: buildAssistantWelcomeMessage(firstName),
+			metadata_json: JSON.stringify({
+				chips: buildAssistantStarterChips(),
+			}),
+		},
+		token,
+	);
+
+	return conversation;
+}
+
+function mapAssistantMessage(message: Record<string, any>) {
+	return {
+		id: String(message.id),
+		role: String(message.role),
+		content: String(message.content ?? ''),
+		createdAt: String(message.created ?? ''),
+		metadata: parseAssistantMetadata(message.metadata_json),
+	};
+}
+
+export async function getAssistantWorkspace(userToken: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureAssistantCollections(adminToken);
+
+	const user = await getUserRecordById(String(refreshedAuth.record.id), adminToken);
+	const avatarUrl = await getFileUrl('users', String(user.id), user.avatar);
+	let conversation = await getLatestAssistantConversation(String(user.id), adminToken);
+
+	if (!conversation) {
+		conversation = await createAssistantConversationForUser(user, adminToken);
+	}
+
+	const messages = await getAssistantMessages(String(conversation.id), adminToken);
+
+	return {
+		token: refreshedAuth.token,
+		viewer: {
+			id: String(user.id),
+			firstName: String(user.prenom || user.name || 'Utilisateur').trim().split(' ')[0],
+			fullName: String(`${user.prenom ?? ''} ${user.nom ?? ''}`.trim() || user.name || 'Utilisateur'),
+			avatarUrl,
+			initials: `${String(user.prenom ?? '')[0] ?? ''}${String(user.nom ?? '')[0] ?? ''}`.toUpperCase() || 'NU',
+		},
+		conversation: {
+			id: String(conversation.id),
+			title: String(conversation.titre ?? 'Conversation'),
+		},
+		messages: messages.map(mapAssistantMessage),
+		quickActions: [
+			{ id: 'quick-recipe', label: 'Recette rapide', prompt: 'Propose-moi une recette rapide adaptée à mon profil.' },
+			{ id: 'quick-menu', label: 'Menu semaine', prompt: 'Prépare-moi un menu simple pour les 7 prochains jours.' },
+			{ id: 'quick-substitution', label: 'Substitution', prompt: 'Aide-moi à remplacer un ingrédient dans une recette.' },
+			{ id: 'quick-weight', label: 'Conseil perte de poids', prompt: 'Quels conseils concrets me donner pour progresser vers mon objectif ?' },
+		],
+		faqs: [
+			'Quels aliments sont riches en fer ?',
+			'Comment calculer mes besoins en protéines ?',
+			'Quelle collation prendre avant le sport ?',
+			'Comment réduire ma consommation de sucre ?',
+			'Quels sont les bénéfices du régime méditerranéen ?',
+			'Comment éviter les fringales en fin de journée ?',
+		],
+		recommendation: {
+			title: 'Guide complet nutrition 2026',
+			description: 'Tout savoir sur l’alimentation saine et équilibrée - format digital + 200 recettes',
+			price: '19,99€',
+		},
+	};
+}
+
+export async function saveAssistantConversationTurn(
+	userToken: string,
+	data: {
+		conversationId?: string;
+		userMessage: string;
+		assistantMessage: string;
+		assistantMetadata?: Record<string, any>;
+	},
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureAssistantCollections(adminToken);
+
+	const user = await getUserRecordById(String(refreshedAuth.record.id), adminToken);
+	let conversation =
+		data.conversationId
+			? await getRecordById('assistant_conversations', String(data.conversationId), adminToken)
+			: await getLatestAssistantConversation(String(user.id), adminToken);
+
+	if (!conversation?.id) {
+		conversation = await createAssistantConversationForUser(user, adminToken);
+	}
+
+	await createRecord(
+		'assistant_messages',
+		{
+			conversation_id: String(conversation.id),
+			role: 'user',
+			content: String(data.userMessage).trim(),
+			metadata_json: '',
+		},
+		adminToken,
+	);
+
+	await createRecord(
+		'assistant_messages',
+		{
+			conversation_id: String(conversation.id),
+			role: 'assistant',
+			content: String(data.assistantMessage).trim(),
+			metadata_json: JSON.stringify(data.assistantMetadata ?? {}),
+		},
+		adminToken,
+	);
+
+	const preview = String(data.userMessage).trim().slice(0, 120);
+	await updateRecord(
+		'assistant_conversations',
+		String(conversation.id),
+		{
+			titre: preview.slice(0, 60) || String(conversation.titre ?? 'Conversation'),
+			resume: preview,
+		},
+		adminToken,
+	);
+
+	const messages = await getAssistantMessages(String(conversation.id), adminToken);
+	return {
+		token: refreshedAuth.token,
+		conversation: {
+			id: String(conversation.id),
+			title: preview.slice(0, 60) || String(conversation.titre ?? 'Conversation'),
+		},
+		messages: messages.map(mapAssistantMessage),
+	};
 }

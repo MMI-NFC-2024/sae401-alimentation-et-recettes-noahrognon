@@ -1,0 +1,138 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Planificateur de repas - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)] py-8 lg:py-10">
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
+			<div class="mx-auto max-w-[1080px]">
+				<div class="mb-8">
+					<h1 class="text-[2.3rem] font-semibold tracking-[-0.04em] text-[#16223c]">Planificateur de repas</h1>
+					<p class="mt-2 text-[1.05rem] text-slate-500">Organisez vos repas de la semaine et préparez votre suivi plus facilement</p>
+				</div>
+
+				<p id="planner-error" class="mb-5 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+
+				<div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+					<button id="planner-prev-week" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600 sm:w-auto"><span>‹</span><span>Semaine précédente</span></button>
+					<div class="text-center">
+						<p class="text-[1.1rem] font-semibold text-[#16223c]">Semaine actuelle</p>
+						<p id="planner-week-label" class="mt-1 text-[1rem] text-slate-500">-</p>
+					</div>
+					<button id="planner-next-week" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600 sm:w-auto"><span>Semaine suivante</span><span>›</span></button>
+				</div>
+
+				<div class="mb-6 grid gap-4 lg:grid-cols-3">
+					<button id="planner-open-shopping" type="button" class="rounded-[22px] border border-[#9fe3c7] bg-[linear-gradient(135deg,#ebfbf3_0%,#dff8eb_100%)] px-5 py-5 text-left shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+						<p class="text-[1.18rem] font-semibold text-[#16223c]">Générer liste de courses</p>
+						<p class="mt-1 text-[0.95rem] text-slate-500">À partir du planning</p>
+					</button>
+					<button id="planner-smart-fill" type="button" class="rounded-[22px] border border-[#dfcdfc] bg-[linear-gradient(135deg,#f8f2ff_0%,#f5efff_100%)] px-5 py-5 text-left shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+						<p class="text-[1.18rem] font-semibold text-[#16223c]">Menu intelligent</p>
+						<p class="mt-1 text-[0.95rem] text-slate-500">Remplir les cases vides</p>
+					</button>
+					<button id="planner-open-modal-top" type="button" class="rounded-[22px] border border-[#bfd7ff] bg-[linear-gradient(135deg,#eef4ff_0%,#edf5ff_100%)] px-5 py-5 text-left shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+						<p class="text-[1.18rem] font-semibold text-[#16223c]">Ajouter des recettes</p>
+						<p class="mt-1 text-[0.95rem] text-slate-500">Parcourir le catalogue</p>
+					</button>
+				</div>
+
+				<section class="overflow-hidden rounded-[24px] border border-[#d8e2ee] bg-white shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+					<div id="planner-desktop" class="hidden lg:block">
+						<div class="grid grid-cols-[120px_repeat(7,minmax(0,1fr))] border-b border-[#e7eef6] bg-[#fbfdff]">
+							<div class="px-4 py-5 text-[1rem] font-semibold text-[#16223c]">Repas</div>
+							<div id="planner-header-days" class="col-span-7 grid grid-cols-7"></div>
+						</div>
+						<div id="planner-grid-rows"></div>
+					</div>
+					<div id="planner-mobile-days" class="grid gap-4 p-4 lg:hidden"></div>
+				</section>
+
+				<div class="mt-7 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+					<div class="rounded-[22px] bg-[linear-gradient(180deg,#10b389_0%,#0ca985_100%)] px-5 py-5 text-white shadow-[0_20px_45px_rgba(16,179,137,0.24)]">
+						<p class="text-[1rem] text-white/80">Total semaine</p>
+						<p id="planner-total-calories" class="mt-2 text-[3rem] leading-none font-semibold">0</p>
+						<p class="mt-2 text-[1rem] text-white/80">kilocalories</p>
+					</div>
+					<div class="rounded-[22px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)]"><p class="text-[1rem] text-slate-500">Repas planifiés</p><p id="planner-planned-count" class="mt-2 text-[2.4rem] leading-none font-semibold text-[#16223c]">0</p><p id="planner-planned-subtitle" class="mt-2 text-[1rem] text-slate-400">sur 21 possibles</p></div>
+					<div class="rounded-[22px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)]"><p class="text-[1rem] text-slate-500">Moyenne journalière</p><p id="planner-average-calories" class="mt-2 text-[2.4rem] leading-none font-semibold text-[#16223c]">0</p><p class="mt-2 text-[1rem] text-slate-400">kcal / jour</p></div>
+					<div class="rounded-[22px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)]"><p class="text-[1rem] text-slate-500">Objectif</p><p id="planner-target-calories" class="mt-2 text-[2.4rem] leading-none font-semibold text-[#08b37d]">0</p><p class="mt-2 text-[1rem] text-slate-400">kcal / jour</p></div>
+				</div>
+
+				<div class="mt-5 flex flex-col gap-3 sm:flex-row">
+					<button id="planner-sync-tracking" type="button" class="inline-flex min-h-[48px] items-center justify-center rounded-[16px] bg-[#08b37d] px-6 py-3 text-[0.98rem] font-semibold text-white shadow-[0_18px_36px_rgba(8,179,125,0.22)]">Ajouter ma semaine au suivi</button>
+					<p id="planner-action-message" class="hidden rounded-[16px] bg-[#eefbf5] px-4 py-3 text-[0.94rem] text-[#0b8c5f]"></p>
+				</div>
+
+				<div id="planner-modal" class="pointer-events-none fixed inset-0 z-50 hidden bg-slate-950/40 opacity-0 transition duration-200">
+					<div class="flex min-h-full items-end justify-center p-0 sm:p-4 md:items-center">
+						<div id="planner-modal-panel" class="w-full max-w-[920px] translate-y-6 rounded-t-[28px] border border-[#d8e2ee] bg-white p-4 shadow-[0_28px_60px_rgba(15,23,42,0.24)] transition duration-200 sm:rounded-[28px] sm:p-6">
+							<div class="flex items-start justify-between gap-4">
+								<div>
+									<p class="text-[1.45rem] font-semibold text-[#16223c]">Ajouter au planning</p>
+									<p id="planner-modal-context" class="mt-2 text-[0.96rem] text-slate-500">Choisissez une case puis ajoutez une recette.</p>
+								</div>
+								<button id="planner-close-modal" type="button" class="inline-flex h-[44px] w-[44px] items-center justify-center rounded-[14px] border border-[#d8e2ee] text-[1.4rem] text-slate-500">×</button>
+							</div>
+							<div class="mt-5 grid gap-5 lg:grid-cols-[220px_minmax(0,1fr)]">
+								<div class="space-y-5">
+									<div><p class="mb-2 text-[0.94rem] font-medium text-[#324765]">Type de repas</p><div id="planner-meal-types" class="grid gap-2"></div></div>
+									<div>
+										<p class="mb-2 text-[0.94rem] font-medium text-[#324765]">Portions</p>
+										<input id="planner-portions" type="number" min="0.5" step="0.5" value="1" class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.98rem] text-slate-700 outline-none focus:border-[#08b37d]" />
+										<p id="planner-portions-help" class="mt-2 text-[0.86rem] text-slate-400">1 portion</p>
+									</div>
+								</div>
+								<div>
+									<div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+										<input id="planner-search" type="search" placeholder="Chercher une recette..." class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.98rem] text-slate-700 outline-none focus:border-[#08b37d]" />
+										<p id="planner-selection" class="text-[0.88rem] text-slate-400 sm:whitespace-nowrap">Aucune sélection</p>
+									</div>
+									<div id="planner-suggestions" class="mt-4 grid max-h-[48vh] gap-3 overflow-y-auto pr-1 sm:max-h-[420px] sm:grid-cols-2"></div>
+								</div>
+							</div>
+							<div class="mt-6 flex flex-col-reverse gap-3 border-t border-[#e7eef6] pt-5 sm:flex-row sm:items-center sm:justify-between">
+								<p class="text-[0.9rem] text-slate-400">Une seule recette par case. Si la case est déjà remplie, elle sera remplacée.</p>
+								<div class="flex flex-col gap-3 sm:flex-row">
+									<button id="planner-cancel-modal" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600 sm:w-auto">Annuler</button>
+									<button id="planner-add-button" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[0.98rem] font-semibold text-white sm:w-auto">Ajouter au planning</button>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script is:inline>
+	const authKey='nutrivia_auth'; const mealTypes=[{value:'petit_dejeuner',label:'Petit-déjeuner'},{value:'dejeuner',label:'Déjeuner'},{value:'diner',label:'Dîner'}];
+	const qs=(s)=>document.querySelector(s); const plannerError=qs('#planner-error'); const weekLabel=qs('#planner-week-label'); const headerDays=qs('#planner-header-days'); const gridRows=qs('#planner-grid-rows'); const mobileDays=qs('#planner-mobile-days'); const totalCalories=qs('#planner-total-calories'); const plannedCount=qs('#planner-planned-count'); const plannedSubtitle=qs('#planner-planned-subtitle'); const averageCalories=qs('#planner-average-calories'); const targetCalories=qs('#planner-target-calories'); const actionMessage=qs('#planner-action-message'); const prevWeekButton=qs('#planner-prev-week'); const nextWeekButton=qs('#planner-next-week'); const syncButton=qs('#planner-sync-tracking'); const smartFillButton=qs('#planner-smart-fill'); const shoppingButton=qs('#planner-open-shopping'); const openModalTopButton=qs('#planner-open-modal-top'); const modal=qs('#planner-modal'); const modalPanel=qs('#planner-modal-panel'); const closeModalButton=qs('#planner-close-modal'); const cancelModalButton=qs('#planner-cancel-modal'); const mealTypesContainer=qs('#planner-meal-types'); const searchInput=qs('#planner-search'); const suggestionsContainer=qs('#planner-suggestions'); const portionsInput=qs('#planner-portions'); const portionsHelp=qs('#planner-portions-help'); const selectionLabel=qs('#planner-selection'); const modalContext=qs('#planner-modal-context'); const addButton=qs('#planner-add-button');
+	let planner=null,currentDate=new Date().toISOString().slice(0,10),selectedMealType='dejeuner',selectedSuggestion=null,selectedSlotDate='';
+	const getStoredAuth=()=>{try{const raw=localStorage.getItem(authKey); return raw?JSON.parse(raw):null;}catch{return null;}}; const setStoredAuth=(p)=>localStorage.setItem(authKey,JSON.stringify(p)); const clearStoredAuth=()=>localStorage.removeItem(authKey);
+	const esc=(v)=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); const fmt=(v)=>Number.isInteger(v)?String(v):Number(v).toFixed(1).replace('.0',''); const addDays=(d,n)=>{const x=new Date(`${d}T12:00:00`); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10);};
+	const showError=(m)=>{if(plannerError instanceof HTMLElement){plannerError.textContent=m; plannerError.classList.remove('hidden');}}; const clearError=()=>{if(plannerError instanceof HTMLElement){plannerError.textContent=''; plannerError.classList.add('hidden');}}; const showAction=(m,e=false)=>{if(actionMessage instanceof HTMLElement){actionMessage.textContent=m; actionMessage.classList.remove('hidden','bg-[#eefbf5]','text-[#0b8c5f]','bg-red-50','text-red-600'); actionMessage.classList.add(e?'bg-red-50':'bg-[#eefbf5]',e?'text-red-600':'text-[#0b8c5f]');}};
+	function openModal(date,meal){selectedSlotDate=date; selectedMealType=meal||selectedMealType; selectedSuggestion=null; if(searchInput instanceof HTMLInputElement) searchInput.value=''; if(portionsInput instanceof HTMLInputElement) portionsInput.value='1'; updateSelection(); renderMealButtons(); renderSuggestions(); if(modalContext instanceof HTMLElement){const day=planner?.week?.days?.find((i)=>i.date===date); const mealLabel=mealTypes.find((i)=>i.value===selectedMealType)?.label||''; modalContext.textContent=day?`${day.label} · ${mealLabel}`:'Choisissez une case puis ajoutez une recette.';} if(modal instanceof HTMLElement && modalPanel instanceof HTMLElement){modal.classList.remove('hidden'); requestAnimationFrame(()=>{modal.classList.remove('pointer-events-none','opacity-0'); modalPanel.classList.remove('translate-y-6');});}}
+	function closeModal(){if(modal instanceof HTMLElement && modalPanel instanceof HTMLElement){modal.classList.add('pointer-events-none','opacity-0'); modalPanel.classList.add('translate-y-6'); window.setTimeout(()=>modal.classList.add('hidden'),180);}}
+	function updateSelection(){if(selectionLabel instanceof HTMLElement){selectionLabel.textContent=selectedSuggestion?`${selectedSuggestion.title} · ${fmt(selectedSuggestion.calories)} kcal`:'Aucune sélection';}}
+	function renderMealButtons(){if(!(mealTypesContainer instanceof HTMLElement)) return; mealTypesContainer.innerHTML=''; mealTypes.forEach((item)=>{const b=document.createElement('button'); b.type='button'; b.className=`inline-flex min-h-[44px] items-center justify-center rounded-[14px] border px-4 py-2.5 text-[0.94rem] font-medium transition ${selectedMealType===item.value?'border-[#53d7ad] bg-[#eefbf5] text-[#0b8c5f]':'border-[#d8e2ee] bg-white text-slate-600'}`; b.textContent=item.label; b.addEventListener('click',()=>{selectedMealType=item.value; renderMealButtons(); if(modalContext instanceof HTMLElement){const day=planner?.week?.days?.find((i)=>i.date===selectedSlotDate); modalContext.textContent=day?`${day.label} · ${item.label}`:item.label;}}); mealTypesContainer.appendChild(b);});}
+	function renderSuggestions(){if(!(suggestionsContainer instanceof HTMLElement)) return; const term=searchInput instanceof HTMLInputElement?searchInput.value.trim().toLowerCase():''; const items=(planner?.suggestions?.recipes||[]).filter((i)=>i.title.toLowerCase().includes(term)); suggestionsContainer.innerHTML=items.map((item)=>`<button type="button" data-recipe-id="${esc(item.id)}" class="planner-suggestion flex overflow-hidden rounded-[18px] border ${selectedSuggestion?.id===item.id?'border-[#53d7ad] bg-[#eefbf5]':'border-[#d8e2ee] bg-white'} text-left shadow-[0_12px_26px_rgba(71,104,145,0.08)] transition hover:border-[#bcd1e6]"><div class="h-[110px] w-[112px] shrink-0 overflow-hidden bg-slate-100">${item.imageUrl?`<img src="${esc(item.imageUrl)}" alt="${esc(item.title)}" class="h-full w-full object-cover" />`:''}</div><div class="flex min-w-0 flex-1 flex-col justify-between p-4"><div><p class="line-clamp-2 text-[0.98rem] font-semibold text-[#16223c]">${esc(item.title)}</p><p class="mt-2 text-[0.86rem] text-slate-500">${esc(fmt(item.calories))} kcal</p></div><p class="mt-3 text-[0.82rem] text-slate-400">${esc(fmt(item.proteins))}g prot. · ${esc(fmt(item.carbs))}g gluc. · ${esc(fmt(item.fats))}g lip.</p></div></button>`).join(''); suggestionsContainer.querySelectorAll('.planner-suggestion').forEach((button)=>button.addEventListener('click',()=>{const id=button.getAttribute('data-recipe-id'); selectedSuggestion=(planner?.suggestions?.recipes||[]).find((i)=>i.id===id)||null; updateSelection(); renderSuggestions();}));}
+	function bindSlotActions(){document.querySelectorAll('.planner-slot-add,.planner-slot-edit').forEach((button)=>button.addEventListener('click',()=>openModal(button.getAttribute('data-date')||'',button.getAttribute('data-meal')||'dejeuner'))); document.querySelectorAll('.planner-slot-remove').forEach((button)=>button.addEventListener('click',async()=>{try{await removePlannerEntry(button.getAttribute('data-entry')||'',button.getAttribute('data-date')||currentDate);}catch(error){showAction(error instanceof Error?error.message:'Impossible de supprimer ce repas.',true);}}));}
+	function renderDesktop(){if(!(headerDays instanceof HTMLElement) || !(gridRows instanceof HTMLElement)) return; headerDays.innerHTML=planner.week.days.map((day)=>`<div class="border-l border-[#e7eef6] px-4 py-5"><p class="text-[1rem] font-semibold text-[#16223c]">${esc(day.label)}</p><p class="mt-1 text-[0.95rem] font-medium text-slate-500">${esc(fmt(day.totalCalories))} kcal</p></div>`).join(''); gridRows.innerHTML=mealTypes.map((meal)=>`<div class="grid grid-cols-[120px_repeat(7,minmax(0,1fr))] border-b border-[#e7eef6] last:border-b-0"><div class="flex items-center px-4 py-5 text-[1.05rem] font-medium text-[#16223c]">${esc(meal.label)}</div>${planner.week.days.map((day)=>{const slot=day.meals.find((i)=>i.mealType===meal.value); if(!slot?.entry){return `<button type="button" data-date="${esc(day.date)}" data-meal="${esc(meal.value)}" class="planner-slot-add m-3 flex h-[118px] items-center justify-center rounded-[18px] border border-dashed border-[#d8e2ee] bg-white text-slate-400 transition hover:border-[#53d7ad] hover:text-[#0b8c5f]"><div class="text-center"><div class="text-[2rem] leading-none">+</div><p class="mt-2 text-[0.95rem] font-medium">Ajouter</p></div></button>`;} return `<div class="m-3 overflow-hidden rounded-[18px] border border-[#d8e2ee] bg-white shadow-[0_12px_26px_rgba(71,104,145,0.08)]"><div class="h-[84px] overflow-hidden bg-slate-100">${slot.entry.imageUrl?`<img src="${esc(slot.entry.imageUrl)}" alt="${esc(slot.entry.title)}" class="h-full w-full object-cover" />`:''}</div><div class="p-3"><p class="line-clamp-2 text-[0.92rem] font-semibold text-[#16223c]">${esc(slot.entry.title)}</p><p class="mt-1 text-[0.82rem] text-slate-500">${esc(fmt(slot.entry.calories))} kcal · ${esc(fmt(slot.entry.portions))} portion${slot.entry.portions>1?'s':''}</p><div class="mt-3 flex items-center gap-2"><button type="button" data-date="${esc(day.date)}" data-meal="${esc(meal.value)}" class="planner-slot-edit inline-flex flex-1 items-center justify-center rounded-[10px] bg-[#eefbf5] px-3 py-2 text-[0.82rem] font-medium text-[#0b8c5f]">Modifier</button><button type="button" data-entry="${esc(slot.entry.id)}" data-date="${esc(day.date)}" class="planner-slot-remove inline-flex h-[34px] w-[34px] items-center justify-center rounded-[10px] border border-[#d8e2ee] text-[1.1rem] text-slate-500">×</button></div></div></div>`;}).join('')}</div>`).join(''); bindSlotActions();}
+	function renderMobile(){if(!(mobileDays instanceof HTMLElement)) return; mobileDays.innerHTML=planner.week.days.map((day)=>`<section class="rounded-[22px] border border-[#d8e2ee] bg-white p-4 shadow-[0_12px_26px_rgba(71,104,145,0.08)]"><div class="mb-4"><p class="text-[1.02rem] font-semibold text-[#16223c]">${esc(day.label)}</p><p class="mt-1 text-[0.88rem] text-slate-500">${esc(day.dayNumber)} · ${esc(fmt(day.totalCalories))} kcal</p></div><div class="grid gap-3">${day.meals.map((meal)=>{if(!meal.entry){return `<button type="button" data-date="${esc(day.date)}" data-meal="${esc(meal.mealType)}" class="planner-slot-add flex items-center justify-between rounded-[16px] border border-dashed border-[#d8e2ee] px-4 py-4 text-left text-slate-500"><span class="font-medium text-[#16223c]">${esc(meal.mealLabel)}</span><span class="inline-flex items-center gap-2 text-[0.92rem]"><span class="text-[1.2rem]">+</span>Ajouter</span></button>`;} return `<div class="rounded-[16px] border border-[#d8e2ee] bg-[#fbfdff] p-3"><div class="flex items-center gap-3"><div class="h-[62px] w-[62px] shrink-0 overflow-hidden rounded-[14px] bg-slate-100">${meal.entry.imageUrl?`<img src="${esc(meal.entry.imageUrl)}" alt="${esc(meal.entry.title)}" class="h-full w-full object-cover" />`:''}</div><div class="min-w-0 flex-1"><p class="text-[0.84rem] font-medium uppercase tracking-[0.12em] text-slate-400">${esc(meal.mealLabel)}</p><p class="mt-1 line-clamp-2 text-[0.96rem] font-semibold text-[#16223c]">${esc(meal.entry.title)}</p><p class="mt-1 text-[0.84rem] text-slate-500">${esc(fmt(meal.entry.calories))} kcal · ${esc(fmt(meal.entry.portions))} portion${meal.entry.portions>1?'s':''}</p></div></div><div class="mt-3 flex items-center gap-2"><button type="button" data-date="${esc(day.date)}" data-meal="${esc(meal.mealType)}" class="planner-slot-edit inline-flex flex-1 items-center justify-center rounded-[12px] bg-[#eefbf5] px-3 py-2 text-[0.84rem] font-medium text-[#0b8c5f]">Modifier</button><button type="button" data-entry="${esc(meal.entry.id)}" data-date="${esc(day.date)}" class="planner-slot-remove inline-flex h-[38px] w-[38px] items-center justify-center rounded-[12px] border border-[#d8e2ee] text-[1.1rem] text-slate-500">×</button></div></div>`;}).join('')}</div></section>`).join(''); bindSlotActions();}
+	function renderPlanner(){if(!planner) return; if(weekLabel instanceof HTMLElement) weekLabel.textContent=planner.week.label; if(totalCalories instanceof HTMLElement) totalCalories.textContent=fmt(planner.summary.totalCalories); if(plannedCount instanceof HTMLElement) plannedCount.textContent=fmt(planner.summary.plannedMeals); if(plannedSubtitle instanceof HTMLElement) plannedSubtitle.textContent=`sur ${planner.summary.totalSlots} possibles`; if(averageCalories instanceof HTMLElement) averageCalories.textContent=fmt(planner.summary.averageCalories); if(targetCalories instanceof HTMLElement) targetCalories.textContent=fmt(planner.summary.targetCalories); renderDesktop(); renderMobile(); renderSuggestions();}
+	async function fetchPlanner(date){const auth=getStoredAuth(); if(!auth?.token){window.location.href='/auth/login'; return;} const response=await fetch(`/api/planner?date=${encodeURIComponent(date)}`,{headers:{Authorization:`Bearer ${auth.token}`}}); const result=await response.json(); if(!response.ok){ if(response.status===401){clearStoredAuth(); window.location.href='/auth/login'; return;} throw new Error(result.message||'Impossible de charger le planificateur.'); } setStoredAuth({...auth,token:result.token,record:auth.record}); planner=result; currentDate=date; renderPlanner();}
+	async function savePlannerEntry(){if(!selectedSlotDate||!selectedSuggestion) throw new Error('Choisissez d’abord une recette.'); const auth=getStoredAuth(); if(!auth?.token){window.location.href='/auth/login'; return;} const portions=portionsInput instanceof HTMLInputElement?Math.max(0.5,Number(portionsInput.value)||1):1; const response=await fetch('/api/planner',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${auth.token}`},body:JSON.stringify({date:selectedSlotDate,typeRepas:selectedMealType,recipeId:selectedSuggestion.id,portions})}); const result=await response.json(); if(!response.ok){if(response.status===401){clearStoredAuth(); window.location.href='/auth/login'; return;} throw new Error(result.message||"Impossible d'ajouter ce repas au planning.");} setStoredAuth({...auth,token:result.token,record:auth.record}); planner=result; renderPlanner(); closeModal(); showAction('Le repas a bien été ajouté au planning.');}
+	async function removePlannerEntry(entryId,date){const auth=getStoredAuth(); if(!auth?.token){window.location.href='/auth/login'; return;} const response=await fetch('/api/planner',{method:'DELETE',headers:{'Content-Type':'application/json',Authorization:`Bearer ${auth.token}`},body:JSON.stringify({entryId,date})}); const result=await response.json(); if(!response.ok){if(response.status===401){clearStoredAuth(); window.location.href='/auth/login'; return;} throw new Error(result.message||'Impossible de supprimer ce repas planifié.');} setStoredAuth({...auth,token:result.token,record:auth.record}); planner=result; renderPlanner(); showAction('Le repas a bien été retiré du planning.');}
+	async function syncWeekToTracking(){const auth=getStoredAuth(); if(!auth?.token){window.location.href='/auth/login'; return;} const response=await fetch('/api/planner',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${auth.token}`},body:JSON.stringify({action:'sync',weekStart:planner.week.start})}); const result=await response.json(); if(!response.ok){if(response.status===401){clearStoredAuth(); window.location.href='/auth/login'; return;} throw new Error(result.message||'Impossible de synchroniser la semaine vers le suivi.');} setStoredAuth({...auth,token:result.token,record:auth.record}); planner=result; renderPlanner(); showAction('La semaine a bien été envoyée dans le suivi alimentaire.');}
+	function smartFillWeek(){if(!planner?.suggestions?.recipes?.length){showAction('Aucune suggestion disponible pour remplir la semaine.',true); return;} const empty=[]; planner.week.days.forEach((d)=>d.meals.forEach((m)=>{if(!m.entry) empty.push({date:d.date,mealType:m.mealType});})); if(!empty.length){showAction('Votre semaine est déjà complète.'); return;} (async()=>{try{for(let i=0;i<empty.length;i+=1){selectedSlotDate=empty[i].date; selectedMealType=empty[i].mealType; selectedSuggestion=planner.suggestions.recipes[i%planner.suggestions.recipes.length]; await savePlannerEntry();} showAction('Les cases vides ont été remplies automatiquement.');}catch(error){showAction(error instanceof Error?error.message:'Impossible de générer un menu intelligent.',true);}})();}
+	searchInput?.addEventListener('input',renderSuggestions); portionsInput?.addEventListener('input',()=>{if(portionsHelp instanceof HTMLElement&&portionsInput instanceof HTMLInputElement){const v=Math.max(0.5,Number(portionsInput.value)||1); portionsHelp.textContent=`${fmt(v)} portion${v>1?'s':''}`;}});
+	prevWeekButton?.addEventListener('click',async()=>{try{clearError(); await fetchPlanner(addDays(currentDate,-7));}catch(error){showError(error instanceof Error?error.message:'Impossible de charger la semaine précédente.');}});
+	nextWeekButton?.addEventListener('click',async()=>{try{clearError(); await fetchPlanner(addDays(currentDate,7));}catch(error){showError(error instanceof Error?error.message:'Impossible de charger la semaine suivante.');}});
+	openModalTopButton?.addEventListener('click',()=>openModal(planner?.week?.start||currentDate,'dejeuner')); closeModalButton?.addEventListener('click',closeModal); cancelModalButton?.addEventListener('click',closeModal);
+	addButton?.addEventListener('click',async()=>{try{await savePlannerEntry();}catch(error){showAction(error instanceof Error?error.message:"Impossible d'ajouter ce repas au planning.",true);}});
+	syncButton?.addEventListener('click',async()=>{try{await syncWeekToTracking();}catch(error){showAction(error instanceof Error?error.message:'Impossible de synchroniser la semaine.',true);}});
+	smartFillButton?.addEventListener('click',smartFillWeek); shoppingButton?.addEventListener('click',()=>showAction('La génération de liste de courses sera branchée sur le planning ensuite.'));
+	(async()=>{try{clearError(); await fetchPlanner(currentDate);}catch(error){showError(error instanceof Error?error.message:'Impossible de charger le planificateur.');}})();
+</script>

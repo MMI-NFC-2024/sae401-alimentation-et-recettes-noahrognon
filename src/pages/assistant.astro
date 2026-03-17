@@ -1,0 +1,351 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Assistant IA - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)] py-8 lg:py-10">
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
+			<div class="mx-auto max-w-[1080px]">
+				<div class="mb-7 flex items-center gap-4">
+					<div class="flex h-[56px] w-[56px] items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#8b2cf8_0%,#ff4aa2_100%)] text-white shadow-[0_16px_35px_rgba(168,85,247,0.22)]">
+						<svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" aria-hidden="true"><path d="M12 3v5M12 16v5M5 12H0M24 12h-5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+					</div>
+					<div>
+						<h1 class="text-[2.2rem] font-semibold tracking-[-0.04em] text-[#16223c]">Nutriv’IA</h1>
+						<p class="mt-1 text-[1.02rem] text-slate-500">Votre coach nutrition personnalisé disponible 24/7</p>
+					</div>
+				</div>
+
+				<a href="#" class="mb-5 block overflow-hidden rounded-[24px] border border-[#11c49d] bg-[linear-gradient(135deg,#08a37b_0%,#08b37d_50%,#19b2a2_100%)] px-5 py-5 text-white shadow-[0_24px_54px_rgba(8,179,125,0.24)] sm:px-6">
+					<div class="inline-flex rounded-full bg-white/15 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-white">Sponsorisé - IA premium</div>
+					<h2 class="mt-4 text-[2rem] font-semibold tracking-[-0.04em]">Débloquez l’IA Premium</h2>
+					<p class="mt-2 max-w-[42rem] text-[1rem] leading-7 text-white/85">Analyses nutritionnelles avancées, plans personnalisés et réponses illimitées</p>
+					<span class="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-[14px] bg-white px-4 py-2.5 text-[0.96rem] font-semibold text-[#0b8c5f]">Essayer gratuitement 7 jours</span>
+				</a>
+
+				<p id="assistant-error" class="mb-5 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+
+				<div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px]">
+					<section class="overflow-hidden rounded-[24px] border border-[#d8e2ee] bg-white shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+						<div id="assistant-messages" class="max-h-[68vh] min-h-[420px] overflow-y-auto px-4 py-5 sm:px-5"></div>
+						<div class="border-t border-[#e7eef6] p-4 sm:p-5">
+							<form id="assistant-form" class="flex items-end gap-3">
+								<textarea id="assistant-input" rows="1" placeholder="Posez une question sur la nutrition, les recettes, votre alimentation..." class="min-h-[84px] flex-1 resize-none rounded-[18px] border border-[#cad8e7] bg-white px-4 py-4 text-[1rem] text-slate-700 outline-none transition focus:border-[#08b37d]"></textarea>
+								<div class="flex items-center gap-2 pb-1">
+									<button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-300" aria-label="Ajouter une image">
+										<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M8 7h.01M5 19h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3l-1-2H9L8 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+									</button>
+									<button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-300" aria-label="Saisie vocale">
+										<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3ZM19 11a7 7 0 0 1-14 0M12 18v3M8 21h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+									</button>
+									<button id="assistant-send" type="submit" class="inline-flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#80d9ba] text-white shadow-[0_12px_26px_rgba(8,179,125,0.22)]">
+										<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="m4 12 15-7-4 14-4-5-7-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+									</button>
+								</div>
+							</form>
+						</div>
+					</section>
+
+					<div class="grid content-start gap-5">
+						<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+							<h2 class="flex items-center gap-3 text-[1.32rem] font-semibold text-[#16223c]">
+								<span class="text-[#08b37d]">
+									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 19v-2M8 19h8M10 3h4a4 4 0 0 1 4 4v2a6 6 0 0 1-2 4.58L14 15v2h-4v-2l-2-1.42A6 6 0 0 1 6 9V7a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+								</span>
+								Actions rapides
+							</h2>
+							<div id="assistant-quick-actions" class="mt-5 grid gap-3"></div>
+						</section>
+
+						<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+							<h2 class="text-[1.32rem] font-semibold text-[#16223c]">Questions fréquentes</h2>
+							<div id="assistant-faqs" class="mt-5 grid gap-3"></div>
+						</section>
+
+						<section class="overflow-hidden rounded-[24px] border border-[#11c49d] bg-white shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+							<div class="bg-[linear-gradient(135deg,#08a37b_0%,#08b37d_100%)] px-4 py-3 text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-white">Recommandé par l’IA</div>
+							<div class="p-4">
+								<div class="h-[160px] rounded-[16px] bg-[linear-gradient(135deg,#0ea5a4_0%,#0f766e_46%,#164e63_100%)]"></div>
+								<h3 id="assistant-reco-title" class="mt-4 text-[1.35rem] font-semibold text-[#16223c]">Guide complet nutrition 2026</h3>
+								<p id="assistant-reco-description" class="mt-2 text-[0.95rem] leading-7 text-slate-500">-</p>
+								<div class="mt-5 flex items-center justify-between gap-3">
+									<p id="assistant-reco-price" class="text-[2rem] font-semibold text-[#08b37d]">19,99€</p>
+									<a href="#" class="inline-flex min-h-[42px] items-center justify-center rounded-[14px] bg-[#08b37d] px-4 py-2.5 text-[0.92rem] font-semibold text-white">Télécharger</a>
+								</div>
+							</div>
+						</section>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const errorBox = document.querySelector('#assistant-error');
+	const messagesBox = document.querySelector('#assistant-messages');
+	const form = document.querySelector('#assistant-form');
+	const input = document.querySelector('#assistant-input');
+	const sendButton = document.querySelector('#assistant-send');
+	const quickActionsBox = document.querySelector('#assistant-quick-actions');
+	const faqsBox = document.querySelector('#assistant-faqs');
+	let assistantState = null;
+	let isSending = false;
+
+	function getStoredAuth() {
+		try {
+			const raw = localStorage.getItem(authKey);
+			return raw ? JSON.parse(raw) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function setStoredAuth(payload) {
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function clearStoredAuth() {
+		localStorage.removeItem(authKey);
+	}
+
+	function showError(message) {
+		if (!(errorBox instanceof HTMLElement)) return;
+		errorBox.textContent = message;
+		errorBox.classList.remove('hidden');
+	}
+
+	function clearError() {
+		if (!(errorBox instanceof HTMLElement)) return;
+		errorBox.classList.add('hidden');
+		errorBox.textContent = '';
+	}
+
+	function esc(value) {
+		return String(value ?? '')
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#39;');
+	}
+
+	function formatRelativeDate(value) {
+		if (!value) return "À l'instant";
+		const date = new Date(value);
+		const diffMinutes = Math.max(1, Math.round((Date.now() - date.getTime()) / 60000));
+		if (diffMinutes < 60) return `Il y a ${diffMinutes} min`;
+		const diffHours = Math.round(diffMinutes / 60);
+		if (diffHours < 24) return `Il y a ${diffHours} h`;
+		const diffDays = Math.round(diffHours / 24);
+		if (diffDays <= 1) return 'Hier';
+		return `Il y a ${diffDays} jours`;
+	}
+
+	function renderViewerAvatar() {
+		if (assistantState?.viewer?.avatarUrl) {
+			return `<img src="${esc(assistantState.viewer.avatarUrl)}" alt="${esc(assistantState.viewer.fullName)}" class="h-11 w-11 rounded-full object-cover" />`;
+		}
+		return `<span class="flex h-11 w-11 items-center justify-center rounded-full bg-[#08b37d] text-[0.86rem] font-semibold text-white">${esc(assistantState?.viewer?.initials || 'NU')}</span>`;
+	}
+
+	function renderMessages() {
+		if (!(messagesBox instanceof HTMLElement) || !assistantState) return;
+		messagesBox.innerHTML = assistantState.messages.map((message) => {
+			const isAssistant = message.role === 'assistant';
+			const chips = Array.isArray(message.metadata?.chips) ? message.metadata.chips : [];
+			const relatedRecipes = Array.isArray(message.metadata?.relatedRecipes) ? message.metadata.relatedRecipes : [];
+			const relatedLinks = Array.isArray(message.metadata?.relatedLinks) ? message.metadata.relatedLinks : [];
+
+			return `
+				<div class="${isAssistant ? 'mb-6' : 'mb-5 flex justify-end'}">
+					<div class="${isAssistant ? 'max-w-[88%]' : 'max-w-[82%]'}">
+						<div class="flex ${isAssistant ? 'items-start gap-3' : 'justify-end'}">
+							${isAssistant ? '<span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,#8b2cf8_0%,#ff4aa2_100%)] text-white"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 3v5M12 16v5M5 12H0M24 12h-5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></span>' : ''}
+							<div class="min-w-0 rounded-[22px] ${isAssistant ? 'bg-[#f1f5fb] text-[#324765]' : 'bg-[#08b37d] text-white'} px-4 py-4 text-[1rem] leading-8">
+								${esc(message.content).replaceAll('\n', '<br />')}
+							</div>
+							${!isAssistant ? renderViewerAvatar() : ''}
+						</div>
+						<div class="mt-2 ${isAssistant ? 'pl-14' : 'pr-14 text-right'} text-[0.8rem] text-slate-400">${esc(formatRelativeDate(message.createdAt))}</div>
+						${isAssistant ? `
+							<div class="mt-3 pl-14">
+								<div class="flex items-center gap-3 text-slate-300">
+									<button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100" aria-label="Copier">
+										<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none"><path d="M9 9h10v10H9zM5 15H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h10a1 1 0 0 1 1 1v1" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+									</button>
+									<button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100" aria-label="Utile">
+										<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none"><path d="M14 10V4a2 2 0 0 0-2-2l-1 5-2 1v8h8.4a2 2 0 0 0 2-1.5l1.4-5A2 2 0 0 0 18.9 7H15a1 1 0 0 0-1 1v2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M9 8H5v10h4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+									</button>
+									<button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100" aria-label="Peu utile">
+										<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none"><path d="M10 14v6a2 2 0 0 0 2 2l1-5 2-1V8H6.6a2 2 0 0 0-2 1.5l-1.4 5A2 2 0 0 0 5.1 17H9a1 1 0 0 0 1-1v-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 16h4V6h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+									</button>
+								</div>
+								${chips.length ? `<div class="mt-4 flex flex-wrap gap-2">${chips.map((chip) => `<button type="button" data-chip="${esc(chip)}" class="rounded-[14px] border border-[#d7e4f2] bg-white px-3 py-2 text-[0.9rem] text-slate-600 transition hover:border-[#bcd1e6] hover:text-[#16223c]">${esc(chip)}</button>`).join('')}</div>` : ''}
+								${relatedLinks.length ? `<div class="mt-4 flex flex-wrap gap-2">${relatedLinks.map((link) => `<a href="${esc(link.href)}" class="rounded-[14px] bg-[#eefbf5] px-3 py-2 text-[0.88rem] font-medium text-[#0b8c5f]">${esc(link.label)}</a>`).join('')}</div>` : ''}
+								${relatedRecipes.length ? `<div class="mt-4 grid gap-3 sm:grid-cols-2">${relatedRecipes.map((recipe) => `<a href="/recette/${esc(recipe.slug)}" class="flex items-center gap-3 rounded-[16px] border border-[#dfe9f5] bg-white p-3 transition hover:border-[#bfd3e8]">${recipe.imageUrl ? `<img src="${esc(recipe.imageUrl)}" alt="${esc(recipe.title)}" class="h-[58px] w-[58px] rounded-[14px] object-cover" />` : '<div class="h-[58px] w-[58px] rounded-[14px] bg-slate-100"></div>'}<div class="min-w-0"><p class="truncate text-[0.92rem] font-semibold text-[#16223c]">${esc(recipe.title)}</p><p class="mt-1 text-[0.82rem] text-slate-400">${esc(recipe.calories)} kcal · ${esc(recipe.duration)} min</p></div></a>`).join('')}</div>` : ''}
+							</div>
+						` : ''}
+					</div>
+				</div>
+			`;
+		}).join('');
+
+		messagesBox.querySelectorAll('[data-chip]').forEach((button) => {
+			button.addEventListener('click', () => {
+				const prompt = button.getAttribute('data-chip');
+				if (prompt) {
+					sendMessage(prompt);
+				}
+			});
+		});
+
+		messagesBox.scrollTop = messagesBox.scrollHeight;
+	}
+
+	function renderSidebar() {
+		if (!assistantState) return;
+		if (quickActionsBox instanceof HTMLElement) {
+			quickActionsBox.innerHTML = assistantState.quickActions.map((action) => `
+				<button type="button" data-quick="${esc(action.prompt)}" class="flex items-center gap-3 rounded-[18px] border border-[#d8e2ee] bg-[#fbfdff] px-4 py-4 text-left transition hover:border-[#bcd1e6]">
+					<span class="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#dff8eb] text-[#08b37d]">
+						<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 3c-1.5 3-4 5.2-4 9a4 4 0 1 0 8 0c0-1.6-.5-3-1.4-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+					</span>
+					<span class="text-[1rem] font-medium text-[#16223c]">${esc(action.label)}</span>
+				</button>
+			`).join('');
+			quickActionsBox.querySelectorAll('[data-quick]').forEach((button) => {
+				button.addEventListener('click', () => sendMessage(button.getAttribute('data-quick') || ''));
+			});
+		}
+
+		if (faqsBox instanceof HTMLElement) {
+			faqsBox.innerHTML = assistantState.faqs.map((faq) => `
+				<button type="button" data-faq="${esc(faq)}" class="text-left text-[0.96rem] leading-7 text-slate-600 transition hover:text-[#16223c]">→ ${esc(faq)}</button>
+			`).join('');
+			faqsBox.querySelectorAll('[data-faq]').forEach((button) => {
+				button.addEventListener('click', () => sendMessage(button.getAttribute('data-faq') || ''));
+			});
+		}
+
+		document.querySelector('#assistant-reco-title').textContent = assistantState.recommendation.title;
+		document.querySelector('#assistant-reco-description').textContent = assistantState.recommendation.description;
+		document.querySelector('#assistant-reco-price').textContent = assistantState.recommendation.price;
+	}
+
+	function setSendingState(value) {
+		isSending = value;
+		if (sendButton instanceof HTMLButtonElement) {
+			sendButton.disabled = value;
+			sendButton.classList.toggle('opacity-60', value);
+		}
+	}
+
+	async function fetchAssistantWorkspace() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const response = await fetch('/api/assistant', {
+			headers: { Authorization: `Bearer ${auth.token}` },
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				clearStoredAuth();
+				window.location.href = '/auth/login';
+				return;
+			}
+			throw new Error(result.message || "Impossible de charger l'assistant.");
+		}
+
+		setStoredAuth({ ...auth, token: result.token, record: auth.record });
+		assistantState = result;
+		renderSidebar();
+		renderMessages();
+	}
+
+	async function sendMessage(rawMessage) {
+		const message = String(rawMessage ?? '').trim();
+		if (!message || isSending) return;
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		try {
+			clearError();
+			setSendingState(true);
+			if (input instanceof HTMLTextAreaElement) {
+				input.value = '';
+				input.style.height = '84px';
+			}
+
+			const response = await fetch('/api/assistant', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${auth.token}`,
+				},
+				body: JSON.stringify({
+					conversationId: assistantState?.conversation?.id,
+					message,
+				}),
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearStoredAuth();
+					window.location.href = '/auth/login';
+					return;
+				}
+				throw new Error(result.message || "Impossible d'obtenir une réponse.");
+			}
+
+			setStoredAuth({ ...auth, token: result.token, record: auth.record });
+			assistantState = {
+				...assistantState,
+				token: result.token,
+				conversation: result.conversation,
+				messages: result.messages,
+			};
+			renderMessages();
+		} catch (error) {
+			showError(error instanceof Error ? error.message : "Impossible d'obtenir une réponse.");
+		} finally {
+			setSendingState(false);
+		}
+	}
+
+	form?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		await sendMessage(input instanceof HTMLTextAreaElement ? input.value : '');
+	});
+
+	input?.addEventListener('input', () => {
+		if (!(input instanceof HTMLTextAreaElement)) return;
+		input.style.height = '84px';
+		input.style.height = `${Math.min(input.scrollHeight, 220)}px`;
+	});
+
+	input?.addEventListener('keydown', async (event) => {
+		if (!(input instanceof HTMLTextAreaElement)) return;
+		if (event.key === 'Enter' && !event.shiftKey) {
+			event.preventDefault();
+			await sendMessage(input.value);
+		}
+	});
+
+	(async () => {
+		try {
+			clearError();
+			await fetchAssistantWorkspace();
+		} catch (error) {
+			showError(error instanceof Error ? error.message : "Impossible de charger l'assistant.");
+		}
+	})();
+</script>

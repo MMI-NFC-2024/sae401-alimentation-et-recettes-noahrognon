@@ -1,0 +1,97 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Liste de courses - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)] py-8 lg:py-10 print:bg-white print:py-0">
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6 print:max-w-none print:px-0">
+			<div class="mx-auto max-w-[1080px] print:max-w-none">
+				<div class="mb-8 print:mb-5">
+					<h1 class="text-[2.3rem] font-semibold tracking-[-0.04em] text-[#16223c]">Liste de courses</h1>
+					<p class="mt-2 text-[1.05rem] text-slate-500">Générée automatiquement à partir de votre planning hebdomadaire</p>
+				</div>
+
+				<p id="shopping-error" class="mb-5 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 print:hidden"></p>
+
+				<div class="mb-5 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between print:hidden">
+					<button id="shopping-prev-week" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600 sm:w-auto"><span>‹</span><span>Semaine précédente</span></button>
+					<div class="text-center">
+						<p class="text-[1.1rem] font-semibold text-[#16223c]">Semaine sélectionnée</p>
+						<p id="shopping-week-label" class="mt-1 text-[1rem] text-slate-500">-</p>
+					</div>
+					<button id="shopping-next-week" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center gap-2 rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600 sm:w-auto"><span>Semaine suivante</span><span>›</span></button>
+				</div>
+
+				<section class="mb-5 rounded-[24px] border border-[#d8e2ee] bg-white px-5 py-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)] print:shadow-none">
+					<div class="mb-2 flex items-center justify-between gap-3 text-[0.98rem] text-slate-500">
+						<span>Progression</span>
+						<span id="shopping-progress-label">0 / 0 articles</span>
+					</div>
+					<div class="h-4 overflow-hidden rounded-full bg-[#edf2f9]">
+						<div id="shopping-progress-bar" class="h-full rounded-full bg-[#08b37d]" style="width:0%"></div>
+					</div>
+				</section>
+
+				<div class="mb-6 flex flex-col gap-3 sm:flex-row print:hidden">
+					<button id="shopping-open-add" type="button" class="inline-flex min-h-[46px] items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[0.98rem] font-semibold text-white">+ Ajouter un article</button>
+					<button id="shopping-export-pdf" type="button" class="inline-flex min-h-[46px] items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600">Exporter PDF</button>
+					<button id="shopping-print" type="button" class="inline-flex min-h-[46px] items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600">Imprimer</button>
+				</div>
+
+				<div id="shopping-groups" class="grid gap-5"></div>
+
+				<section class="mt-6 rounded-[22px] border border-[#cfe0ff] bg-[linear-gradient(180deg,#edf4ff_0%,#eaf2ff_100%)] px-5 py-5 text-[#33518b] print:hidden">
+					<p class="text-[1rem] font-semibold">Conseil</p>
+					<p class="mt-2 text-[0.96rem] leading-7">Cette liste a été générée automatiquement à partir de votre planning. Les quantités sont fusionnées pour éviter les doublons et vous pouvez la compléter manuellement avant impression.</p>
+				</section>
+
+				<div id="shopping-modal" class="pointer-events-none fixed inset-0 z-50 hidden bg-slate-950/40 opacity-0 transition duration-200 print:hidden">
+					<div class="flex min-h-full items-end justify-center p-0 sm:p-4 md:items-center">
+						<div id="shopping-modal-panel" class="w-full max-w-[560px] translate-y-6 rounded-t-[28px] border border-[#d8e2ee] bg-white p-4 shadow-[0_28px_60px_rgba(15,23,42,0.24)] transition duration-200 sm:rounded-[28px] sm:p-6">
+							<div class="flex items-start justify-between gap-4">
+								<div>
+									<p class="text-[1.45rem] font-semibold text-[#16223c]">Ajouter un article</p>
+									<p class="mt-2 text-[0.96rem] text-slate-500">Complétez votre liste avec un produit manuel.</p>
+								</div>
+								<button id="shopping-close-modal" type="button" class="inline-flex h-[44px] w-[44px] items-center justify-center rounded-[14px] border border-[#d8e2ee] text-[1.4rem] text-slate-500">×</button>
+							</div>
+							<div class="mt-5 grid gap-4">
+								<input id="shopping-manual-name" type="text" placeholder="Nom de l'article" class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.98rem] text-slate-700 outline-none focus:border-[#08b37d]" />
+								<div class="grid gap-4 sm:grid-cols-3">
+									<input id="shopping-manual-category" type="text" placeholder="Catégorie" class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.98rem] text-slate-700 outline-none focus:border-[#08b37d]" />
+									<input id="shopping-manual-quantity" type="number" min="0" step="0.1" placeholder="Quantité" class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.98rem] text-slate-700 outline-none focus:border-[#08b37d]" />
+									<input id="shopping-manual-unit" type="text" placeholder="Unité" class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.98rem] text-slate-700 outline-none focus:border-[#08b37d]" />
+								</div>
+							</div>
+							<div class="mt-6 flex flex-col-reverse gap-3 border-t border-[#e7eef6] pt-5 sm:flex-row sm:items-center sm:justify-end">
+								<button id="shopping-cancel-modal" type="button" class="inline-flex min-h-[46px] items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600">Annuler</button>
+								<button id="shopping-add-button" type="button" class="inline-flex min-h-[46px] items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[0.98rem] font-semibold text-white">Ajouter à la liste</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script is:inline>
+	const authKey='nutrivia_auth'; const qs=(s)=>document.querySelector(s); const shoppingError=qs('#shopping-error'); const weekLabel=qs('#shopping-week-label'); const progressLabel=qs('#shopping-progress-label'); const progressBar=qs('#shopping-progress-bar'); const groupsContainer=qs('#shopping-groups'); const prevWeekButton=qs('#shopping-prev-week'); const nextWeekButton=qs('#shopping-next-week'); const exportPdfButton=qs('#shopping-export-pdf'); const printButton=qs('#shopping-print'); const openAddButton=qs('#shopping-open-add'); const modal=qs('#shopping-modal'); const modalPanel=qs('#shopping-modal-panel'); const closeModalButton=qs('#shopping-close-modal'); const cancelModalButton=qs('#shopping-cancel-modal'); const addButton=qs('#shopping-add-button'); const manualName=qs('#shopping-manual-name'); const manualCategory=qs('#shopping-manual-category'); const manualQuantity=qs('#shopping-manual-quantity'); const manualUnit=qs('#shopping-manual-unit');
+	let shoppingList=null, currentDate=new Date().toISOString().slice(0,10);
+	const getStoredAuth=()=>{try{const raw=localStorage.getItem(authKey); return raw?JSON.parse(raw):null;}catch{return null;}}; const setStoredAuth=(p)=>localStorage.setItem(authKey,JSON.stringify(p)); const clearStoredAuth=()=>localStorage.removeItem(authKey);
+	const esc=(v)=>String(v).replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;').replaceAll('"','&quot;').replaceAll("'",'&#39;'); const fmt=(v)=>Number.isInteger(v)?String(v):Number(v).toFixed(1).replace('.0',''); const addDays=(d,n)=>{const x=new Date(`${d}T12:00:00`); x.setDate(x.getDate()+n); return x.toISOString().slice(0,10);};
+	const showError=(m)=>{if(shoppingError instanceof HTMLElement){shoppingError.textContent=m; shoppingError.classList.remove('hidden');}}; const clearError=()=>{if(shoppingError instanceof HTMLElement){shoppingError.textContent=''; shoppingError.classList.add('hidden');}};
+	function openModal(){if(modal instanceof HTMLElement && modalPanel instanceof HTMLElement){modal.classList.remove('hidden'); requestAnimationFrame(()=>{modal.classList.remove('pointer-events-none','opacity-0'); modalPanel.classList.remove('translate-y-6');});}}
+	function closeModal(){if(modal instanceof HTMLElement && modalPanel instanceof HTMLElement){modal.classList.add('pointer-events-none','opacity-0'); modalPanel.classList.add('translate-y-6'); window.setTimeout(()=>modal.classList.add('hidden'),180);}}
+	function render(){ if(!shoppingList) return; if(weekLabel instanceof HTMLElement) weekLabel.textContent=shoppingList.week.label; if(progressLabel instanceof HTMLElement) progressLabel.textContent=`${shoppingList.progress.checkedCount} / ${shoppingList.progress.totalCount} articles`; if(progressBar instanceof HTMLElement) progressBar.style.width=`${shoppingList.progress.rate}%`; if(!(groupsContainer instanceof HTMLElement)) return; groupsContainer.innerHTML=shoppingList.groups.map((group)=>`<section class="overflow-hidden rounded-[22px] border border-[#d8e2ee] bg-white shadow-[0_16px_38px_rgba(71,104,145,0.08)]"><div class="flex items-center justify-between gap-3 border-b border-[#e7eef6] bg-[#fbfdff] px-5 py-4"><h2 class="text-[1.35rem] font-semibold text-[#16223c]">${esc(group.category)}</h2><p class="text-[0.98rem] text-slate-400">${group.checkedCount} / ${group.totalCount}</p></div><div>${group.items.map((item)=>`<div class="flex items-center gap-4 border-b border-[#eef3f8] px-4 py-4 last:border-b-0"><button type="button" data-key="${esc(item.itemKey)}" data-checked="${item.isChecked?'1':'0'}" class="shopping-toggle inline-flex h-6 w-6 items-center justify-center rounded-full border ${item.isChecked?'border-[#79d4b2] bg-[#79d4b2] text-white':'border-[#cad8e7] bg-white text-transparent'}">✓</button><div class="min-w-0 flex-1"><p class="${item.isChecked?'text-slate-400 line-through':'text-[#16223c]'} text-[1rem] font-medium">${esc(item.nom)}</p></div><p class="${item.isChecked?'text-slate-300':'text-slate-500'} text-[0.96rem]">${esc(item.displayQuantity)}</p><button type="button" data-key="${esc(item.itemKey)}" class="shopping-remove inline-flex h-8 w-8 items-center justify-center rounded-[10px] text-slate-400 hover:bg-slate-50">🗑</button></div>`).join('')}</div></section>`).join(''); bindActions(); }
+	function bindActions(){document.querySelectorAll('.shopping-toggle').forEach((button)=>button.addEventListener('click',async()=>{try{await toggleItem(button.getAttribute('data-key')||'',button.getAttribute('data-checked')!=='1');}catch(error){showError(error instanceof Error?error.message:'Impossible de mettre à jour cet article.');}})); document.querySelectorAll('.shopping-remove').forEach((button)=>button.addEventListener('click',async()=>{try{await removeItem(button.getAttribute('data-key')||'');}catch(error){showError(error instanceof Error?error.message:'Impossible de supprimer cet article.');}}));}
+	async function fetchShopping(date){const auth=getStoredAuth(); if(!auth?.token){window.location.href='/auth/login'; return;} const response=await fetch(`/api/shopping-list?date=${encodeURIComponent(date)}`,{headers:{Authorization:`Bearer ${auth.token}`}}); const result=await response.json(); if(!response.ok){if(response.status===401){clearStoredAuth(); window.location.href='/auth/login'; return;} throw new Error(result.message||'Impossible de charger la liste de courses.');} setStoredAuth({...auth,token:result.token,record:auth.record}); shoppingList=result; currentDate=date; render();}
+	async function toggleItem(itemKey,checked){const auth=getStoredAuth(); if(!auth?.token){window.location.href='/auth/login'; return;} const response=await fetch('/api/shopping-list',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${auth.token}`},body:JSON.stringify({action:'toggle',weekStart:shoppingList.week.start,itemKey,checked})}); const result=await response.json(); if(!response.ok){if(response.status===401){clearStoredAuth(); window.location.href='/auth/login'; return;} throw new Error(result.message||'Impossible de mettre à jour cet article.');} setStoredAuth({...auth,token:result.token,record:auth.record}); shoppingList=result; render();}
+	async function removeItem(itemKey){const auth=getStoredAuth(); if(!auth?.token){window.location.href='/auth/login'; return;} const response=await fetch('/api/shopping-list',{method:'DELETE',headers:{'Content-Type':'application/json',Authorization:`Bearer ${auth.token}`},body:JSON.stringify({weekStart:shoppingList.week.start,itemKey})}); const result=await response.json(); if(!response.ok){if(response.status===401){clearStoredAuth(); window.location.href='/auth/login'; return;} throw new Error(result.message||'Impossible de supprimer cet article.');} setStoredAuth({...auth,token:result.token,record:auth.record}); shoppingList=result; render();}
+	async function addManualItem(){const auth=getStoredAuth(); if(!auth?.token){window.location.href='/auth/login'; return;} const nom=manualName instanceof HTMLInputElement?manualName.value.trim():''; if(!nom) throw new Error("Le nom de l'article est obligatoire."); const categorie=manualCategory instanceof HTMLInputElement?manualCategory.value.trim():'autre'; const quantite=manualQuantity instanceof HTMLInputElement?Number(manualQuantity.value||0):0; const unite=manualUnit instanceof HTMLInputElement?manualUnit.value.trim():''; const response=await fetch('/api/shopping-list',{method:'POST',headers:{'Content-Type':'application/json',Authorization:`Bearer ${auth.token}`},body:JSON.stringify({action:'add-manual',weekStart:shoppingList.week.start,nom,categorie,quantite,unite})}); const result=await response.json(); if(!response.ok){if(response.status===401){clearStoredAuth(); window.location.href='/auth/login'; return;} throw new Error(result.message||"Impossible d'ajouter cet article.");} setStoredAuth({...auth,token:result.token,record:auth.record}); shoppingList=result; if(manualName instanceof HTMLInputElement) manualName.value=''; if(manualCategory instanceof HTMLInputElement) manualCategory.value=''; if(manualQuantity instanceof HTMLInputElement) manualQuantity.value=''; if(manualUnit instanceof HTMLInputElement) manualUnit.value=''; closeModal(); render();}
+	prevWeekButton?.addEventListener('click',async()=>{try{clearError(); await fetchShopping(addDays(currentDate,-7));}catch(error){showError(error instanceof Error?error.message:'Impossible de charger la semaine précédente.');}});
+	nextWeekButton?.addEventListener('click',async()=>{try{clearError(); await fetchShopping(addDays(currentDate,7));}catch(error){showError(error instanceof Error?error.message:'Impossible de charger la semaine suivante.');}});
+	openAddButton?.addEventListener('click',openModal); closeModalButton?.addEventListener('click',closeModal); cancelModalButton?.addEventListener('click',closeModal); addButton?.addEventListener('click',async()=>{try{await addManualItem();}catch(error){showError(error instanceof Error?error.message:"Impossible d'ajouter cet article.");}});
+	exportPdfButton?.addEventListener('click',async()=>{try{const auth=getStoredAuth(); if(!auth?.token){window.location.href='/auth/login'; return;} const response=await fetch(`/api/shopping-list/pdf?date=${encodeURIComponent(currentDate)}`,{headers:{Authorization:`Bearer ${auth.token}`}}); if(!response.ok){throw new Error('Impossible de générer le PDF.');} const blob=await response.blob(); const href=URL.createObjectURL(blob); const link=document.createElement('a'); link.href=href; link.download=`liste-courses-${shoppingList?.week?.start||currentDate}.pdf`; document.body.appendChild(link); link.click(); link.remove(); URL.revokeObjectURL(href);}catch(error){showError(error instanceof Error?error.message:'Impossible de générer le PDF.');}}); printButton?.addEventListener('click',()=>window.print());
+	(async()=>{try{clearError(); await fetchShopping(currentDate);}catch(error){showError(error instanceof Error?error.message:'Impossible de charger la liste de courses.');}})();
+</script>

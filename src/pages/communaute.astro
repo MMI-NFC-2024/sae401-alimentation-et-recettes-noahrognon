@@ -1,0 +1,801 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Communaute - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)] py-8 lg:py-10">
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
+			<div class="mx-auto max-w-[760px]">
+				<div class="mb-6">
+					<h1 class="text-[2.2rem] font-semibold tracking-[-0.04em] text-[#16223c]">Communaute Nutrivia</h1>
+					<p class="mt-2 text-[1.02rem] text-slate-500">Partagez vos recettes, photos et experiences avec la communaute.</p>
+				</div>
+
+				<a href="#" class="mb-5 block overflow-hidden rounded-[24px] border border-[#bde7d8] bg-[linear-gradient(135deg,#08b37d_0%,#0da886_48%,#b9f0df_100%)] px-5 py-5 text-white shadow-[0_20px_40px_rgba(8,179,125,0.22)] sm:px-6">
+					<div class="inline-flex rounded-full bg-white/20 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-white">Sponsorise</div>
+					<h2 class="mt-4 text-[1.4rem] font-semibold">Coaching Nutrition Personnalise</h2>
+					<p class="mt-2 max-w-[35rem] text-[0.95rem] leading-7 text-white/85">Rejoignez le programme qui aide a mieux tenir ses objectifs avec Nutrivia Pro.</p>
+					<span class="mt-5 inline-flex min-h-[42px] items-center justify-center rounded-[14px] bg-white px-4 py-2.5 text-[0.94rem] font-semibold text-[#0b8c5f]">Essayer pendant 14 jours</span>
+				</a>
+
+				<p id="community-error" class="mb-4 hidden rounded-[18px] bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+				<p id="community-success" class="mb-4 hidden rounded-[18px] bg-[#e9fbf2] px-4 py-3 text-sm text-[#0b8c5f]"></p>
+
+				<section class="mb-5 rounded-[22px] border border-[#d8e2ee] bg-white px-4 py-4 shadow-[0_16px_38px_rgba(71,104,145,0.08)] sm:px-5">
+					<div class="flex items-center gap-3">
+						<div id="community-composer-avatar" class="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#08b37d] text-[0.9rem] font-semibold text-white">UT</div>
+						<button id="community-open-composer" type="button" class="flex min-h-[50px] flex-1 items-center rounded-[16px] border border-[#dfe9f5] bg-[#fbfdff] px-4 text-left text-[0.95rem] text-slate-400 transition hover:border-[#bfd3e8]">
+							Partagez vos recettes, photos ou experiences...
+						</button>
+						<button id="community-open-composer-icon" type="button" class="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-[14px] bg-[#08b37d] text-white shadow-[0_12px_26px_rgba(8,179,125,0.24)]">
+							<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none" aria-hidden="true">
+								<path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+							</svg>
+						</button>
+					</div>
+				</section>
+
+				<div class="mb-5 flex flex-wrap gap-2">
+					<button id="community-filter-recent" type="button" class="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#55d8af] bg-[#e9fbf2] px-4 py-2 text-[0.9rem] font-semibold text-[#0b8c5f]">
+						<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+							<path d="M12 7v5l3 3M21 12a9 9 0 1 1-9-9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+						</svg>
+						Recentes
+					</button>
+					<button id="community-filter-popular" type="button" class="inline-flex min-h-[38px] items-center gap-2 rounded-full border border-[#d8e2ee] bg-white px-4 py-2 text-[0.9rem] font-semibold text-slate-600">
+						<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true">
+							<path d="M12 3 14.9 8.9 21 9.8l-4.5 4.4 1.1 6.1L12 17.4 6.4 20.3l1.1-6.1L3 9.8l6.1-.9L12 3Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"></path>
+						</svg>
+						Populaires
+					</button>
+				</div>
+
+				<div id="community-feed" class="grid gap-4"></div>
+
+				<div class="mt-6 flex justify-center">
+					<button id="community-load-more" type="button" class="inline-flex min-h-[42px] items-center justify-center rounded-[14px] border border-[#d8e2ee] bg-white px-5 py-2.5 text-[0.94rem] font-medium text-slate-600 shadow-[0_12px_26px_rgba(71,104,145,0.08)]">
+						Voir plus de publications
+					</button>
+				</div>
+			</div>
+		</div>
+
+		<div id="community-modal" class="pointer-events-none fixed inset-0 z-50 hidden bg-slate-950/40 opacity-0 transition duration-200">
+			<div class="flex min-h-full items-end justify-center overflow-y-auto p-0 sm:p-4 md:items-center">
+				<div id="community-modal-panel" class="flex max-h-[100dvh] w-full max-w-[760px] translate-y-6 flex-col rounded-t-[28px] border border-[#d8e2ee] bg-white p-4 shadow-[0_28px_60px_rgba(15,23,42,0.24)] transition duration-200 sm:max-h-[min(92dvh,920px)] sm:rounded-[28px] sm:p-6">
+					<div class="flex items-start justify-between gap-4">
+						<div>
+							<h2 class="text-[1.45rem] font-semibold text-[#16223c]">Nouvelle publication</h2>
+							<p class="mt-2 text-[0.96rem] text-slate-500">Ajoutez une photo, un message et quelques hashtags pour partager avec la communaute.</p>
+						</div>
+						<button id="community-close-modal" type="button" class="inline-flex h-[44px] w-[44px] items-center justify-center rounded-[14px] border border-[#d8e2ee] text-[1.4rem] text-slate-500">×</button>
+					</div>
+
+					<form id="community-post-form" class="mt-6 flex min-h-0 flex-1 flex-col">
+						<div class="min-h-0 flex-1 space-y-4 overflow-y-auto pr-1">
+						<div>
+							<label for="community-post-description" class="mb-2 block text-[0.94rem] font-medium text-[#324765]">Description</label>
+							<textarea id="community-post-description" name="description" rows="5" placeholder="Racontez votre repas, vos astuces ou votre progression..." class="w-full rounded-[18px] border border-[#cad8e7] bg-white px-4 py-4 text-[0.98rem] text-slate-700 outline-none transition focus:border-[#08b37d]"></textarea>
+						</div>
+
+						<div>
+							<label for="community-post-hashtags" class="mb-2 block text-[0.94rem] font-medium text-[#324765]">Hashtags</label>
+							<input id="community-post-hashtags" name="hashtags" type="text" placeholder="#mealprep #motivation #recette" class="h-[48px] w-full rounded-[16px] border border-[#cad8e7] bg-white px-4 text-[0.98rem] text-slate-700 outline-none transition focus:border-[#08b37d]" />
+						</div>
+
+						<div class="rounded-[20px] border border-[#dfe9f5] bg-[#fbfdff] px-4 py-4">
+							<div class="flex items-center justify-between gap-3">
+								<div>
+									<p class="text-[0.96rem] font-medium text-[#16223c]">Lier une recette du site</p>
+									<p class="mt-1 text-[0.88rem] text-slate-400">Optionnel, pour montrer le resultat ou parler d'une recette.</p>
+								</div>
+								<button id="community-clear-recipe" type="button" class="hidden text-[0.86rem] font-medium text-slate-400">Retirer</button>
+							</div>
+							<div class="mt-4 grid gap-3">
+								<input id="community-recipe-search" type="search" placeholder="Chercher une recette..." class="h-[46px] w-full rounded-[14px] border border-[#cad8e7] bg-white px-4 text-[0.95rem] text-slate-700 outline-none transition focus:border-[#08b37d]" />
+								<div id="community-selected-recipe" class="hidden rounded-[16px] border border-[#cce9dd] bg-[#eefbf5] p-3"></div>
+								<div id="community-recipe-results" class="grid max-h-[220px] gap-2 overflow-y-auto pr-1"></div>
+							</div>
+						</div>
+
+						<div>
+							<div class="mb-2 flex items-center justify-between gap-3">
+								<label for="community-post-image" class="text-[0.94rem] font-medium text-[#324765]">Image</label>
+								<button id="community-clear-image" type="button" class="hidden text-[0.86rem] font-medium text-slate-400">Retirer</button>
+							</div>
+							<label for="community-post-image" class="flex min-h-[168px] cursor-pointer flex-col items-center justify-center rounded-[22px] border border-dashed border-[#cad8e7] bg-[#fbfdff] px-4 py-6 text-center transition hover:border-[#08b37d]">
+								<input id="community-post-image" name="image" type="file" accept="image/*" class="hidden" />
+								<div id="community-image-preview" class="hidden h-[180px] w-full overflow-hidden rounded-[18px] bg-slate-100">
+									<img id="community-image-preview-image" alt="Apercu de la publication" class="h-full w-full object-cover" />
+								</div>
+								<div id="community-image-placeholder">
+									<div class="mx-auto flex h-12 w-12 items-center justify-center rounded-2xl bg-[#e9fbf2] text-[#0b8c5f]">
+										<svg viewBox="0 0 24 24" class="h-6 w-6" fill="none" aria-hidden="true">
+											<path d="M8 7h.01M5 19h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3l-1-2H9L8 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+										</svg>
+									</div>
+									<p class="mt-3 text-[0.96rem] font-medium text-[#16223c]">Ajouter une photo</p>
+									<p class="mt-1 text-[0.88rem] text-slate-400">PNG, JPG ou WEBP - 5 Mo max</p>
+								</div>
+							</label>
+						</div>
+						</div>
+
+						<div class="mt-4 flex flex-col-reverse gap-3 border-t border-[#e7eef6] pt-5 sm:flex-row sm:items-center sm:justify-between">
+							<p class="text-[0.9rem] text-slate-400">Votre publication sera visible par toute la communaute.</p>
+							<div class="flex flex-col gap-3 sm:flex-row">
+								<button id="community-cancel-modal" type="button" class="inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.98rem] font-medium text-slate-600 sm:w-auto">Annuler</button>
+								<button type="submit" class="inline-flex min-h-[46px] w-full items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-3 text-[0.98rem] font-semibold text-white shadow-[0_16px_35px_rgba(8,179,125,0.22)] sm:w-auto">Publier</button>
+							</div>
+						</div>
+					</form>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const qs = (selector) => document.querySelector(selector);
+	const feedContainer = qs('#community-feed');
+	const errorBox = qs('#community-error');
+	const successBox = qs('#community-success');
+	const loadMoreButton = qs('#community-load-more');
+	const filterRecentButton = qs('#community-filter-recent');
+	const filterPopularButton = qs('#community-filter-popular');
+	const composerAvatar = qs('#community-composer-avatar');
+	const openComposerButton = qs('#community-open-composer');
+	const openComposerIconButton = qs('#community-open-composer-icon');
+	const modal = qs('#community-modal');
+	const modalPanel = qs('#community-modal-panel');
+	const closeModalButton = qs('#community-close-modal');
+	const cancelModalButton = qs('#community-cancel-modal');
+	const postForm = qs('#community-post-form');
+	const imageInput = qs('#community-post-image');
+	const imagePreview = qs('#community-image-preview');
+	const imagePreviewImage = qs('#community-image-preview-image');
+	const imagePlaceholder = qs('#community-image-placeholder');
+	const clearImageButton = qs('#community-clear-image');
+	const descriptionInput = qs('#community-post-description');
+	const recipeSearchInput = qs('#community-recipe-search');
+	const recipeResults = qs('#community-recipe-results');
+	const selectedRecipeBox = qs('#community-selected-recipe');
+	const clearRecipeButton = qs('#community-clear-recipe');
+	let selectedImageDataUrl = '';
+	let selectedRecipe = null;
+
+	let communityData = null;
+	let currentSort = 'recent';
+	let visibleCount = 5;
+
+	function getStoredAuth() {
+		try {
+			const raw = localStorage.getItem(authKey);
+			return raw ? JSON.parse(raw) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function setStoredAuth(payload) {
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function clearStoredAuth() {
+		localStorage.removeItem(authKey);
+	}
+
+	function showError(message) {
+		if (!(errorBox instanceof HTMLElement)) return;
+		errorBox.textContent = message;
+		errorBox.classList.remove('hidden');
+	}
+
+	function clearError() {
+		if (!(errorBox instanceof HTMLElement)) return;
+		errorBox.textContent = '';
+		errorBox.classList.add('hidden');
+	}
+
+	function showSuccess(message) {
+		if (!(successBox instanceof HTMLElement)) return;
+		successBox.textContent = message;
+		successBox.classList.remove('hidden');
+		window.clearTimeout(showSuccess.timer);
+		showSuccess.timer = window.setTimeout(() => {
+			successBox.classList.add('hidden');
+		}, 2800);
+	}
+
+	function escapeHtml(value) {
+		return String(value ?? '')
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#39;');
+	}
+
+	function formatRelativeDate(value) {
+		if (!value) return "A l'instant";
+		const date = new Date(value);
+		const diffMs = Date.now() - date.getTime();
+		const diffMinutes = Math.max(1, Math.round(diffMs / 60000));
+		if (diffMinutes < 60) return `Il y a ${diffMinutes} min`;
+		const diffHours = Math.round(diffMinutes / 60);
+		if (diffHours < 24) return `Il y a ${diffHours} h`;
+		const diffDays = Math.round(diffHours / 24);
+		if (diffDays === 1) return 'Hier';
+		if (diffDays < 7) return `Il y a ${diffDays} jours`;
+		return new Intl.DateTimeFormat('fr-FR', { day: 'numeric', month: 'short' }).format(date);
+	}
+
+	function renderAvatar(user, className = '') {
+		if (user?.avatarUrl) {
+			return `<img src="${escapeHtml(user.avatarUrl)}" alt="${escapeHtml(user.name)}" class="${className || 'h-11 w-11'} rounded-full object-cover" />`;
+		}
+		return `<div class="${className || 'h-11 w-11'} flex items-center justify-center rounded-full bg-[#08b37d] text-[0.88rem] font-semibold text-white">${escapeHtml(user?.initials || 'UT')}</div>`;
+	}
+
+	function heartIcon(active = false) {
+		return `<svg viewBox="0 0 24 24" class="h-4 w-4" fill="${active ? 'currentColor' : 'none'}" aria-hidden="true"><path d="M12 20s-7-4.6-7-10a4 4 0 0 1 7-2.5A4 4 0 0 1 19 10c0 5.4-7 10-7 10Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>`;
+	}
+
+	function commentIcon() {
+		return `<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true"><path d="M7 18.5 3.5 20l1.1-3.4A7.5 7.5 0 1 1 19.5 12 7.5 7.5 0 0 1 7 18.5Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+	}
+
+	function shareIcon() {
+		return `<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true"><path d="M15 8 19 4m0 0v4m0-4h-4M10 14 19 5M5 12v5a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+	}
+
+	function sendIcon() {
+		return `<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none" aria-hidden="true"><path d="m4 12 14-8-3 8 3 8-14-8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>`;
+	}
+
+	function renderFilters() {
+		const recentActive = currentSort === 'recent';
+		const popularActive = currentSort === 'popular';
+		[filterRecentButton, filterPopularButton].forEach((button) => {
+			if (button instanceof HTMLElement) {
+				button.classList.remove('border-[#55d8af]', 'bg-[#e9fbf2]', 'text-[#0b8c5f]', 'border-[#8fb1d8]', 'bg-[#eef5ff]', 'text-[#325d9f]');
+				button.classList.add('border-[#d8e2ee]', 'bg-white', 'text-slate-600');
+			}
+		});
+
+		if (filterRecentButton instanceof HTMLElement && recentActive) {
+			filterRecentButton.classList.remove('border-[#d8e2ee]', 'bg-white', 'text-slate-600');
+			filterRecentButton.classList.add('border-[#55d8af]', 'bg-[#e9fbf2]', 'text-[#0b8c5f]');
+		}
+
+		if (filterPopularButton instanceof HTMLElement && popularActive) {
+			filterPopularButton.classList.remove('border-[#d8e2ee]', 'bg-white', 'text-slate-600');
+			filterPopularButton.classList.add('border-[#8fb1d8]', 'bg-[#eef5ff]', 'text-[#325d9f]');
+		}
+	}
+
+	function renderFeed() {
+		if (!(feedContainer instanceof HTMLElement) || !communityData) return;
+
+		if (composerAvatar instanceof HTMLElement) {
+			composerAvatar.innerHTML = renderAvatar(communityData.viewer, 'h-11 w-11');
+		}
+
+		renderFilters();
+
+		const posts = communityData.posts.slice(0, visibleCount);
+		const sponsorIndex = posts.length > 4 ? 4 : -1;
+		const html = [];
+
+		posts.forEach((post, index) => {
+			const comments = post.comments
+				.map(
+					(comment) => `
+						<div class="rounded-[16px] bg-[#fbfdff] px-3 py-3">
+							<div class="flex items-start justify-between gap-3">
+								<div class="flex items-start gap-3">
+									${renderAvatar(comment.author, 'h-9 w-9')}
+									<div>
+										<div class="flex flex-wrap items-center gap-x-2 gap-y-1">
+											<p class="text-[0.92rem] font-medium text-[#16223c]">${escapeHtml(comment.author.name)}</p>
+											<span class="text-[0.78rem] text-slate-400">${escapeHtml(formatRelativeDate(comment.createdAt))}</span>
+										</div>
+										<p class="mt-1 text-[0.9rem] leading-6 text-slate-600">${escapeHtml(comment.content)}</p>
+									</div>
+								</div>
+								<button type="button" data-comment-like="${escapeHtml(comment.id)}" class="inline-flex items-center gap-1 rounded-full px-2 py-1 text-[0.82rem] ${comment.isLiked ? 'text-[#ff5f6d]' : 'text-slate-400'}">
+									${heartIcon(comment.isLiked)}
+									<span>${escapeHtml(comment.likeCount)}</span>
+								</button>
+							</div>
+						</div>
+					`,
+				)
+				.join('');
+
+			html.push(`
+				<article id="post-${escapeHtml(post.id)}" class="overflow-hidden rounded-[24px] border border-[#d8e2ee] bg-white shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
+					<div class="px-4 pt-4 sm:px-5 sm:pt-5">
+						<div class="flex items-start justify-between gap-3">
+							<div class="flex min-w-0 items-start gap-3">
+								${renderAvatar(post.author, 'h-11 w-11')}
+								<div class="min-w-0">
+									<p class="truncate text-[1rem] font-semibold text-[#16223c]">${escapeHtml(post.author.name)}</p>
+									<p class="mt-1 text-[0.84rem] text-slate-400">${escapeHtml(formatRelativeDate(post.createdAt))}</p>
+								</div>
+							</div>
+							<button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full text-slate-300">
+								<svg viewBox="0 0 24 24" class="h-4 w-4" fill="currentColor" aria-hidden="true"><circle cx="12" cy="5" r="1.8"></circle><circle cx="12" cy="12" r="1.8"></circle><circle cx="12" cy="19" r="1.8"></circle></svg>
+							</button>
+						</div>
+						<p class="mt-4 text-[0.98rem] leading-7 text-slate-600">${escapeHtml(post.description)}</p>
+						${post.hashtags?.length ? `<div class="mt-3 flex flex-wrap gap-2">${post.hashtags.map((tag) => `<span class="inline-flex rounded-full bg-[#eef7f2] px-2.5 py-1 text-[0.76rem] font-medium text-[#0b8c5f]">#${escapeHtml(tag)}</span>`).join('')}</div>` : ''}
+						${post.linkedRecipe ? `
+							<a href="/recette/${escapeHtml(post.linkedRecipe.slug)}" class="mt-4 flex items-center gap-3 rounded-[18px] border border-[#dfe9f5] bg-[#fbfdff] p-3 transition hover:border-[#bcd1e6]">
+								${post.linkedRecipe.imageUrl ? `<img src="${escapeHtml(post.linkedRecipe.imageUrl)}" alt="${escapeHtml(post.linkedRecipe.title)}" class="h-[60px] w-[60px] rounded-[14px] object-cover" />` : '<div class="h-[60px] w-[60px] rounded-[14px] bg-slate-100"></div>'}
+								<div class="min-w-0">
+									<p class="truncate text-[0.98rem] font-semibold text-[#16223c]">${escapeHtml(post.linkedRecipe.title)}</p>
+									<p class="mt-1 text-[0.86rem] text-slate-500">${escapeHtml(post.linkedRecipe.calories)} kcal · ${escapeHtml(post.linkedRecipe.duration)} min</p>
+									<p class="mt-1 text-[0.82rem] font-medium text-[#0b8c5f]">Voir la recette liée</p>
+								</div>
+							</a>
+						` : ''}
+					</div>
+					${post.imageUrl ? `<div class="mt-4 aspect-[1.45/1] overflow-hidden bg-slate-100"><img src="${escapeHtml(post.imageUrl)}" alt="Publication de ${escapeHtml(post.author.name)}" class="h-full w-full object-cover" /></div>` : ''}
+					<div class="px-4 py-4 sm:px-5">
+						<div class="flex items-center justify-between gap-3 text-[0.9rem]">
+							<div class="flex items-center gap-4">
+								<button type="button" data-post-like="${escapeHtml(post.id)}" class="inline-flex items-center gap-1.5 ${post.isLiked ? 'text-[#ff5f6d]' : 'text-slate-500'}">
+									${heartIcon(post.isLiked)}
+									<span>${escapeHtml(post.likeCount)}</span>
+								</button>
+								<div class="inline-flex items-center gap-1.5 text-slate-500">
+									${commentIcon()}
+									<span>${escapeHtml(post.commentCount)}</span>
+								</div>
+							</div>
+							<button type="button" data-share-post="${escapeHtml(post.id)}" class="inline-flex items-center gap-1.5 text-slate-400">${shareIcon()}</button>
+						</div>
+						<div class="mt-4 grid gap-2">
+							${comments || '<p class="rounded-[16px] border border-dashed border-[#d8e2ee] px-4 py-3 text-[0.9rem] text-slate-400">Aucun commentaire pour le moment.</p>'}
+						</div>
+						<div class="mt-3 flex items-center gap-2 rounded-[16px] border border-[#dfe9f5] bg-[#fbfdff] px-3 py-2">
+							<input data-comment-input="${escapeHtml(post.id)}" type="text" placeholder="Ecrire un commentaire..." class="h-10 flex-1 border-0 bg-transparent text-[0.92rem] text-slate-700 outline-none" />
+							<button type="button" data-comment-submit="${escapeHtml(post.id)}" class="inline-flex h-9 w-9 items-center justify-center rounded-full bg-[#08b37d] text-white shadow-[0_10px_20px_rgba(8,179,125,0.22)]">${sendIcon()}</button>
+						</div>
+					</div>
+				</article>
+			`);
+
+			if (index === sponsorIndex) {
+				html.push(`
+					<a href="#" class="flex flex-col gap-4 overflow-hidden rounded-[24px] border border-[#ffd4b3] bg-[linear-gradient(135deg,#fff4e8_0%,#fff8f2_44%,#fff2e9_100%)] p-4 shadow-[0_16px_38px_rgba(71,104,145,0.08)] sm:flex-row sm:items-center sm:justify-between">
+						<div class="min-w-0">
+							<div class="inline-flex rounded-full bg-[#ffeddc] px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-[#f97316]">Sponsorise - Offre du moment</div>
+							<h3 class="mt-3 text-[1.25rem] font-semibold text-[#16223c]">Kit Meal Prep Complet</h3>
+							<p class="mt-2 text-[0.92rem] leading-7 text-slate-500">Optimisez votre organisation et vos preparations hebdomadaires avec notre kit premium.</p>
+						</div>
+						<div class="shrink-0">
+							<div class="text-[1.65rem] font-semibold text-[#08b37d]">34,99€</div>
+							<span class="mt-3 inline-flex min-h-[42px] items-center justify-center rounded-[14px] bg-[#ff7a1a] px-4 py-2.5 text-[0.92rem] font-semibold text-white">Voir l'offre</span>
+						</div>
+					</a>
+				`);
+			}
+		});
+
+		if (!posts.length) {
+			html.push('<div class="rounded-[24px] border border-dashed border-[#cad8e7] bg-white px-5 py-8 text-center text-[0.98rem] text-slate-400 shadow-[0_16px_38px_rgba(71,104,145,0.08)]">Aucune publication pour le moment. Soyez le premier a partager quelque chose.</div>');
+		}
+
+		feedContainer.innerHTML = html.join('');
+
+		if (loadMoreButton instanceof HTMLElement) {
+			loadMoreButton.classList.toggle('hidden', visibleCount >= communityData.posts.length);
+		}
+
+		bindFeedActions();
+	}
+
+	function bindFeedActions() {
+		document.querySelectorAll('[data-post-like]').forEach((button) => {
+			button.addEventListener('click', async () => {
+				try {
+					await togglePostLike(button.getAttribute('data-post-like') || '');
+				} catch (error) {
+					showError(error instanceof Error ? error.message : 'Impossible de mettre a jour ce like.');
+				}
+			});
+		});
+
+		document.querySelectorAll('[data-comment-submit]').forEach((button) => {
+			button.addEventListener('click', async () => {
+				const postId = button.getAttribute('data-comment-submit') || '';
+				const input = document.querySelector(`[data-comment-input="${CSS.escape(postId)}"]`);
+				if (!(input instanceof HTMLInputElement)) return;
+				try {
+					await submitComment(postId, input.value);
+					input.value = '';
+				} catch (error) {
+					showError(error instanceof Error ? error.message : 'Impossible d’ajouter ce commentaire.');
+				}
+			});
+		});
+
+		document.querySelectorAll('[data-comment-input]').forEach((input) => {
+			input.addEventListener('keydown', async (event) => {
+				if (event.key !== 'Enter') return;
+				event.preventDefault();
+				const field = event.currentTarget;
+				if (!(field instanceof HTMLInputElement)) return;
+				try {
+					await submitComment(field.getAttribute('data-comment-input') || '', field.value);
+					field.value = '';
+				} catch (error) {
+					showError(error instanceof Error ? error.message : 'Impossible d’ajouter ce commentaire.');
+				}
+			});
+		});
+
+		document.querySelectorAll('[data-comment-like]').forEach((button) => {
+			button.addEventListener('click', async () => {
+				try {
+					await toggleCommentLike(button.getAttribute('data-comment-like') || '');
+				} catch (error) {
+					showError(error instanceof Error ? error.message : 'Impossible de mettre a jour ce like.');
+				}
+			});
+		});
+
+		document.querySelectorAll('[data-share-post]').forEach((button) => {
+			button.addEventListener('click', async () => {
+				const postId = button.getAttribute('data-share-post') || '';
+				const shareUrl = `${window.location.origin}/communaute#post-${postId}`;
+				try {
+					await navigator.clipboard.writeText(shareUrl);
+					showSuccess('Lien de la publication copie.');
+				} catch {
+					showError('Impossible de copier le lien de partage.');
+				}
+			});
+		});
+	}
+
+	async function handleUnauthorized() {
+		clearStoredAuth();
+		window.location.href = '/auth/login';
+	}
+
+	async function fetchCommunity(sort = currentSort) {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const response = await fetch(`/api/community?sort=${encodeURIComponent(sort)}`, {
+			headers: { Authorization: `Bearer ${auth.token}` },
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				await handleUnauthorized();
+				return;
+			}
+			throw new Error(result.message || 'Impossible de charger la communaute.');
+		}
+
+		setStoredAuth({ ...auth, token: result.token, record: auth.record });
+		currentSort = sort;
+		communityData = result;
+		renderRecipeSelector();
+		renderFeed();
+	}
+
+	async function togglePostLike(postId) {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const response = await fetch('/api/community/post-like', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${auth.token}`,
+			},
+			body: JSON.stringify({ postId, sort: currentSort }),
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				await handleUnauthorized();
+				return;
+			}
+			throw new Error(result.message || 'Impossible de mettre a jour ce like.');
+		}
+
+		setStoredAuth({ ...auth, token: result.token, record: auth.record });
+		communityData = result;
+		renderFeed();
+	}
+
+	async function submitComment(postId, commentaire) {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		if (!String(commentaire).trim()) {
+			throw new Error('Le commentaire ne peut pas etre vide.');
+		}
+
+		const response = await fetch('/api/community/comment', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${auth.token}`,
+			},
+			body: JSON.stringify({ postId, commentaire, sort: currentSort }),
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				await handleUnauthorized();
+				return;
+			}
+			throw new Error(result.message || 'Impossible d’ajouter ce commentaire.');
+		}
+
+		setStoredAuth({ ...auth, token: result.token, record: auth.record });
+		communityData = result;
+		renderFeed();
+	}
+
+	async function toggleCommentLike(commentId) {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const response = await fetch('/api/community/comment-like', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${auth.token}`,
+			},
+			body: JSON.stringify({ commentId, sort: currentSort }),
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				await handleUnauthorized();
+				return;
+			}
+			throw new Error(result.message || 'Impossible de mettre a jour ce like.');
+		}
+
+		setStoredAuth({ ...auth, token: result.token, record: auth.record });
+		communityData = result;
+		renderFeed();
+	}
+
+	function openComposer() {
+		if (!(modal instanceof HTMLElement) || !(modalPanel instanceof HTMLElement)) return;
+		clearError();
+		modal.classList.remove('hidden', 'pointer-events-none', 'opacity-0');
+		modal.classList.add('opacity-100');
+		window.requestAnimationFrame(() => {
+			modalPanel.classList.remove('translate-y-6');
+		});
+		if (descriptionInput instanceof HTMLTextAreaElement) {
+			descriptionInput.focus();
+		}
+	}
+
+	function closeComposer() {
+		if (!(modal instanceof HTMLElement) || !(modalPanel instanceof HTMLElement)) return;
+		modal.classList.add('pointer-events-none', 'opacity-0');
+		modal.classList.remove('opacity-100');
+		modalPanel.classList.add('translate-y-6');
+		window.setTimeout(() => {
+			modal.classList.add('hidden');
+		}, 180);
+	}
+
+	function resetComposerForm() {
+		if (postForm instanceof HTMLFormElement) {
+			postForm.reset();
+		}
+		if (imagePreview instanceof HTMLElement) {
+			imagePreview.classList.add('hidden');
+		}
+		if (imagePlaceholder instanceof HTMLElement) {
+			imagePlaceholder.classList.remove('hidden');
+		}
+		if (clearImageButton instanceof HTMLElement) {
+			clearImageButton.classList.add('hidden');
+		}
+		if (imagePreviewImage instanceof HTMLImageElement) {
+			imagePreviewImage.removeAttribute('src');
+		}
+		selectedImageDataUrl = '';
+		selectedRecipe = null;
+		renderRecipeSelector();
+	}
+
+	async function submitPost(event) {
+		event.preventDefault();
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		if (!(postForm instanceof HTMLFormElement)) return;
+		const formData = new FormData(postForm);
+		formData.set('sort', currentSort);
+		formData.set('imageDataUrl', selectedImageDataUrl);
+		formData.set('recipeId', selectedRecipe?.id ?? '');
+
+		const response = await fetch('/api/community', {
+			method: 'POST',
+			headers: {
+				Authorization: `Bearer ${auth.token}`,
+			},
+			body: formData,
+		});
+		const result = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				await handleUnauthorized();
+				return;
+			}
+			throw new Error(result.message || 'Impossible de publier ce post.');
+		}
+
+		setStoredAuth({ ...auth, token: result.token, record: auth.record });
+		communityData = result;
+		resetComposerForm();
+		closeComposer();
+		renderFeed();
+		showSuccess('Votre publication a bien ete partagee.');
+	}
+
+	function handleImagePreview() {
+		const file = imageInput instanceof HTMLInputElement ? imageInput.files?.[0] : null;
+		if (!file || !(imagePreview instanceof HTMLElement) || !(imagePlaceholder instanceof HTMLElement) || !(imagePreviewImage instanceof HTMLImageElement) || !(clearImageButton instanceof HTMLElement)) {
+			resetComposerForm();
+			return;
+		}
+
+		const reader = new FileReader();
+		reader.onload = () => {
+			selectedImageDataUrl = String(reader.result ?? '');
+			imagePreviewImage.src = selectedImageDataUrl;
+			imagePreview.classList.remove('hidden');
+			imagePlaceholder.classList.add('hidden');
+			clearImageButton.classList.remove('hidden');
+		};
+		reader.readAsDataURL(file);
+	}
+
+	function getRecipeSuggestions() {
+		const allRecipes = communityData?.composer?.recipes ?? [];
+		const search = recipeSearchInput instanceof HTMLInputElement ? recipeSearchInput.value.trim().toLowerCase() : '';
+		return allRecipes
+			.filter((recipe) => !selectedRecipe || recipe.id !== selectedRecipe.id)
+			.filter((recipe) => !search || String(recipe.title).toLowerCase().includes(search))
+			.slice(0, 8);
+	}
+
+	function renderRecipeSelector() {
+		if (!(recipeResults instanceof HTMLElement) || !(selectedRecipeBox instanceof HTMLElement) || !(clearRecipeButton instanceof HTMLElement)) {
+			return;
+		}
+
+		if (selectedRecipe) {
+			selectedRecipeBox.classList.remove('hidden');
+			selectedRecipeBox.innerHTML = `
+				<div class="flex items-center gap-3">
+					${selectedRecipe.imageUrl ? `<img src="${escapeHtml(selectedRecipe.imageUrl)}" alt="${escapeHtml(selectedRecipe.title)}" class="h-[58px] w-[58px] rounded-[14px] object-cover" />` : '<div class="h-[58px] w-[58px] rounded-[14px] bg-slate-100"></div>'}
+					<div class="min-w-0">
+						<p class="truncate text-[0.96rem] font-semibold text-[#16223c]">${escapeHtml(selectedRecipe.title)}</p>
+						<p class="mt-1 text-[0.84rem] text-slate-500">${escapeHtml(selectedRecipe.calories)} kcal · ${escapeHtml(selectedRecipe.duration)} min</p>
+					</div>
+				</div>
+			`;
+			clearRecipeButton.classList.remove('hidden');
+		} else {
+			selectedRecipeBox.classList.add('hidden');
+			selectedRecipeBox.innerHTML = '';
+			clearRecipeButton.classList.add('hidden');
+		}
+
+		const suggestions = getRecipeSuggestions();
+		if (!suggestions.length) {
+			recipeResults.innerHTML = '<p class="rounded-[14px] border border-dashed border-[#d8e2ee] px-3 py-3 text-[0.88rem] text-slate-400">Aucune recette trouvée.</p>';
+			return;
+		}
+
+		recipeResults.innerHTML = suggestions.map((recipe) => `
+			<button type="button" data-recipe-pick="${escapeHtml(recipe.id)}" class="flex items-center gap-3 rounded-[14px] border border-[#dfe9f5] bg-white p-3 text-left transition hover:border-[#bcd1e6]">
+				${recipe.imageUrl ? `<img src="${escapeHtml(recipe.imageUrl)}" alt="${escapeHtml(recipe.title)}" class="h-[52px] w-[52px] rounded-[12px] object-cover" />` : '<div class="h-[52px] w-[52px] rounded-[12px] bg-slate-100"></div>'}
+				<div class="min-w-0">
+					<p class="truncate text-[0.92rem] font-medium text-[#16223c]">${escapeHtml(recipe.title)}</p>
+					<p class="mt-1 text-[0.82rem] text-slate-400">${escapeHtml(recipe.calories)} kcal · ${escapeHtml(recipe.duration)} min</p>
+				</div>
+			</button>
+		`).join('');
+
+		recipeResults.querySelectorAll('[data-recipe-pick]').forEach((button) => {
+			button.addEventListener('click', () => {
+				const recipeId = button.getAttribute('data-recipe-pick');
+				selectedRecipe = (communityData?.composer?.recipes ?? []).find((item) => item.id === recipeId) ?? null;
+				renderRecipeSelector();
+			});
+		});
+	}
+
+	openComposerButton?.addEventListener('click', openComposer);
+	openComposerIconButton?.addEventListener('click', openComposer);
+	closeModalButton?.addEventListener('click', closeComposer);
+	cancelModalButton?.addEventListener('click', closeComposer);
+	postForm?.addEventListener('submit', async (event) => {
+		try {
+			clearError();
+			await submitPost(event);
+		} catch (error) {
+			showError(error instanceof Error ? error.message : 'Impossible de publier ce post.');
+		}
+	});
+	filterRecentButton?.addEventListener('click', async () => {
+		try {
+			clearError();
+			visibleCount = 5;
+			await fetchCommunity('recent');
+		} catch (error) {
+			showError(error instanceof Error ? error.message : 'Impossible de charger les publications recentes.');
+		}
+	});
+	filterPopularButton?.addEventListener('click', async () => {
+		try {
+			clearError();
+			visibleCount = 5;
+			await fetchCommunity('popular');
+		} catch (error) {
+			showError(error instanceof Error ? error.message : 'Impossible de charger les publications populaires.');
+		}
+	});
+	loadMoreButton?.addEventListener('click', () => {
+		visibleCount += 4;
+		renderFeed();
+	});
+	imageInput?.addEventListener('change', handleImagePreview);
+	recipeSearchInput?.addEventListener('input', renderRecipeSelector);
+	clearImageButton?.addEventListener('click', () => {
+		resetComposerForm();
+	});
+	clearRecipeButton?.addEventListener('click', () => {
+		selectedRecipe = null;
+		renderRecipeSelector();
+	});
+	modal?.addEventListener('click', (event) => {
+		if (event.target === modal) {
+			closeComposer();
+		}
+	});
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') {
+			closeComposer();
+		}
+	});
+
+	fetchCommunity(currentSort).catch((error) => {
+		showError(error instanceof Error ? error.message : 'Impossible de charger la communaute.');
+	});
+</script>
