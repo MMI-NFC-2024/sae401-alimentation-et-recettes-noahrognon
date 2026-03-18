@@ -93,18 +93,27 @@ async function getPocketBaseConfig(): Promise<PocketBaseConfig> {
 		return cachedConfig;
 	}
 
-	if (
-		process.env.POCKETBASE_URL &&
-		process.env.POCKETBASE_ADMIN_EMAIL &&
-		process.env.POCKETBASE_ADMIN_PASSWORD
-	) {
-		cachedConfig = {
-			url: process.env.POCKETBASE_URL,
-			adminEmail: process.env.POCKETBASE_ADMIN_EMAIL,
-			adminPassword: process.env.POCKETBASE_ADMIN_PASSWORD,
-		};
-		return cachedConfig;
+	const url = process.env.POCKETBASE_URL;
+	const adminEmail = process.env.POCKETBASE_ADMIN_EMAIL;
+	const adminPassword = process.env.POCKETBASE_ADMIN_PASSWORD;
+
+	if (!url || !adminEmail || !adminPassword) {
+		throw new Error(
+			`Variables PocketBase manquantes. ` +
+			`POCKETBASE_URL=${url ? 'OK' : 'MISSING'}, ` +
+			`POCKETBASE_ADMIN_EMAIL=${adminEmail ? 'OK' : 'MISSING'}, ` +
+			`POCKETBASE_ADMIN_PASSWORD=${adminPassword ? 'OK' : 'MISSING'}`
+		);
 	}
+
+	cachedConfig = {
+		url: url.replace(/\/+$/, ''),
+		adminEmail,
+		adminPassword,
+	};
+
+	return cachedConfig;
+}
 
 	const mcpPath = path.resolve(process.cwd(), '.vscode', 'mcp.json');
 	const raw = await readFile(mcpPath, 'utf8');
