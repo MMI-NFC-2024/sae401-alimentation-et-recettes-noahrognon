@@ -7,7 +7,7 @@
                 "C:\\Users\\noahr\\OneDrive\\Documents\\GitHub\\sae401-alimentation-et-recettes-noahrognon\\pocketbase-mcp\\build\\index.js"
             ],
             "env": {
-                "POCKETBASE_URL": "http://127.0.0.1:8090",
+                "POCKETBASE_URL": "https://nutrivia.noahrognon.fr",
                 "POCKETBASE_ADMIN_EMAIL": "noah.rognon@gmail.com",
                 "POCKETBASE_ADMIN_PASSWORD": "Trombone2006$"
             }
