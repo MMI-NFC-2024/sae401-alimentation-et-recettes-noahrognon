@@ -26,3 +26,5 @@ pocketbase/*
 !pocketbase/pb_migrations/
 !pocketbase/pb_migrations/**
 pocketbase-mcp/
+pocketbase-cp/
+.vscode/mcp.json
