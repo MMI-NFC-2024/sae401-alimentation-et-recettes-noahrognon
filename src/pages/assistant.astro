@@ -2,81 +2,39 @@
 import Layout from '../layouts/Layout.astro';
 ---
 
-<Layout title="Assistant IA - Nutrivia">
-	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)] py-8 lg:py-10">
-		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
-			<div class="mx-auto max-w-[1080px]">
-				<div class="mb-7 flex items-center gap-4">
-					<div class="flex h-[56px] w-[56px] items-center justify-center rounded-[18px] bg-[linear-gradient(135deg,#8b2cf8_0%,#ff4aa2_100%)] text-white shadow-[0_16px_35px_rgba(168,85,247,0.22)]">
-						<svg viewBox="0 0 24 24" class="h-7 w-7" fill="none" aria-hidden="true"><path d="M12 3v5M12 16v5M5 12H0M24 12h-5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
-					</div>
-					<div>
-						<h1 class="text-[2.2rem] font-semibold tracking-[-0.04em] text-[#16223c]">Nutriv’IA</h1>
-						<p class="mt-1 text-[1.02rem] text-slate-500">Votre coach nutrition personnalisé disponible 24/7</p>
-					</div>
+<Layout title="Assistant IA - Nutrivia" hideFooter={true} mainClass="overflow-hidden" bodyClass="overflow-hidden">
+	<section class="h-[calc(100vh-72px)] overflow-hidden bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)]">
+		<div class="mx-auto flex h-full w-full min-h-0 max-w-[1480px] flex-col px-2 py-2 md:px-4 md:py-4">
+			<p id="assistant-error" class="mb-2 hidden shrink-0 rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+
+			<section class="flex min-h-0 flex-1 flex-col overflow-hidden rounded-[22px] border border-[#d8e2ee] bg-white shadow-[0_18px_42px_rgba(71,104,145,0.10)] md:rounded-[28px]">
+				<div class="shrink-0 border-b border-[#e7eef6] px-3 py-3 md:px-5 md:py-4">
+					<div id="assistant-actions-desktop" class="hidden flex-wrap gap-2 md:flex"></div>
+					<div id="assistant-actions-mobile" class="flex gap-2 overflow-x-auto pb-1 md:hidden"></div>
+					<div id="assistant-faqs" class="mt-2 flex gap-2 overflow-x-auto"></div>
 				</div>
 
-				<a href="#" class="mb-5 block overflow-hidden rounded-[24px] border border-[#11c49d] bg-[linear-gradient(135deg,#08a37b_0%,#08b37d_50%,#19b2a2_100%)] px-5 py-5 text-white shadow-[0_24px_54px_rgba(8,179,125,0.24)] sm:px-6">
-					<div class="inline-flex rounded-full bg-white/15 px-3 py-1 text-[0.72rem] font-semibold uppercase tracking-[0.14em] text-white">Sponsorisé - IA premium</div>
-					<h2 class="mt-4 text-[2rem] font-semibold tracking-[-0.04em]">Débloquez l’IA Premium</h2>
-					<p class="mt-2 max-w-[42rem] text-[1rem] leading-7 text-white/85">Analyses nutritionnelles avancées, plans personnalisés et réponses illimitées</p>
-					<span class="mt-5 inline-flex min-h-[44px] items-center justify-center rounded-[14px] bg-white px-4 py-2.5 text-[0.96rem] font-semibold text-[#0b8c5f]">Essayer gratuitement 7 jours</span>
-				</a>
+				<div id="assistant-messages" class="min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-6 md:py-6"></div>
 
-				<p id="assistant-error" class="mb-5 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
-
-				<div class="grid gap-5 lg:grid-cols-[minmax(0,1fr)_290px]">
-					<section class="overflow-hidden rounded-[24px] border border-[#d8e2ee] bg-white shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
-						<div id="assistant-messages" class="max-h-[68vh] min-h-[420px] overflow-y-auto px-4 py-5 sm:px-5"></div>
-						<div class="border-t border-[#e7eef6] p-4 sm:p-5">
-							<form id="assistant-form" class="flex items-end gap-3">
-								<textarea id="assistant-input" rows="1" placeholder="Posez une question sur la nutrition, les recettes, votre alimentation..." class="min-h-[84px] flex-1 resize-none rounded-[18px] border border-[#cad8e7] bg-white px-4 py-4 text-[1rem] text-slate-700 outline-none transition focus:border-[#08b37d]"></textarea>
-								<div class="flex items-center gap-2 pb-1">
-									<button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-300" aria-label="Ajouter une image">
-										<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M8 7h.01M5 19h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3l-1-2H9L8 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-									</button>
-									<button type="button" class="inline-flex h-10 w-10 items-center justify-center rounded-full text-slate-300" aria-label="Saisie vocale">
-										<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3ZM19 11a7 7 0 0 1-14 0M12 18v3M8 21h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-									</button>
-									<button id="assistant-send" type="submit" class="inline-flex h-10 w-10 items-center justify-center rounded-[14px] bg-[#80d9ba] text-white shadow-[0_12px_26px_rgba(8,179,125,0.22)]">
-										<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="m4 12 15-7-4 14-4-5-7-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-									</button>
-								</div>
-							</form>
-						</div>
-					</section>
-
-					<div class="grid content-start gap-5">
-						<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
-							<h2 class="flex items-center gap-3 text-[1.32rem] font-semibold text-[#16223c]">
-								<span class="text-[#08b37d]">
-									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 19v-2M8 19h8M10 3h4a4 4 0 0 1 4 4v2a6 6 0 0 1-2 4.58L14 15v2h-4v-2l-2-1.42A6 6 0 0 1 6 9V7a4 4 0 0 1 4-4Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-								</span>
-								Actions rapides
-							</h2>
-							<div id="assistant-quick-actions" class="mt-5 grid gap-3"></div>
-						</section>
-
-						<section class="rounded-[24px] border border-[#d8e2ee] bg-white p-5 shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
-							<h2 class="text-[1.32rem] font-semibold text-[#16223c]">Questions fréquentes</h2>
-							<div id="assistant-faqs" class="mt-5 grid gap-3"></div>
-						</section>
-
-						<section class="overflow-hidden rounded-[24px] border border-[#11c49d] bg-white shadow-[0_16px_38px_rgba(71,104,145,0.08)]">
-							<div class="bg-[linear-gradient(135deg,#08a37b_0%,#08b37d_100%)] px-4 py-3 text-[0.78rem] font-semibold uppercase tracking-[0.14em] text-white">Recommandé par l’IA</div>
-							<div class="p-4">
-								<div class="h-[160px] rounded-[16px] bg-[linear-gradient(135deg,#0ea5a4_0%,#0f766e_46%,#164e63_100%)]"></div>
-								<h3 id="assistant-reco-title" class="mt-4 text-[1.35rem] font-semibold text-[#16223c]">Guide complet nutrition 2026</h3>
-								<p id="assistant-reco-description" class="mt-2 text-[0.95rem] leading-7 text-slate-500">-</p>
-								<div class="mt-5 flex items-center justify-between gap-3">
-									<p id="assistant-reco-price" class="text-[2rem] font-semibold text-[#08b37d]">19,99€</p>
-									<a href="#" class="inline-flex min-h-[42px] items-center justify-center rounded-[14px] bg-[#08b37d] px-4 py-2.5 text-[0.92rem] font-semibold text-white">Télécharger</a>
-								</div>
+				<div class="shrink-0 border-t border-[#e7eef6] bg-white/95 px-3 py-3 backdrop-blur md:px-6 md:py-4">
+					<form id="assistant-form" class="mx-auto flex max-w-[980px] items-end gap-3">
+						<div class="flex-1 rounded-[24px] border border-[#cad8e7] bg-white px-4 py-3 shadow-[0_10px_30px_rgba(71,104,145,0.08)]">
+							<textarea id="assistant-input" rows="1" placeholder="Posez une question sur la nutrition, les recettes, votre alimentation..." class="min-h-[52px] w-full resize-none bg-transparent text-[1rem] text-slate-700 outline-none placeholder:text-slate-400"></textarea>
+							<div class="mt-2 flex items-center justify-end gap-2 text-slate-300">
+								<button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-slate-50" aria-label="Ajouter une image">
+									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M8 7h.01M5 19h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3l-1-2H9L8 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+								</button>
+								<button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-slate-50" aria-label="Saisie vocale">
+									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3ZM19 11a7 7 0 0 1-14 0M12 18v3M8 21h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+								</button>
 							</div>
-						</section>
-					</div>
+						</div>
+						<button id="assistant-send" type="submit" class="inline-flex h-14 w-14 shrink-0 items-center justify-center rounded-[18px] bg-[#80d9ba] text-white shadow-[0_12px_26px_rgba(8,179,125,0.22)] transition hover:bg-[#08b37d]">
+							<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="m4 12 15-7-4 14-4-5-7-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+						</button>
+					</form>
 				</div>
-			</div>
+			</section>
 		</div>
 	</section>
 </Layout>
@@ -88,10 +46,12 @@ import Layout from '../layouts/Layout.astro';
 	const form = document.querySelector('#assistant-form');
 	const input = document.querySelector('#assistant-input');
 	const sendButton = document.querySelector('#assistant-send');
-	const quickActionsBox = document.querySelector('#assistant-quick-actions');
+	const quickActionsDesktop = document.querySelector('#assistant-actions-desktop');
+	const quickActionsMobile = document.querySelector('#assistant-actions-mobile');
 	const faqsBox = document.querySelector('#assistant-faqs');
 	let assistantState = null;
 	let isSending = false;
+	let pendingUserMessage = '';
 
 	function getStoredAuth() {
 		try {
@@ -145,31 +105,70 @@ import Layout from '../layouts/Layout.astro';
 
 	function renderViewerAvatar() {
 		if (assistantState?.viewer?.avatarUrl) {
-			return `<img src="${esc(assistantState.viewer.avatarUrl)}" alt="${esc(assistantState.viewer.fullName)}" class="h-11 w-11 rounded-full object-cover" />`;
+			return `<img src="${esc(assistantState.viewer.avatarUrl)}" alt="${esc(assistantState.viewer.fullName)}" class="h-10 w-10 rounded-full object-cover" />`;
 		}
-		return `<span class="flex h-11 w-11 items-center justify-center rounded-full bg-[#08b37d] text-[0.86rem] font-semibold text-white">${esc(assistantState?.viewer?.initials || 'NU')}</span>`;
+		return `<span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#08b37d] text-[0.82rem] font-semibold text-white">${esc(assistantState?.viewer?.initials || 'NU')}</span>`;
+	}
+
+	function renderWelcomeState() {
+		if (!(messagesBox instanceof HTMLElement) || !assistantState) return;
+		messagesBox.innerHTML = `
+			<div class="flex h-full min-h-[320px] items-center justify-center">
+				<div class="w-full max-w-[760px] px-2 text-center">
+					<p class="text-[1rem] text-slate-500">${esc(assistantState?.viewer?.fullName ? `Bonjour ${assistantState.viewer.fullName.split(' ')[0]}` : 'Bonjour')}</p>
+					<h2 class="mt-2 text-[2.15rem] font-semibold tracking-[-0.05em] text-[#16223c] md:text-[3.15rem]">Comment puis-je vous aider ?</h2>
+					<p class="mx-auto mt-3 max-w-[44rem] text-[1rem] leading-7 text-slate-500">Nutrition, recettes, planification des repas, objectifs ou habitudes alimentaires.</p>
+				</div>
+			</div>
+		`;
 	}
 
 	function renderMessages() {
 		if (!(messagesBox instanceof HTMLElement) || !assistantState) return;
-		messagesBox.innerHTML = assistantState.messages.map((message) => {
+		const renderedMessages = [...assistantState.messages];
+		if (pendingUserMessage) {
+			renderedMessages.push({
+				role: 'user',
+				content: pendingUserMessage,
+				createdAt: new Date().toISOString(),
+				metadata: {},
+			});
+		}
+		if (isSending) {
+			renderedMessages.push({
+				role: 'assistant',
+				content: '__typing__',
+				createdAt: new Date().toISOString(),
+				metadata: {},
+			});
+		}
+
+		if (!renderedMessages.length) {
+			renderWelcomeState();
+			return;
+		}
+
+		messagesBox.innerHTML = renderedMessages.map((message) => {
 			const isAssistant = message.role === 'assistant';
+			const isTyping = message.content === '__typing__';
 			const chips = Array.isArray(message.metadata?.chips) ? message.metadata.chips : [];
 			const relatedRecipes = Array.isArray(message.metadata?.relatedRecipes) ? message.metadata.relatedRecipes : [];
 			const relatedLinks = Array.isArray(message.metadata?.relatedLinks) ? message.metadata.relatedLinks : [];
 
 			return `
-				<div class="${isAssistant ? 'mb-6' : 'mb-5 flex justify-end'}">
-					<div class="${isAssistant ? 'max-w-[88%]' : 'max-w-[82%]'}">
-						<div class="flex ${isAssistant ? 'items-start gap-3' : 'justify-end'}">
+				<div class="${isAssistant ? 'mb-7' : 'mb-6 flex justify-end'}">
+					<div class="${isAssistant ? 'max-w-[880px]' : 'max-w-[760px]'} w-full">
+						<div class="flex ${isAssistant ? 'items-start gap-3' : 'justify-end gap-3'}">
 							${isAssistant ? '<span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,#8b2cf8_0%,#ff4aa2_100%)] text-white"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 3v5M12 16v5M5 12H0M24 12h-5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></span>' : ''}
-							<div class="min-w-0 rounded-[22px] ${isAssistant ? 'bg-[#f1f5fb] text-[#324765]' : 'bg-[#08b37d] text-white'} px-4 py-4 text-[1rem] leading-8">
-								${esc(message.content).replaceAll('\n', '<br />')}
+							<div class="min-w-0 rounded-[22px] ${isAssistant ? 'bg-[#f1f5fb] text-[#324765]' : 'bg-[#08b37d] text-white'} px-4 py-4 text-[1rem] leading-8 shadow-[0_8px_22px_rgba(71,104,145,0.06)]">
+								${isTyping
+									? "<div class=\"flex items-center gap-2 py-1\"><span class=\"h-2.5 w-2.5 animate-pulse rounded-full bg-[#8fa3bf]\"></span><span class=\"h-2.5 w-2.5 animate-pulse rounded-full bg-[#8fa3bf] [animation-delay:120ms]\"></span><span class=\"h-2.5 w-2.5 animate-pulse rounded-full bg-[#8fa3bf] [animation-delay:240ms]\"></span><span class=\"ml-2 text-[0.95rem] text-slate-400\">Nutriv'IA réfléchit...</span></div>"
+									: esc(message.content).replaceAll('\n', '<br />')}
 							</div>
 							${!isAssistant ? renderViewerAvatar() : ''}
 						</div>
 						<div class="mt-2 ${isAssistant ? 'pl-14' : 'pr-14 text-right'} text-[0.8rem] text-slate-400">${esc(formatRelativeDate(message.createdAt))}</div>
-						${isAssistant ? `
+						${isAssistant && !isTyping ? `
 							<div class="mt-3 pl-14">
 								<div class="flex items-center gap-3 text-slate-300">
 									<button type="button" class="inline-flex h-8 w-8 items-center justify-center rounded-full hover:bg-slate-100" aria-label="Copier">
@@ -182,8 +181,8 @@ import Layout from '../layouts/Layout.astro';
 										<svg viewBox="0 0 24 24" class="h-4 w-4" fill="none"><path d="M10 14v6a2 2 0 0 0 2 2l1-5 2-1V8H6.6a2 2 0 0 0-2 1.5l-1.4 5A2 2 0 0 0 5.1 17H9a1 1 0 0 0 1-1v-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><path d="M15 16h4V6h-4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 									</button>
 								</div>
-								${chips.length ? `<div class="mt-4 flex flex-wrap gap-2">${chips.map((chip) => `<button type="button" data-chip="${esc(chip)}" class="rounded-[14px] border border-[#d7e4f2] bg-white px-3 py-2 text-[0.9rem] text-slate-600 transition hover:border-[#bcd1e6] hover:text-[#16223c]">${esc(chip)}</button>`).join('')}</div>` : ''}
-								${relatedLinks.length ? `<div class="mt-4 flex flex-wrap gap-2">${relatedLinks.map((link) => `<a href="${esc(link.href)}" class="rounded-[14px] bg-[#eefbf5] px-3 py-2 text-[0.88rem] font-medium text-[#0b8c5f]">${esc(link.label)}</a>`).join('')}</div>` : ''}
+								${chips.length ? `<div class="mt-4 flex flex-wrap gap-2">${chips.map((chip) => `<button type="button" data-chip="${esc(chip)}" class="rounded-full border border-[#d7e4f2] bg-white px-3 py-2 text-[0.9rem] text-slate-600 transition hover:border-[#bcd1e6] hover:text-[#16223c]">${esc(chip)}</button>`).join('')}</div>` : ''}
+								${relatedLinks.length ? `<div class="mt-4 flex flex-wrap gap-2">${relatedLinks.map((link) => `<a href="${esc(link.href)}" class="rounded-full bg-[#eefbf5] px-3 py-2 text-[0.88rem] font-medium text-[#0b8c5f]">${esc(link.label)}</a>`).join('')}</div>` : ''}
 								${relatedRecipes.length ? `<div class="mt-4 grid gap-3 sm:grid-cols-2">${relatedRecipes.map((recipe) => `<a href="/recette/${esc(recipe.slug)}" class="flex items-center gap-3 rounded-[16px] border border-[#dfe9f5] bg-white p-3 transition hover:border-[#bfd3e8]">${recipe.imageUrl ? `<img src="${esc(recipe.imageUrl)}" alt="${esc(recipe.title)}" class="h-[58px] w-[58px] rounded-[14px] object-cover" />` : '<div class="h-[58px] w-[58px] rounded-[14px] bg-slate-100"></div>'}<div class="min-w-0"><p class="truncate text-[0.92rem] font-semibold text-[#16223c]">${esc(recipe.title)}</p><p class="mt-1 text-[0.82rem] text-slate-400">${esc(recipe.calories)} kcal · ${esc(recipe.duration)} min</p></div></a>`).join('')}</div>` : ''}
 							</div>
 						` : ''}
@@ -195,9 +194,7 @@ import Layout from '../layouts/Layout.astro';
 		messagesBox.querySelectorAll('[data-chip]').forEach((button) => {
 			button.addEventListener('click', () => {
 				const prompt = button.getAttribute('data-chip');
-				if (prompt) {
-					sendMessage(prompt);
-				}
+				if (prompt) sendMessage(prompt);
 			});
 		});
 
@@ -206,40 +203,48 @@ import Layout from '../layouts/Layout.astro';
 
 	function renderSidebar() {
 		if (!assistantState) return;
-		if (quickActionsBox instanceof HTMLElement) {
-			quickActionsBox.innerHTML = assistantState.quickActions.map((action) => `
-				<button type="button" data-quick="${esc(action.prompt)}" class="flex items-center gap-3 rounded-[18px] border border-[#d8e2ee] bg-[#fbfdff] px-4 py-4 text-left transition hover:border-[#bcd1e6]">
-					<span class="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#dff8eb] text-[#08b37d]">
-						<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 3c-1.5 3-4 5.2-4 9a4 4 0 1 0 8 0c0-1.6-.5-3-1.4-4.3" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
-					</span>
-					<span class="text-[1rem] font-medium text-[#16223c]">${esc(action.label)}</span>
-				</button>
-			`).join('');
-			quickActionsBox.querySelectorAll('[data-quick]').forEach((button) => {
+		const actionsMarkup = assistantState.quickActions.map((action) => `
+			<button type="button" data-quick="${esc(action.prompt)}" class="shrink-0 rounded-full border border-[#d8e2ee] bg-[#f5fbf8] px-4 py-2 text-[0.92rem] font-medium text-[#0b8c5f] transition hover:border-[#bcd1e6]">
+				${esc(action.label)}
+			</button>
+		`).join('');
+
+		if (quickActionsDesktop instanceof HTMLElement) {
+			quickActionsDesktop.innerHTML = actionsMarkup;
+			quickActionsDesktop.querySelectorAll('[data-quick]').forEach((button) => {
+				button.addEventListener('click', () => sendMessage(button.getAttribute('data-quick') || ''));
+			});
+		}
+		if (quickActionsMobile instanceof HTMLElement) {
+			quickActionsMobile.innerHTML = actionsMarkup;
+			quickActionsMobile.querySelectorAll('[data-quick]').forEach((button) => {
 				button.addEventListener('click', () => sendMessage(button.getAttribute('data-quick') || ''));
 			});
 		}
 
 		if (faqsBox instanceof HTMLElement) {
 			faqsBox.innerHTML = assistantState.faqs.map((faq) => `
-				<button type="button" data-faq="${esc(faq)}" class="text-left text-[0.96rem] leading-7 text-slate-600 transition hover:text-[#16223c]">→ ${esc(faq)}</button>
+				<button type="button" data-faq="${esc(faq)}" class="shrink-0 rounded-full border border-[#d8e2ee] bg-white px-4 py-2 text-[0.88rem] text-slate-600 transition hover:border-[#bcd1e6] hover:text-[#16223c]">
+					${esc(faq)}
+				</button>
 			`).join('');
 			faqsBox.querySelectorAll('[data-faq]').forEach((button) => {
 				button.addEventListener('click', () => sendMessage(button.getAttribute('data-faq') || ''));
 			});
 		}
-
-		document.querySelector('#assistant-reco-title').textContent = assistantState.recommendation.title;
-		document.querySelector('#assistant-reco-description').textContent = assistantState.recommendation.description;
-		document.querySelector('#assistant-reco-price').textContent = assistantState.recommendation.price;
 	}
 
 	function setSendingState(value) {
 		isSending = value;
+		if (input instanceof HTMLTextAreaElement) input.disabled = value;
 		if (sendButton instanceof HTMLButtonElement) {
 			sendButton.disabled = value;
 			sendButton.classList.toggle('opacity-60', value);
+			sendButton.innerHTML = value
+				? '<svg viewBox="0 0 24 24" class="h-5 w-5 animate-spin" fill="none"><circle cx="12" cy="12" r="8" stroke="currentColor" stroke-width="2" opacity="0.25"></circle><path d="M20 12a8 8 0 0 0-8-8" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>'
+				: '<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="m4 12 15-7-4 14-4-5-7-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 		}
+		renderMessages();
 	}
 
 	async function fetchAssistantWorkspace() {
@@ -279,10 +284,11 @@ import Layout from '../layouts/Layout.astro';
 
 		try {
 			clearError();
+			pendingUserMessage = message;
 			setSendingState(true);
 			if (input instanceof HTMLTextAreaElement) {
 				input.value = '';
-				input.style.height = '84px';
+				input.style.height = '52px';
 			}
 
 			const response = await fetch('/api/assistant', {
@@ -313,8 +319,10 @@ import Layout from '../layouts/Layout.astro';
 				conversation: result.conversation,
 				messages: result.messages,
 			};
+			pendingUserMessage = '';
 			renderMessages();
 		} catch (error) {
+			pendingUserMessage = '';
 			showError(error instanceof Error ? error.message : "Impossible d'obtenir une réponse.");
 		} finally {
 			setSendingState(false);
@@ -328,8 +336,8 @@ import Layout from '../layouts/Layout.astro';
 
 	input?.addEventListener('input', () => {
 		if (!(input instanceof HTMLTextAreaElement)) return;
-		input.style.height = '84px';
-		input.style.height = `${Math.min(input.scrollHeight, 220)}px`;
+		input.style.height = '52px';
+		input.style.height = `${Math.min(input.scrollHeight, 180)}px`;
 	});
 
 	input?.addEventListener('keydown', async (event) => {

@@ -1,3 +1,5 @@
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
 import {
 	getFoodsCatalog,
 	getMealPlannerDashboard,
@@ -23,12 +25,38 @@ type AssistantReplyPayload = {
 	}>;
 };
 
-function requireOpenAiKey() {
-	const apiKey = process.env.OPENAI_API_KEY;
-	if (!apiKey) {
-		throw new Error("Clé OpenAI manquante. Ajoutez OPENAI_API_KEY dans le fichier .env.");
+let cachedOpenAiKey: string | null = null;
+
+async function requireOpenAiKey() {
+	if (cachedOpenAiKey) {
+		return cachedOpenAiKey;
 	}
-	return apiKey;
+
+	const importMetaEnvKey =
+		typeof import.meta !== 'undefined' && import.meta.env && typeof import.meta.env.OPENAI_API_KEY === 'string'
+			? import.meta.env.OPENAI_API_KEY
+			: '';
+	const apiKey = process.env.OPENAI_API_KEY || importMetaEnvKey;
+
+	if (apiKey) {
+		cachedOpenAiKey = apiKey;
+		return apiKey;
+	}
+
+	try {
+		const envPath = path.resolve(process.cwd(), '.env');
+		const raw = await readFile(envPath, 'utf8');
+		const match = raw.match(/^\s*OPENAI_API_KEY\s*=\s*(.+)\s*$/m);
+		const fallbackKey = match?.[1]?.trim().replace(/^['"]|['"]$/g, '') ?? '';
+		if (fallbackKey) {
+			cachedOpenAiKey = fallbackKey;
+			return fallbackKey;
+		}
+	} catch {
+		// Ignore .env fallback read errors and fail below with a clear message.
+	}
+
+	throw new Error('Clé OpenAI manquante. Ajoutez OPENAI_API_KEY dans le fichier .env.');
 }
 
 function truncate(value: string, limit: number) {
@@ -38,11 +66,11 @@ function truncate(value: string, limit: number) {
 function buildSystemPrompt() {
 	return [
 		"Tu es Nutriv'IA, l'assistant nutritionnel de Nutrivia.",
-		"Tu réponds toujours en français.",
+		'Tu réponds toujours en français.',
 		"Tu aides sur la nutrition, le sport loisir, l'organisation des repas, la planification hebdomadaire, les recettes du site, les listes de courses et le suivi alimentaire.",
-		"Tu adaptes tes réponses au profil utilisateur fourni dans le contexte.",
+		'Tu adaptes tes réponses au profil utilisateur fourni dans le contexte.',
 		"Tu restes concret, structuré et utile. Donne des étapes actionnables quand c'est pertinent.",
-		"Tu peux recommander les recettes du site si elles sont pertinentes.",
+		'Tu peux recommander les recettes du site si elles sont pertinentes.',
 		"Tu ne fais pas de diagnostic médical. Si la question est médicale ou pathologique, conseille de consulter un professionnel de santé.",
 		"Quand l'utilisateur demande un menu ou une planification, propose quelque chose de réaliste et simple à suivre.",
 		"Évite d'inventer des fonctionnalités qui n'existent pas sur le site.",
@@ -56,7 +84,7 @@ function pickRelatedLinks(question: string) {
 	if (normalized.includes('menu') || normalized.includes('plan') || normalized.includes('semaine')) {
 		links.push({ label: 'Ouvrir le planificateur', href: '/planificateur' });
 	}
-	if (normalized.includes('suivi') || normalized.includes('apport') || normalized.includes('macros')) {
+	if (normalized.includes('suivi') || normalized.includes('apport') || normalized.includes('macro')) {
 		links.push({ label: 'Voir mon suivi', href: '/suivi' });
 	}
 	if (normalized.includes('course') || normalized.includes('liste')) {
@@ -112,7 +140,19 @@ function pickRelatedRecipes(
 	}>,
 ) {
 	return [...recipes]
-		.sort((left, right) => getQuestionRecipeScore(question, { title: right.titre, badge: right.badge, calories: right.caloriesParPortion }) - getQuestionRecipeScore(question, { title: left.titre, badge: left.badge, calories: left.caloriesParPortion }))
+		.sort(
+			(left, right) =>
+				getQuestionRecipeScore(question, {
+					title: right.titre,
+					badge: right.badge,
+					calories: right.caloriesParPortion,
+				}) -
+				getQuestionRecipeScore(question, {
+					title: left.titre,
+					badge: left.badge,
+					calories: left.caloriesParPortion,
+				}),
+		)
 		.slice(0, 3)
 		.map((recipe) => ({
 			id: recipe.id,
@@ -160,10 +200,12 @@ function buildContextSummary(data: {
 		planningSemaine: planner.week.days.map((day) => ({
 			jour: day.label,
 			calories: day.totalCalories,
-			repas: day.meals.filter((meal) => meal.entry).map((meal) => ({
-				type: meal.mealLabel,
-				recette: meal.entry?.title,
-			})),
+			repas: day.meals
+				.filter((meal) => meal.entry)
+				.map((meal) => ({
+					type: meal.mealLabel,
+					recette: meal.entry?.title,
+				})),
 		})),
 		recettesSite: recipes.recipes.slice(0, 14).map((recipe) => ({
 			titre: recipe.titre,
@@ -192,7 +234,7 @@ function buildContextSummary(data: {
 }
 
 async function callOpenAi(messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }>) {
-	const apiKey = requireOpenAiKey();
+	const apiKey = await requireOpenAiKey();
 	const response = await fetch('https://api.openai.com/v1/chat/completions', {
 		method: 'POST',
 		headers: {
@@ -200,7 +242,7 @@ async function callOpenAi(messages: Array<{ role: 'system' | 'user' | 'assistant
 			Authorization: `Bearer ${apiKey}`,
 		},
 		body: JSON.stringify({
-			model: process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+			model: process.env.OPENAI_MODEL || 'gpt-5.2',
 			temperature: 0.7,
 			messages,
 		}),
@@ -221,7 +263,7 @@ async function callOpenAi(messages: Array<{ role: 'system' | 'user' | 'assistant
 		if (joined) return joined;
 	}
 
-	throw new Error("Réponse OpenAI vide.");
+	throw new Error('Réponse OpenAI vide.');
 }
 
 export async function generateAssistantReply(

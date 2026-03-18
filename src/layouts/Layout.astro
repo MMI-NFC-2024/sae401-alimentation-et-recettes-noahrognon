@@ -5,9 +5,12 @@ import '../styles/global.css';
 
 interface Props {
 	title?: string;
+	hideFooter?: boolean;
+	mainClass?: string;
+	bodyClass?: string;
 }
 
-const { title = 'Nutrivia' } = Astro.props;
+const { title = 'Nutrivia', hideFooter = false, mainClass = '', bodyClass = '' } = Astro.props;
 ---
 
 <!doctype html>
@@ -20,13 +23,13 @@ const { title = 'Nutrivia' } = Astro.props;
 		<meta name="generator" content={Astro.generator} />
 		<title>{title}</title>
 	</head>
-	<body class="min-h-screen bg-white text-slate-700 antialiased">
+	<body class={`min-h-screen bg-white text-slate-700 antialiased ${bodyClass}`.trim()}>
 		<div class="flex min-h-screen flex-col">
 			<Header />
-			<main class="flex-1">
+			<main class={`flex-1 ${mainClass}`.trim()}>
 				<slot />
 			</main>
-			<Footer />
+			{!hideFooter && <Footer />}
 		</div>
 	</body>
 </html>
