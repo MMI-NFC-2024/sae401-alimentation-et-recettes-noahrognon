@@ -395,7 +395,7 @@ const optionsJson = JSON.stringify(options);
 	async function submitRegistration() {
 		if (!(form instanceof HTMLFormElement)) return;
 		const payload = new FormData(form);
-		const response = await fetch('/api/auth/register', {
+		const response = await fetch('/app-api/auth/register', {
 			method: 'POST',
 			body: payload,
 		});
@@ -464,3 +464,4 @@ const optionsJson = JSON.stringify(options);
 	renderCards('#diet-grid', parsedOptions.diets, 'regime_slug', 'slug', 'libelle', 'description', () => '');
 	updateStepVisibility();
 </script>
+

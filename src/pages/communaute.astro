@@ -474,7 +474,7 @@ import Layout from '../layouts/Layout.astro';
 			return;
 		}
 
-		const response = await fetch(`/api/community?sort=${encodeURIComponent(sort)}`, {
+		const response = await fetch(`/app-api/community?sort=${encodeURIComponent(sort)}`, {
 			headers: { Authorization: `Bearer ${auth.token}` },
 		});
 		const result = await response.json();
@@ -500,7 +500,7 @@ import Layout from '../layouts/Layout.astro';
 			return;
 		}
 
-		const response = await fetch('/api/community/post-like', {
+		const response = await fetch('/app-api/community/post-like', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -533,7 +533,7 @@ import Layout from '../layouts/Layout.astro';
 			throw new Error('Le commentaire ne peut pas etre vide.');
 		}
 
-		const response = await fetch('/api/community/comment', {
+		const response = await fetch('/app-api/community/comment', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -562,7 +562,7 @@ import Layout from '../layouts/Layout.astro';
 			return;
 		}
 
-		const response = await fetch('/api/community/comment-like', {
+		const response = await fetch('/app-api/community/comment-like', {
 			method: 'POST',
 			headers: {
 				'Content-Type': 'application/json',
@@ -642,7 +642,7 @@ import Layout from '../layouts/Layout.astro';
 		formData.set('imageDataUrl', selectedImageDataUrl);
 		formData.set('recipeId', selectedRecipe?.id ?? '');
 
-		const response = await fetch('/api/community', {
+		const response = await fetch('/app-api/community', {
 			method: 'POST',
 			headers: {
 				Authorization: `Bearer ${auth.token}`,
@@ -799,3 +799,4 @@ import Layout from '../layouts/Layout.astro';
 		showError(error instanceof Error ? error.message : 'Impossible de charger la communaute.');
 	});
 </script>
+

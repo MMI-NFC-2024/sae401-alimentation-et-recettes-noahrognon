@@ -288,7 +288,7 @@ import Layout from '../layouts/Layout.astro';
 			return;
 		}
 
-		const response = await fetch('/api/foods', {
+		const response = await fetch('/app-api/foods', {
 			headers: {
 				Authorization: `Bearer ${auth.token}`,
 			},
@@ -319,3 +319,4 @@ import Layout from '../layouts/Layout.astro';
 			showError(error instanceof Error ? error.message : 'Impossible de charger les aliments.');
 		});
 </script>
+

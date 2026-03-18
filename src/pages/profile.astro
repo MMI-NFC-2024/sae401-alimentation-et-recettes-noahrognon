@@ -420,7 +420,7 @@ import Layout from '../layouts/Layout.astro';
 			return;
 		}
 
-		const response = await fetch('/api/profile', {
+		const response = await fetch('/app-api/profile', {
 			headers: {
 				Authorization: `Bearer ${auth.token}`,
 			},
@@ -465,7 +465,7 @@ import Layout from '../layouts/Layout.astro';
 		const payload = Object.fromEntries(formData.entries());
 
 		try {
-			const response = await fetch('/api/profile', {
+			const response = await fetch('/app-api/profile', {
 				method: 'PATCH',
 				headers: {
 					'Content-Type': 'application/json',
@@ -495,3 +495,4 @@ import Layout from '../layouts/Layout.astro';
 		showProfileError(error instanceof Error ? error.message : 'Impossible de charger le profil.');
 	});
 </script>
+

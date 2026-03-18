@@ -254,7 +254,7 @@ import Layout from '../layouts/Layout.astro';
 			return;
 		}
 
-		const response = await fetch('/api/assistant', {
+		const response = await fetch('/app-api/assistant', {
 			headers: { Authorization: `Bearer ${auth.token}` },
 		});
 		const result = await response.json();
@@ -291,7 +291,7 @@ import Layout from '../layouts/Layout.astro';
 				input.style.height = '52px';
 			}
 
-			const response = await fetch('/api/assistant', {
+			const response = await fetch('/app-api/assistant', {
 				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json',
@@ -357,3 +357,4 @@ import Layout from '../layouts/Layout.astro';
 		}
 	})();
 </script>
+

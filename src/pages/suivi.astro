@@ -696,7 +696,7 @@ import Layout from '../layouts/Layout.astro';
 			return;
 		}
 
-		const response = await fetch(`/api/tracking?date=${encodeURIComponent(date)}`, {
+		const response = await fetch(`/app-api/tracking?date=${encodeURIComponent(date)}`, {
 			headers: { Authorization: `Bearer ${auth.token}` },
 		});
 		const result = await response.json();
@@ -722,7 +722,7 @@ import Layout from '../layouts/Layout.astro';
 			return;
 		}
 
-		const response = await fetch('/api/tracking', {
+		const response = await fetch('/app-api/tracking', {
 			method,
 			headers: {
 				'Content-Type': 'application/json',
@@ -801,3 +801,4 @@ import Layout from '../layouts/Layout.astro';
 	}
 	loadDashboard(currentDate).then(clearError).catch((error) => showError(error instanceof Error ? error.message : 'Impossible de charger le suivi.'));
 </script>
+

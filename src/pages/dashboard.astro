@@ -337,7 +337,7 @@ import Layout from '../layouts/Layout.astro';
 			return;
 		}
 
-		const response = await fetch('/api/dashboard', {
+		const response = await fetch('/app-api/dashboard', {
 			headers: { Authorization: `Bearer ${auth.token}` },
 		});
 		const result = await response.json();
@@ -364,3 +364,4 @@ import Layout from '../layouts/Layout.astro';
 		}
 	})();
 </script>
+
