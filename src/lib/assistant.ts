@@ -25,6 +25,21 @@ type AssistantReplyPayload = {
 	}>;
 };
 
+export type FoodScanResult = {
+	nom: string;
+	marque: string;
+	categorie: string;
+	description: string;
+	uniteParDefaut: string;
+	calories100g: number;
+	proteines100g: number;
+	glucides100g: number;
+	lipides100g: number;
+	fibres100g: number;
+	confiance: number;
+	resume: string;
+};
+
 let cachedOpenAiKey: string | null = null;
 
 async function requireOpenAiKey() {
@@ -97,6 +112,27 @@ function pickRelatedLinks(question: string) {
 	return links.slice(0, 3);
 }
 
+function shouldSuggestRecipes(question: string) {
+	const normalized = question.toLowerCase();
+	return [
+		'recette',
+		'recettes',
+		'plat',
+		'plats',
+		'menu',
+		'menus',
+		'petit-déjeuner',
+		'petit dejeuner',
+		'déjeuner',
+		'dejeuner',
+		'dîner',
+		'diner',
+		'collation',
+		'cuisine',
+		'cuisiner',
+	].some((keyword) => normalized.includes(keyword));
+}
+
 function getQuestionRecipeScore(
 	question: string,
 	recipe: {
@@ -139,6 +175,10 @@ function pickRelatedRecipes(
 		badge?: string;
 	}>,
 ) {
+	if (!shouldSuggestRecipes(question)) {
+		return [];
+	}
+
 	return [...recipes]
 		.sort(
 			(left, right) =>
@@ -152,6 +192,13 @@ function pickRelatedRecipes(
 					badge: left.badge,
 					calories: left.caloriesParPortion,
 				}),
+		)
+		.filter((recipe) =>
+			getQuestionRecipeScore(question, {
+				title: recipe.titre,
+				badge: recipe.badge,
+				calories: recipe.caloriesParPortion,
+			}) > 0,
 		)
 		.slice(0, 3)
 		.map((recipe) => ({
@@ -264,6 +311,124 @@ async function callOpenAi(messages: Array<{ role: 'system' | 'user' | 'assistant
 	}
 
 	throw new Error('Réponse OpenAI vide.');
+}
+
+function sanitizeFoodScanCategory(value: string) {
+	const normalized = String(value ?? '')
+		.toLowerCase()
+		.normalize('NFD')
+		.replace(/[\u0300-\u036f]/g, '')
+		.replace(/[^a-z0-9]+/g, '_')
+		.replace(/^_+|_+$/g, '');
+
+	const allowed = new Set(['viande', 'poisson', 'produit_laitier', 'cereale', 'legume', 'fruit', 'epicerie', 'autre']);
+	return allowed.has(normalized) ? normalized : 'autre';
+}
+
+function sanitizeFoodScanUnit(value: string) {
+	const normalized = String(value ?? '')
+		.toLowerCase()
+		.replace(/\s+/g, '')
+		.replace('grammes', 'g')
+		.replace('gramme', 'g');
+
+	const allowed = new Set(['g', 'ml', 'piece', 'portion']);
+	return allowed.has(normalized) ? normalized : 'g';
+}
+
+function extractJsonObject(value: string) {
+	const start = value.indexOf('{');
+	const end = value.lastIndexOf('}');
+	if (start === -1 || end === -1 || end <= start) {
+		throw new Error("La réponse d'analyse produit est invalide.");
+	}
+
+	return value.slice(start, end + 1);
+}
+
+async function callOpenAiVisionForFoodScan(imageDataUrl: string) {
+	const apiKey = await requireOpenAiKey();
+	const response = await fetch('https://api.openai.com/v1/chat/completions', {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			Authorization: `Bearer ${apiKey}`,
+		},
+		body: JSON.stringify({
+			model: process.env.OPENAI_VISION_MODEL || process.env.OPENAI_MODEL || 'gpt-4.1-mini',
+			temperature: 0.2,
+			messages: [
+				{
+					role: 'system',
+					content:
+						"Tu analyses la photo d'un produit alimentaire. Tu retournes uniquement un objet JSON valide, sans markdown ni texte autour. Les clés attendues sont: nom, marque, categorie, description, uniteParDefaut, calories100g, proteines100g, glucides100g, lipides100g, fibres100g, confiance, resume. categorie doit être parmi viande, poisson, produit_laitier, cereale, legume, fruit, epicerie, autre. uniteParDefaut doit être parmi g, ml, piece, portion. Si la photo montre une étiquette nutritionnelle, utilise-la en priorité. Si l'information est incertaine, estime prudemment et baisse confiance.",
+				},
+				{
+					role: 'user',
+					content: [
+						{
+							type: 'text',
+							text: "Analyse ce produit et extrais sa fiche nutritionnelle pour 100g ou 100ml si possible.",
+						},
+						{
+							type: 'image_url',
+							image_url: {
+								url: imageDataUrl,
+							},
+						},
+					],
+				},
+			],
+		}),
+	});
+
+	const payload = await response.json();
+	if (!response.ok) {
+		throw new Error(payload?.error?.message ?? payload?.message ?? "Impossible d'analyser ce produit.");
+	}
+
+	const content = payload?.choices?.[0]?.message?.content;
+	if (typeof content === 'string' && content.trim()) {
+		return content.trim();
+	}
+
+	if (Array.isArray(content)) {
+		const joined = content.map((item) => item?.text ?? '').join('\n').trim();
+		if (joined) return joined;
+	}
+
+	throw new Error("Réponse d'analyse vide.");
+}
+
+export async function scanFoodProductFromImage(imageDataUrl: string): Promise<FoodScanResult> {
+	if (!String(imageDataUrl ?? '').startsWith('data:image/')) {
+		throw new Error('Image produit invalide.');
+	}
+
+	const raw = await callOpenAiVisionForFoodScan(imageDataUrl);
+	const parsed = JSON.parse(extractJsonObject(raw)) as Record<string, unknown>;
+
+	const numberValue = (value: unknown) => {
+		const numeric = Number(value ?? 0);
+		return Number.isFinite(numeric) ? Math.max(0, Math.round(numeric * 10) / 10) : 0;
+	};
+
+	return {
+		nom: String(parsed.nom ?? 'Produit à vérifier').trim() || 'Produit à vérifier',
+		marque: String(parsed.marque ?? '').trim(),
+		categorie: sanitizeFoodScanCategory(String(parsed.categorie ?? 'autre')),
+		description: String(parsed.description ?? '').trim(),
+		uniteParDefaut: sanitizeFoodScanUnit(String(parsed.uniteParDefaut ?? 'g')),
+		calories100g: numberValue(parsed.calories100g),
+		proteines100g: numberValue(parsed.proteines100g),
+		glucides100g: numberValue(parsed.glucides100g),
+		lipides100g: numberValue(parsed.lipides100g),
+		fibres100g: numberValue(parsed.fibres100g),
+		confiance: Math.min(100, Math.max(0, Math.round(Number(parsed.confiance ?? 0) || 0))),
+		resume:
+			String(parsed.resume ?? '').trim() ||
+			"Analyse terminée. Vérifiez les valeurs avant l'enregistrement.",
+	};
 }
 
 export async function generateAssistantReply(

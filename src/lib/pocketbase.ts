@@ -1,4 +1,7 @@
 
+import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+
 type PocketBaseServerConfig = {
 	args?: string[];
 	env?: Record<string, string>;
@@ -951,6 +954,82 @@ export async function getFoodsCatalog(userToken: string) {
 	return {
 		token,
 		foods: items,
+	};
+}
+
+function dataUrlToFormFile(dataUrl: string, fallbackName: string) {
+	const match = String(dataUrl ?? '').match(/^data:([^;]+);base64,(.+)$/);
+	if (!match) {
+		throw new Error("Image scannée invalide.");
+	}
+
+	const mimeType = match[1];
+	const base64 = match[2];
+	const bytes = Uint8Array.from(Buffer.from(base64, 'base64'));
+	const extension = mimeType.split('/')[1] || 'png';
+	const blob = new Blob([bytes], { type: mimeType });
+
+	return {
+		blob,
+		fileName: `${fallbackName}.${extension.replace(/[^a-z0-9]/gi, '') || 'png'}`,
+	};
+}
+
+export async function createFoodFromScan(
+	userToken: string,
+	data: {
+		imageDataUrl?: string;
+		nom: string;
+		marque?: string;
+		categorie: string;
+		description?: string;
+		uniteParDefaut?: string;
+		calories100g: number;
+		proteines100g: number;
+		glucides100g: number;
+		lipides100g: number;
+		fibres100g: number;
+	},
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+
+	const formData = new FormData();
+	const cleanName = String(data.nom ?? '').trim();
+	const cleanBrand = String(data.marque ?? '').trim();
+	const description = [cleanBrand, String(data.description ?? '').trim()].filter(Boolean).join(' · ');
+
+	formData.append('nom', cleanName || 'Produit à vérifier');
+	formData.append('description', description);
+	formData.append('categorie', String(data.categorie ?? 'autre'));
+	formData.append('unite_par_defaut', String(data.uniteParDefaut ?? 'g'));
+	formData.append('calories_100g', String(Number(data.calories100g ?? 0)));
+	formData.append('proteines_100g', String(Number(data.proteines100g ?? 0)));
+	formData.append('glucides_100g', String(Number(data.glucides100g ?? 0)));
+	formData.append('lipides_100g', String(Number(data.lipides100g ?? 0)));
+	formData.append('fibres_100g', String(Number(data.fibres100g ?? 0)));
+
+	if (data.imageDataUrl) {
+		const file = dataUrlToFormFile(data.imageDataUrl, cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produit-scanne');
+		formData.append('image', file.blob, file.fileName);
+	}
+
+	const created = (await createRecord('aliments', formData, adminToken)) as Record<string, any>;
+	return {
+		token: refreshedAuth.token,
+		food: {
+			id: String(created.id),
+			nom: String(created.nom),
+			description: String(created.description ?? ''),
+			categorie: String(created.categorie ?? 'autre'),
+			uniteParDefaut: String(created.unite_par_defaut ?? 'g'),
+			calories100g: Number(created.calories_100g ?? 0),
+			proteines100g: Number(created.proteines_100g ?? 0),
+			glucides100g: Number(created.glucides_100g ?? 0),
+			lipides100g: Number(created.lipides_100g ?? 0),
+			fibres100g: Number(created.fibres_100g ?? 0),
+			imageUrl: await getFileUrl('aliments', String(created.id), created.image),
+		},
 	};
 }
 

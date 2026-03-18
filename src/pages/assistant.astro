@@ -17,11 +17,11 @@ import Layout from '../layouts/Layout.astro';
 				<div id="assistant-messages" class="min-h-0 flex-1 overflow-y-auto px-3 py-4 md:px-6 md:py-6"></div>
 
 				<div class="shrink-0 border-t border-[#e7eef6] bg-white/95 px-3 py-3 backdrop-blur md:px-6 md:py-4">
-					<form id="assistant-form" class="mx-auto flex max-w-[980px] items-end gap-3">
+					<form id="assistant-form" class="flex w-full items-end gap-3">
 						<div class="flex-1 rounded-[24px] border border-[#cad8e7] bg-white px-4 py-3 shadow-[0_10px_30px_rgba(71,104,145,0.08)]">
 							<textarea id="assistant-input" rows="1" placeholder="Posez une question sur la nutrition, les recettes, votre alimentation..." class="min-h-[52px] w-full resize-none bg-transparent text-[1rem] text-slate-700 outline-none placeholder:text-slate-400"></textarea>
 							<div class="mt-2 flex items-center justify-end gap-2 text-slate-300">
-								<button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-slate-50" aria-label="Ajouter une image">
+								<button id="assistant-scan-trigger" type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-slate-50" aria-label="Scanner un produit">
 									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M8 7h.01M5 19h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3l-1-2H9L8 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 								</button>
 								<button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-slate-50" aria-label="Saisie vocale">
@@ -36,6 +36,65 @@ import Layout from '../layouts/Layout.astro';
 				</div>
 			</section>
 		</div>
+
+		<div id="assistant-scan-modal" class="pointer-events-none fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/45 p-4 opacity-0 transition md:p-6">
+			<div class="flex max-h-[92vh] w-full max-w-[900px] flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.28)]">
+				<div class="flex items-center justify-between border-b border-[#e6eef7] px-5 py-4 md:px-6">
+					<div>
+						<h2 class="text-[1.35rem] font-semibold tracking-[-0.03em] text-[#16223c]">Scanner un produit</h2>
+						<p class="mt-1 text-sm text-slate-500">Analysez une photo, vérifiez la fiche puis ajoutez-la à la base aliments.</p>
+					</div>
+					<button id="assistant-scan-close" type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#d7e4f2] text-slate-500 transition hover:bg-slate-50" aria-label="Fermer">
+						<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+					</button>
+				</div>
+				<div class="min-h-0 flex-1 overflow-y-auto px-5 py-5 md:px-6">
+					<p id="assistant-scan-error" class="mb-4 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+					<div class="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+						<div class="space-y-4">
+							<input id="assistant-scan-input" type="file" accept="image/*" capture="environment" class="hidden" />
+							<button id="assistant-scan-pick" type="button" class="flex min-h-[220px] w-full flex-col items-center justify-center rounded-[24px] border border-dashed border-[#bfd3e8] bg-[#f7fbff] px-6 py-8 text-center transition hover:border-[#08b37d] hover:bg-[#f3fbf7]">
+								<div class="flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#e7fbf3] text-[#08b37d]">
+									<svg viewBox="0 0 24 24" class="h-7 w-7" fill="none"><path d="M4 8a2 2 0 0 1 2-2h2l1-2h6l1 2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"></circle></svg>
+								</div>
+								<p class="mt-4 text-[1.02rem] font-medium text-[#16223c]">Choisir une photo</p>
+								<p class="mt-2 max-w-[18rem] text-sm leading-6 text-slate-500">Prenez en photo le produit ou son tableau nutritionnel.</p>
+							</button>
+							<div id="assistant-scan-preview-wrap" class="hidden overflow-hidden rounded-[24px] border border-[#d8e2ee] bg-white">
+								<img id="assistant-scan-preview" alt="Aperçu du produit" class="h-[240px] w-full object-cover" />
+							</div>
+						</div>
+						<div class="space-y-4">
+							<div class="flex items-center gap-3 rounded-[20px] border border-[#d8e2ee] bg-white px-4 py-4">
+								<div id="assistant-scan-loader" class="hidden h-5 w-5 animate-spin rounded-full border-2 border-[#08b37d]/20 border-t-[#08b37d]"></div>
+								<p id="assistant-scan-status" class="text-sm text-slate-500">Importez une image pour lancer l’analyse.</p>
+							</div>
+							<div class="grid gap-4 rounded-[24px] border border-[#d8e2ee] bg-white p-4 md:grid-cols-2 md:p-5">
+								<label class="space-y-2 md:col-span-2"><span class="text-sm font-medium text-slate-600">Nom</span><input id="assistant-food-name" type="text" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Marque</span><input id="assistant-food-brand" type="text" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Catégorie</span><select id="assistant-food-category" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] bg-white px-4 text-slate-700 outline-none focus:border-[#08b37d]"><option value="autre">Autre</option><option value="viande">Viande</option><option value="poisson">Poisson</option><option value="produit_laitier">Produits laitiers</option><option value="cereale">Céréales</option><option value="legume">Légumes</option><option value="fruit">Fruits</option><option value="epicerie">Épicerie</option></select></label>
+								<label class="space-y-2 md:col-span-2"><span class="text-sm font-medium text-slate-600">Description</span><textarea id="assistant-food-description" rows="3" class="w-full rounded-[16px] border border-[#cad8e7] px-4 py-3 text-slate-700 outline-none focus:border-[#08b37d]"></textarea></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Unité</span><select id="assistant-food-unit" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] bg-white px-4 text-slate-700 outline-none focus:border-[#08b37d]"><option value="g">g</option><option value="ml">ml</option><option value="piece">pièce</option><option value="portion">portion</option></select></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Confiance IA</span><input id="assistant-food-confidence" type="text" disabled class="h-[46px] w-full rounded-[16px] border border-[#e3ebf4] bg-slate-50 px-4 text-slate-500 outline-none" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Calories /100g</span><input id="assistant-food-calories" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Protéines /100g</span><input id="assistant-food-proteins" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Glucides /100g</span><input id="assistant-food-carbs" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Lipides /100g</span><input id="assistant-food-fats" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Fibres /100g</span><input id="assistant-food-fibers" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<div class="rounded-[18px] bg-[#eef8ff] px-4 py-4 text-sm leading-6 text-[#46627f] md:col-span-2"><p class="font-medium text-[#16223c]">Résumé IA</p><p id="assistant-food-summary" class="mt-2">En attente d’analyse.</p></div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="flex flex-col-reverse gap-3 border-t border-[#e6eef7] px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+					<div class="text-sm text-slate-500">Validation manuelle avant ajout à la base aliments.</div>
+					<div class="flex flex-col gap-3 sm:flex-row">
+						<button id="assistant-scan-analyze" type="button" class="inline-flex min-h-[48px] items-center justify-center rounded-[16px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.96rem] font-medium text-slate-700 transition hover:border-[#08b37d] hover:text-[#08b37d]">Analyser l’image</button>
+						<button id="assistant-scan-save" type="button" class="inline-flex min-h-[48px] items-center justify-center rounded-[16px] bg-[#08b37d] px-5 py-3 text-[0.96rem] font-semibold text-white shadow-[0_16px_36px_rgba(8,179,125,0.2)] transition hover:bg-[#069c6c]">Ajouter à la base aliments</button>
+					</div>
+				</div>
+			</div>
+		</div>
 	</section>
 </Layout>
 
@@ -49,9 +108,34 @@ import Layout from '../layouts/Layout.astro';
 	const quickActionsDesktop = document.querySelector('#assistant-actions-desktop');
 	const quickActionsMobile = document.querySelector('#assistant-actions-mobile');
 	const faqsBox = document.querySelector('#assistant-faqs');
+	const scanTrigger = document.querySelector('#assistant-scan-trigger');
+	const scanModal = document.querySelector('#assistant-scan-modal');
+	const scanClose = document.querySelector('#assistant-scan-close');
+	const scanInput = document.querySelector('#assistant-scan-input');
+	const scanPick = document.querySelector('#assistant-scan-pick');
+	const scanPreviewWrap = document.querySelector('#assistant-scan-preview-wrap');
+	const scanPreview = document.querySelector('#assistant-scan-preview');
+	const scanAnalyze = document.querySelector('#assistant-scan-analyze');
+	const scanSave = document.querySelector('#assistant-scan-save');
+	const scanStatus = document.querySelector('#assistant-scan-status');
+	const scanLoader = document.querySelector('#assistant-scan-loader');
+	const scanError = document.querySelector('#assistant-scan-error');
+	const scanSummary = document.querySelector('#assistant-food-summary');
+	const scanName = document.querySelector('#assistant-food-name');
+	const scanBrand = document.querySelector('#assistant-food-brand');
+	const scanCategory = document.querySelector('#assistant-food-category');
+	const scanDescription = document.querySelector('#assistant-food-description');
+	const scanUnit = document.querySelector('#assistant-food-unit');
+	const scanConfidence = document.querySelector('#assistant-food-confidence');
+	const scanCalories = document.querySelector('#assistant-food-calories');
+	const scanProteins = document.querySelector('#assistant-food-proteins');
+	const scanCarbs = document.querySelector('#assistant-food-carbs');
+	const scanFats = document.querySelector('#assistant-food-fats');
+	const scanFibers = document.querySelector('#assistant-food-fibers');
 	let assistantState = null;
 	let isSending = false;
 	let pendingUserMessage = '';
+	let currentScanImage = '';
 
 	function getStoredAuth() {
 		try {
@@ -82,6 +166,84 @@ import Layout from '../layouts/Layout.astro';
 		errorBox.textContent = '';
 	}
 
+	function showScanError(message) {
+		if (!(scanError instanceof HTMLElement)) return;
+		scanError.textContent = message;
+		scanError.classList.remove('hidden');
+	}
+
+	function clearScanError() {
+		if (!(scanError instanceof HTMLElement)) return;
+		scanError.textContent = '';
+		scanError.classList.add('hidden');
+	}
+
+	function setScanStatus(message, loading = false) {
+		if (scanStatus instanceof HTMLElement) {
+			scanStatus.textContent = message;
+		}
+		scanLoader?.classList.toggle('hidden', !loading);
+	}
+
+	function openScanModal() {
+		if (!(scanModal instanceof HTMLElement)) return;
+		scanModal.classList.remove('hidden', 'pointer-events-none', 'opacity-0');
+		scanModal.classList.add('flex', 'opacity-100');
+		document.body.classList.add('overflow-hidden');
+	}
+
+	function closeScanModal() {
+		if (!(scanModal instanceof HTMLElement)) return;
+		scanModal.classList.add('hidden', 'pointer-events-none', 'opacity-0');
+		scanModal.classList.remove('flex', 'opacity-100');
+		document.body.classList.remove('overflow-hidden');
+	}
+
+	function resetScanForm() {
+		currentScanImage = '';
+		clearScanError();
+		if (scanInput instanceof HTMLInputElement) scanInput.value = '';
+		if (scanPreview instanceof HTMLImageElement) scanPreview.src = '';
+		scanPreviewWrap?.classList.add('hidden');
+		setScanStatus('Importez une image pour lancer l’analyse.', false);
+		if (scanSummary instanceof HTMLElement) scanSummary.textContent = 'En attente d’analyse.';
+		if (scanName instanceof HTMLInputElement) scanName.value = '';
+		if (scanBrand instanceof HTMLInputElement) scanBrand.value = '';
+		if (scanCategory instanceof HTMLSelectElement) scanCategory.value = 'autre';
+		if (scanDescription instanceof HTMLTextAreaElement) scanDescription.value = '';
+		if (scanUnit instanceof HTMLSelectElement) scanUnit.value = 'g';
+		if (scanConfidence instanceof HTMLInputElement) scanConfidence.value = '';
+		if (scanCalories instanceof HTMLInputElement) scanCalories.value = '';
+		if (scanProteins instanceof HTMLInputElement) scanProteins.value = '';
+		if (scanCarbs instanceof HTMLInputElement) scanCarbs.value = '';
+		if (scanFats instanceof HTMLInputElement) scanFats.value = '';
+		if (scanFibers instanceof HTMLInputElement) scanFibers.value = '';
+	}
+
+	function readFileAsDataUrl(file) {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = () => resolve(String(reader.result ?? ''));
+			reader.onerror = () => reject(new Error("Impossible de lire cette image."));
+			reader.readAsDataURL(file);
+		});
+	}
+
+	function fillScanForm(scan) {
+		if (scanName instanceof HTMLInputElement) scanName.value = scan.nom ?? '';
+		if (scanBrand instanceof HTMLInputElement) scanBrand.value = scan.marque ?? '';
+		if (scanCategory instanceof HTMLSelectElement) scanCategory.value = scan.categorie ?? 'autre';
+		if (scanDescription instanceof HTMLTextAreaElement) scanDescription.value = scan.description ?? '';
+		if (scanUnit instanceof HTMLSelectElement) scanUnit.value = scan.uniteParDefaut ?? 'g';
+		if (scanConfidence instanceof HTMLInputElement) scanConfidence.value = `${scan.confiance ?? 0}%`;
+		if (scanCalories instanceof HTMLInputElement) scanCalories.value = String(scan.calories100g ?? 0);
+		if (scanProteins instanceof HTMLInputElement) scanProteins.value = String(scan.proteines100g ?? 0);
+		if (scanCarbs instanceof HTMLInputElement) scanCarbs.value = String(scan.glucides100g ?? 0);
+		if (scanFats instanceof HTMLInputElement) scanFats.value = String(scan.lipides100g ?? 0);
+		if (scanFibers instanceof HTMLInputElement) scanFibers.value = String(scan.fibres100g ?? 0);
+		if (scanSummary instanceof HTMLElement) scanSummary.textContent = scan.resume ?? '';
+	}
+
 	function esc(value) {
 		return String(value ?? '')
 			.replaceAll('&', '&amp;')
@@ -108,6 +270,77 @@ import Layout from '../layouts/Layout.astro';
 			return `<img src="${esc(assistantState.viewer.avatarUrl)}" alt="${esc(assistantState.viewer.fullName)}" class="h-10 w-10 rounded-full object-cover" />`;
 		}
 		return `<span class="flex h-10 w-10 items-center justify-center rounded-full bg-[#08b37d] text-[0.82rem] font-semibold text-white">${esc(assistantState?.viewer?.initials || 'NU')}</span>`;
+	}
+
+	function renderInlineMarkdown(value) {
+		return value
+			.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+			.replace(/\*(.+?)\*/g, '<em>$1</em>')
+			.replace(/`(.+?)`/g, '<code class="rounded bg-slate-100 px-1.5 py-0.5 text-[0.92em]">$1</code>');
+	}
+
+	function renderMarkdown(value) {
+		const lines = esc(value ?? '').replace(/\r/g, '').split('\n');
+		const output = [];
+		let inList = false;
+		let listType = '';
+
+		const closeList = () => {
+			if (inList) {
+				output.push(listType === 'ol' ? '</ol>' : '</ul>');
+				inList = false;
+				listType = '';
+			}
+		};
+
+		for (const rawLine of lines) {
+			const line = rawLine.trim();
+
+			if (!line) {
+				closeList();
+				continue;
+			}
+
+			if (/^###\s+/.test(line)) {
+				closeList();
+				output.push(`<h3 class="mt-4 text-[1.02rem] font-semibold text-[#16223c]">${renderInlineMarkdown(line.replace(/^###\s+/, ''))}</h3>`);
+				continue;
+			}
+
+			if (/^##\s+/.test(line)) {
+				closeList();
+				output.push(`<h2 class="mt-5 text-[1.12rem] font-semibold text-[#16223c]">${renderInlineMarkdown(line.replace(/^##\s+/, ''))}</h2>`);
+				continue;
+			}
+
+			if (/^\d+[\.\)]\s+/.test(line)) {
+				if (!inList || listType !== 'ol') {
+					closeList();
+					output.push('<ol class="mt-3 list-decimal space-y-2 pl-5">');
+					inList = true;
+					listType = 'ol';
+				}
+				output.push(`<li>${renderInlineMarkdown(line.replace(/^\d+[\.\)]\s+/, ''))}</li>`);
+				continue;
+			}
+
+			if (/^[-*]\s+/.test(line)) {
+				if (!inList || listType !== 'ul') {
+					closeList();
+					output.push('<ul class="mt-3 list-disc space-y-2 pl-5">');
+					inList = true;
+					listType = 'ul';
+				}
+				output.push(`<li>${renderInlineMarkdown(line.replace(/^[-*]\s+/, ''))}</li>`);
+				continue;
+			}
+
+			closeList();
+			output.push(`<p class="mt-3">${renderInlineMarkdown(line)}</p>`);
+		}
+
+		closeList();
+		return output.join('');
 	}
 
 	function renderWelcomeState() {
@@ -157,13 +390,13 @@ import Layout from '../layouts/Layout.astro';
 
 			return `
 				<div class="${isAssistant ? 'mb-7' : 'mb-6 flex justify-end'}">
-					<div class="${isAssistant ? 'max-w-[880px]' : 'max-w-[760px]'} w-full">
+					<div class="${isAssistant ? 'max-w-[1120px]' : 'max-w-[920px]'} w-full">
 						<div class="flex ${isAssistant ? 'items-start gap-3' : 'justify-end gap-3'}">
 							${isAssistant ? '<span class="flex h-11 w-11 shrink-0 items-center justify-center rounded-[16px] bg-[linear-gradient(135deg,#8b2cf8_0%,#ff4aa2_100%)] text-white"><svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 3v5M12 16v5M5 12H0M24 12h-5M5.6 5.6l3.5 3.5M14.9 14.9l3.5 3.5M18.4 5.6l-3.5 3.5M9.1 14.9l-3.5 3.5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg></span>' : ''}
 							<div class="min-w-0 rounded-[22px] ${isAssistant ? 'bg-[#f1f5fb] text-[#324765]' : 'bg-[#08b37d] text-white'} px-4 py-4 text-[1rem] leading-8 shadow-[0_8px_22px_rgba(71,104,145,0.06)]">
 								${isTyping
 									? "<div class=\"flex items-center gap-2 py-1\"><span class=\"h-2.5 w-2.5 animate-pulse rounded-full bg-[#8fa3bf]\"></span><span class=\"h-2.5 w-2.5 animate-pulse rounded-full bg-[#8fa3bf] [animation-delay:120ms]\"></span><span class=\"h-2.5 w-2.5 animate-pulse rounded-full bg-[#8fa3bf] [animation-delay:240ms]\"></span><span class=\"ml-2 text-[0.95rem] text-slate-400\">Nutriv'IA réfléchit...</span></div>"
-									: esc(message.content).replaceAll('\n', '<br />')}
+									: renderMarkdown(message.content)}
 							</div>
 							${!isAssistant ? renderViewerAvatar() : ''}
 						</div>
@@ -245,6 +478,134 @@ import Layout from '../layouts/Layout.astro';
 				: '<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="m4 12 15-7-4 14-4-5-7-2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 		}
 		renderMessages();
+	}
+
+	function buildScanPayload() {
+		return {
+			nom: scanName instanceof HTMLInputElement ? scanName.value.trim() : '',
+			marque: scanBrand instanceof HTMLInputElement ? scanBrand.value.trim() : '',
+			categorie: scanCategory instanceof HTMLSelectElement ? scanCategory.value : 'autre',
+			description: scanDescription instanceof HTMLTextAreaElement ? scanDescription.value.trim() : '',
+			uniteParDefaut: scanUnit instanceof HTMLSelectElement ? scanUnit.value : 'g',
+			calories100g: scanCalories instanceof HTMLInputElement ? Number(scanCalories.value || 0) : 0,
+			proteines100g: scanProteins instanceof HTMLInputElement ? Number(scanProteins.value || 0) : 0,
+			glucides100g: scanCarbs instanceof HTMLInputElement ? Number(scanCarbs.value || 0) : 0,
+			lipides100g: scanFats instanceof HTMLInputElement ? Number(scanFats.value || 0) : 0,
+			fibres100g: scanFibers instanceof HTMLInputElement ? Number(scanFibers.value || 0) : 0,
+		};
+	}
+
+	async function analyzeCurrentScan() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+		if (!currentScanImage) {
+			showScanError('Ajoutez une image avant de lancer l’analyse.');
+			return;
+		}
+
+		try {
+			clearScanError();
+			setScanStatus('Analyse du produit en cours...', true);
+			scanAnalyze?.setAttribute('disabled', 'disabled');
+			const response = await fetch('/app-api/food-scan', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${auth.token}`,
+				},
+				body: JSON.stringify({
+					mode: 'analyze',
+					imageDataUrl: currentScanImage,
+				}),
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearStoredAuth();
+					window.location.href = '/auth/login';
+					return;
+				}
+				throw new Error(result.message || "Impossible d'analyser ce produit.");
+			}
+			fillScanForm(result.scan);
+			setScanStatus('Analyse terminée. Vérifiez la fiche puis ajoutez-la à la base.', false);
+		} catch (error) {
+			setScanStatus('Analyse indisponible.', false);
+			showScanError(error instanceof Error ? error.message : "Impossible d'analyser ce produit.");
+		} finally {
+			scanAnalyze?.removeAttribute('disabled');
+		}
+	}
+
+	async function saveCurrentScan() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		const scan = buildScanPayload();
+		if (!scan.nom) {
+			showScanError("Le nom du produit est requis.");
+			return;
+		}
+
+		try {
+			clearScanError();
+			setScanStatus("Ajout du produit à la base aliments...", true);
+			scanSave?.setAttribute('disabled', 'disabled');
+			const response = await fetch('/app-api/food-scan', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${auth.token}`,
+				},
+				body: JSON.stringify({
+					mode: 'save',
+					imageDataUrl: currentScanImage,
+					scan,
+				}),
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearStoredAuth();
+					window.location.href = '/auth/login';
+					return;
+				}
+				throw new Error(result.message || "Impossible d'ajouter cet aliment.");
+			}
+
+			setStoredAuth({ ...auth, token: result.token, record: auth.record });
+			if (assistantState) {
+				assistantState = {
+					...assistantState,
+					messages: [
+						...assistantState.messages,
+						{
+							id: `scan-${Date.now()}`,
+							role: 'assistant',
+							content: `J'ai ajouté **${scan.nom}** à votre base aliments.\n\n- Calories: **${scan.calories100g} kcal** /100g\n- Protéines: **${scan.proteines100g} g**\n- Glucides: **${scan.glucides100g} g**\n- Lipides: **${scan.lipides100g} g**`,
+							createdAt: new Date().toISOString(),
+							metadata: {
+								relatedLinks: [{ label: 'Voir les aliments', href: '/aliments' }],
+							},
+						},
+					],
+				};
+				renderMessages();
+			}
+			closeScanModal();
+		} catch (error) {
+			setScanStatus("Échec de l'enregistrement.", false);
+			showScanError(error instanceof Error ? error.message : "Impossible d'ajouter cet aliment.");
+		} finally {
+			scanSave?.removeAttribute('disabled');
+			setScanStatus('Importez une image pour lancer l’analyse.', false);
+		}
 	}
 
 	async function fetchAssistantWorkspace() {
@@ -347,6 +708,37 @@ import Layout from '../layouts/Layout.astro';
 			await sendMessage(input.value);
 		}
 	});
+
+	scanTrigger?.addEventListener('click', () => {
+		resetScanForm();
+		openScanModal();
+	});
+	scanClose?.addEventListener('click', closeScanModal);
+	scanModal?.addEventListener('click', (event) => {
+		if (event.target === scanModal) {
+			closeScanModal();
+		}
+	});
+	document.addEventListener('keydown', (event) => {
+		if (event.key === 'Escape') {
+			closeScanModal();
+		}
+	});
+	scanPick?.addEventListener('click', () => scanInput?.click());
+	scanInput?.addEventListener('change', async () => {
+		if (!(scanInput instanceof HTMLInputElement) || !scanInput.files?.[0]) return;
+		try {
+			clearScanError();
+			currentScanImage = await readFileAsDataUrl(scanInput.files[0]);
+			if (scanPreview instanceof HTMLImageElement) scanPreview.src = currentScanImage;
+			scanPreviewWrap?.classList.remove('hidden');
+			setScanStatus('Image prête. Lancez l’analyse.', false);
+		} catch (error) {
+			showScanError(error instanceof Error ? error.message : "Impossible de charger cette image.");
+		}
+	});
+	scanAnalyze?.addEventListener('click', analyzeCurrentScan);
+	scanSave?.addEventListener('click', saveCurrentScan);
 
 	(async () => {
 		try {
