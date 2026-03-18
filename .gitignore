@@ -22,6 +22,7 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 # pocketbase files
-pocketbase/
+pocketbase/*
 !pocketbase/pb_migrations/
+!pocketbase/pb_migrations/**
 pocketbase-mcp/
