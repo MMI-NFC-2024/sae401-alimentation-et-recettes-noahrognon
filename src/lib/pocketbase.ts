@@ -97,23 +97,15 @@ async function getPocketBaseConfig(): Promise<PocketBaseConfig> {
 	const adminEmail = process.env.POCKETBASE_ADMIN_EMAIL;
 	const adminPassword = process.env.POCKETBASE_ADMIN_PASSWORD;
 
-	if (!url || !adminEmail || !adminPassword) {
-		throw new Error(
-			`Variables PocketBase manquantes. ` +
-			`POCKETBASE_URL=${url ? 'OK' : 'MISSING'}, ` +
-			`POCKETBASE_ADMIN_EMAIL=${adminEmail ? 'OK' : 'MISSING'}, ` +
-			`POCKETBASE_ADMIN_PASSWORD=${adminPassword ? 'OK' : 'MISSING'}`
-		);
+	if (url && adminEmail && adminPassword) {
+		cachedConfig = {
+			url: url.replace(/\/+$/, ''),
+			adminEmail,
+			adminPassword,
+		};
+
+		return cachedConfig;
 	}
-
-	cachedConfig = {
-		url: url.replace(/\/+$/, ''),
-		adminEmail,
-		adminPassword,
-	};
-
-	return cachedConfig;
-}
 
 	const mcpPath = path.resolve(process.cwd(), '.vscode', 'mcp.json');
 	const raw = await readFile(mcpPath, 'utf8');
@@ -1451,12 +1443,12 @@ export async function getUserDashboard(userToken: string) {
 	const weightGap = round(Math.abs(currentWeight - targetWeight));
 	const weeklyPace =
 		goalSlug === 'prise-masse' ? 0.3 :
-		goalSlug === 'perte-poids' ? 0.5 :
-		0.2;
+			goalSlug === 'perte-poids' ? 0.5 :
+				0.2;
 	const weeklyPaceLabel =
 		goalSlug === 'prise-masse' ? `${formatSignedNumber(0.3)} kg/semaine` :
-		goalSlug === 'perte-poids' ? `-${formatDisplayNumber(0.5)} kg/semaine` :
-		`${formatSignedNumber(0.2)} kg/semaine`;
+			goalSlug === 'perte-poids' ? `-${formatDisplayNumber(0.5)} kg/semaine` :
+				`${formatSignedNumber(0.2)} kg/semaine`;
 
 	const rewards = [
 		{
@@ -1481,8 +1473,8 @@ export async function getUserDashboard(userToken: string) {
 
 	const caloriesAdjustment =
 		goalSlug === 'prise-masse' ? '+300 kcal' :
-		goalSlug === 'perte-poids' ? '-450 kcal' :
-		'Plan équilibré';
+			goalSlug === 'perte-poids' ? '-450 kcal' :
+				'Plan équilibré';
 
 	const todayDateLabel = new Intl.DateTimeFormat('fr-FR', {
 		day: 'numeric',
@@ -2162,10 +2154,10 @@ export async function getShoppingList(userToken: string, selectedDateInput?: str
 	const recipeIds = [...new Set(plannerEntries.map((entry) => String(entry.recette_id)))];
 	const ingredientLinks = recipeIds.length
 		? await listRecordsWithQuery<Record<string, any>>(
-				'ingredients_recette',
-				`perPage=800&sort=ordre&filter=${encodeURIComponent(recipeIds.map((id) => `recette_id="${id}"`).join(' || '))}&expand=aliment_id`,
-				adminToken,
-			)
+			'ingredients_recette',
+			`perPage=800&sort=ordre&filter=${encodeURIComponent(recipeIds.map((id) => `recette_id="${id}"`).join(' || '))}&expand=aliment_id`,
+			adminToken,
+		)
 		: [];
 
 	const ingredientMapByRecipe = new Map<string, Array<Record<string, any>>>();
