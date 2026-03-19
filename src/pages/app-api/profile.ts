@@ -2,6 +2,7 @@ import type { APIRoute } from 'astro';
 import {
 	authenticatePocketBaseAdmin,
 	findRecordByField,
+	getFavoriteRecipesForUser,
 	getFileUrl,
 	getNutritionProfileByUserId,
 	getUserRecordById,
@@ -31,6 +32,7 @@ export const GET: APIRoute = async ({ request }) => {
 		const user = await getUserRecordById(auth.record.id, adminToken);
 		const nutritionProfile = await getNutritionProfileByUserId(auth.record.id, adminToken);
 		const avatarUrl = await getFileUrl('users', user.id, user.avatar);
+		const favoriteRecipesData = await getFavoriteRecipesForUser(auth.token);
 
 		return new Response(
 			JSON.stringify({
@@ -40,6 +42,7 @@ export const GET: APIRoute = async ({ request }) => {
 					avatarUrl,
 				},
 				nutritionProfile,
+				favoriteRecipes: favoriteRecipesData.recipes,
 			}),
 			{
 				status: 200,
@@ -134,6 +137,7 @@ export const PATCH: APIRoute = async ({ request }) => {
 		const user = await getUserRecordById(refreshedAuth.record.id, adminToken);
 		const nutritionProfile = await getNutritionProfileByUserId(refreshedAuth.record.id, adminToken);
 		const avatarUrl = await getFileUrl('users', user.id, user.avatar);
+		const favoriteRecipesData = await getFavoriteRecipesForUser(refreshedAuth.token);
 
 		return new Response(
 			JSON.stringify({
@@ -143,6 +147,7 @@ export const PATCH: APIRoute = async ({ request }) => {
 					avatarUrl,
 				},
 				nutritionProfile,
+				favoriteRecipes: favoriteRecipesData.recipes,
 			}),
 			{
 				status: 200,

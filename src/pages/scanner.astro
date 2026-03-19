@@ -1,0 +1,492 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Scanner IA - Nutrivia" hideFooter={true}>
+	<section class="min-h-[calc(100vh-72px)] bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.78),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_32%),linear-gradient(180deg,#f6fdf9_0%,#fbfdff_64%,#f4f9ff_100%)] py-6 md:py-8">
+		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
+			<div class="mx-auto max-w-[1040px]">
+				<div class="mb-6 md:mb-8">
+					<p class="text-[0.8rem] font-semibold uppercase tracking-[0.22em] text-[#08b37d]">Scanner IA</p>
+					<h1 class="mt-3 text-[2.15rem] font-semibold tracking-[-0.04em] text-[#16223c] md:text-[2.65rem]">Analyse produit ou assiette</h1>
+					<p class="mt-3 max-w-[42rem] text-[1rem] leading-7 text-slate-500 md:text-[1.05rem]">
+						Scannez une étiquette produit pour enrichir votre base aliments, ou analysez une photo d’assiette pour obtenir une estimation nutritionnelle exploitable dans Nutrivia.
+					</p>
+				</div>
+
+				<p id="scanner-error" class="mb-5 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+
+				<div class="mb-5 flex flex-wrap gap-3">
+					<button id="scanner-mode-product" type="button" class="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#53d7ad] bg-[#e8fbf2] px-5 py-2.5 text-[0.96rem] font-semibold text-[#0b8c5f] transition">Scanner un produit</button>
+					<button id="scanner-mode-plate" type="button" class="inline-flex min-h-[46px] items-center justify-center rounded-full border border-[#d8e2ee] bg-white px-5 py-2.5 text-[0.96rem] font-semibold text-slate-600 transition hover:border-[#bfd3e8] hover:text-[#16223c]">Analyser une assiette</button>
+				</div>
+
+				<div class="grid gap-5 lg:grid-cols-[0.92fr_1.08fr]">
+					<div class="space-y-5">
+						<div class="rounded-[28px] border border-[#d8e2ee] bg-white p-5 shadow-[0_18px_42px_rgba(71,104,145,0.10)] md:p-6">
+							<div class="mb-4 flex items-start justify-between gap-4">
+								<div>
+									<h2 id="scanner-card-title" class="text-[1.35rem] font-semibold tracking-[-0.03em] text-[#16223c]">Scanner un produit</h2>
+									<p id="scanner-card-description" class="mt-2 text-sm leading-6 text-slate-500">Photographiez le produit ou son tableau nutritionnel, puis validez la fiche avant ajout.</p>
+								</div>
+								<a id="scanner-return-link" href="/aliments" class="inline-flex min-h-[42px] items-center justify-center rounded-[14px] border border-[#d8e2ee] px-4 py-2 text-sm font-medium text-slate-600 transition hover:border-[#bfd3e8] hover:text-[#16223c]">Retour</a>
+							</div>
+
+							<input id="scanner-file-input" type="file" accept="image/*" capture="environment" class="hidden" />
+							<button id="scanner-file-pick" type="button" class="flex min-h-[240px] w-full flex-col items-center justify-center rounded-[24px] border border-dashed border-[#bfd3e8] bg-[#f7fbff] px-6 py-8 text-center transition hover:border-[#08b37d] hover:bg-[#f3fbf7]">
+								<div class="flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#e7fbf3] text-[#08b37d]">
+									<svg id="scanner-upload-icon" viewBox="0 0 24 24" class="h-7 w-7" fill="none">
+										<path d="M4 8a2 2 0 0 1 2-2h2l1-2h6l1 2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+										<circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"></circle>
+									</svg>
+								</div>
+								<p id="scanner-pick-title" class="mt-4 text-[1.02rem] font-medium text-[#16223c]">Choisir une photo</p>
+								<p id="scanner-pick-description" class="mt-2 max-w-[18rem] text-sm leading-6 text-slate-500">Photographiez le produit ou son tableau nutritionnel pour générer une fiche vérifiable.</p>
+							</button>
+
+							<div id="scanner-preview-wrap" class="mt-4 hidden overflow-hidden rounded-[24px] border border-[#d8e2ee] bg-white">
+								<img id="scanner-preview" alt="Aperçu du scan" class="h-[280px] w-full object-cover" />
+							</div>
+
+							<div class="mt-4 flex items-center gap-3 rounded-[20px] border border-[#d8e2ee] bg-white px-4 py-4">
+								<div id="scanner-loader" class="hidden h-5 w-5 animate-spin rounded-full border-2 border-[#08b37d]/20 border-t-[#08b37d]"></div>
+								<p id="scanner-status" class="text-sm text-slate-500">Importez une image pour lancer l’analyse.</p>
+							</div>
+						</div>
+
+						<div id="scanner-plate-result" class="hidden rounded-[28px] border border-[#d8e2ee] bg-white p-5 shadow-[0_18px_42px_rgba(71,104,145,0.10)] md:p-6">
+							<div class="flex items-start justify-between gap-4">
+								<div>
+									<p id="scanner-plate-title" class="text-[1.2rem] font-semibold text-[#16223c]">Analyse de votre assiette</p>
+									<p id="scanner-plate-summary" class="mt-2 text-sm leading-6 text-slate-500">En attente d’analyse.</p>
+								</div>
+								<p id="scanner-plate-confidence" class="rounded-full bg-[#eefbf5] px-3 py-1 text-[0.82rem] font-semibold text-[#0b8c5f]">0%</p>
+							</div>
+							<div class="mt-4 grid gap-3 sm:grid-cols-2">
+								<div class="rounded-[18px] bg-[#eef4ff] px-4 py-4"><p class="text-[0.8rem] font-medium text-[#4f7df4]">Calories estimées</p><p id="scanner-plate-kcal" class="mt-1 text-[1.15rem] font-semibold text-[#1d58eb]">0 kcal</p></div>
+								<div class="rounded-[18px] bg-[#fff5ea] px-4 py-4"><p class="text-[0.8rem] font-medium text-[#e35a00]">Macros</p><p id="scanner-plate-macros" class="mt-1 text-[0.96rem] font-semibold text-[#16223c]">P 0 g · G 0 g · L 0 g</p></div>
+							</div>
+							<div class="mt-4">
+								<p class="text-[0.82rem] font-medium text-slate-600">Aliments détectés</p>
+								<div id="scanner-plate-foods" class="mt-2 flex flex-wrap gap-2"></div>
+							</div>
+							<div class="mt-4">
+								<p class="text-[0.82rem] font-medium text-slate-600">Conseils rapides</p>
+								<div id="scanner-plate-tips" class="mt-2 grid gap-2"></div>
+							</div>
+						</div>
+					</div>
+
+					<div class="space-y-5">
+						<div id="scanner-food-form-wrap" class="rounded-[28px] border border-[#d8e2ee] bg-white p-5 shadow-[0_18px_42px_rgba(71,104,145,0.10)] md:p-6">
+							<div class="grid gap-4 md:grid-cols-2">
+								<label class="space-y-2 md:col-span-2"><span class="text-sm font-medium text-slate-600">Nom</span><input id="scanner-food-name" type="text" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Marque</span><input id="scanner-food-brand" type="text" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Catégorie</span><select id="scanner-food-category" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] bg-white px-4 text-slate-700 outline-none focus:border-[#08b37d]"><option value="autre">Autre</option><option value="viande">Viande</option><option value="poisson">Poisson</option><option value="produit_laitier">Produits laitiers</option><option value="cereale">Céréales</option><option value="legume">Légumes</option><option value="fruit">Fruits</option><option value="epicerie">Épicerie</option></select></label>
+								<label class="space-y-2 md:col-span-2"><span class="text-sm font-medium text-slate-600">Description</span><textarea id="scanner-food-description" rows="3" class="w-full rounded-[16px] border border-[#cad8e7] px-4 py-3 text-slate-700 outline-none focus:border-[#08b37d]"></textarea></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Unité</span><select id="scanner-food-unit" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] bg-white px-4 text-slate-700 outline-none focus:border-[#08b37d]"><option value="g">g</option><option value="ml">ml</option><option value="piece">pièce</option><option value="portion">portion</option></select></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Confiance IA</span><input id="scanner-food-confidence" type="text" disabled class="h-[46px] w-full rounded-[16px] border border-[#e3ebf4] bg-slate-50 px-4 text-slate-500 outline-none" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Calories /100g</span><input id="scanner-food-calories" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Protéines /100g</span><input id="scanner-food-proteins" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Glucides /100g</span><input id="scanner-food-carbs" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Lipides /100g</span><input id="scanner-food-fats" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<label class="space-y-2"><span class="text-sm font-medium text-slate-600">Fibres /100g</span><input id="scanner-food-fibers" type="number" min="0" step="0.1" class="h-[46px] w-full rounded-[16px] border border-[#cad8e7] px-4 text-slate-700 outline-none focus:border-[#08b37d]" /></label>
+								<div class="rounded-[18px] bg-[#eef8ff] px-4 py-4 text-sm leading-6 text-[#46627f] md:col-span-2"><p class="font-medium text-[#16223c]">Résumé IA</p><p id="scanner-food-summary" class="mt-2">En attente d’analyse.</p></div>
+							</div>
+						</div>
+
+						<div class="rounded-[28px] border border-[#d8e2ee] bg-white p-5 shadow-[0_18px_42px_rgba(71,104,145,0.10)] md:p-6">
+							<div class="flex flex-col gap-3 sm:flex-row">
+								<button id="scanner-run" type="button" class="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-[16px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.96rem] font-medium text-slate-700 transition hover:border-[#08b37d] hover:text-[#08b37d]">Analyser l’image</button>
+								<button id="scanner-primary" type="button" class="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-[16px] bg-[#08b37d] px-5 py-3 text-[0.96rem] font-semibold text-white shadow-[0_16px_36px_rgba(8,179,125,0.2)] transition hover:bg-[#069c6c]">Ajouter à la base aliments</button>
+							</div>
+							<p id="scanner-hint" class="mt-3 text-sm leading-6 text-slate-500">La fiche est toujours validée manuellement avant enregistrement.</p>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const assistantReturnKey = 'nutrivia_scanner_assistant_payload';
+
+	const query = new URLSearchParams(window.location.search);
+	const returnUrl = query.get('return') || '/aliments';
+
+	const errorBox = document.querySelector('#scanner-error');
+	const modeButtons = {
+		product: document.querySelector('#scanner-mode-product'),
+		plate: document.querySelector('#scanner-mode-plate'),
+	};
+	const titleBox = document.querySelector('#scanner-card-title');
+	const descriptionBox = document.querySelector('#scanner-card-description');
+	const returnLink = document.querySelector('#scanner-return-link');
+	const pickButton = document.querySelector('#scanner-file-pick');
+	const fileInput = document.querySelector('#scanner-file-input');
+	const previewWrap = document.querySelector('#scanner-preview-wrap');
+	const previewImage = document.querySelector('#scanner-preview');
+	const statusBox = document.querySelector('#scanner-status');
+	const loader = document.querySelector('#scanner-loader');
+	const runButton = document.querySelector('#scanner-run');
+	const primaryButton = document.querySelector('#scanner-primary');
+	const hintBox = document.querySelector('#scanner-hint');
+	const uploadIcon = document.querySelector('#scanner-upload-icon');
+	const pickTitle = document.querySelector('#scanner-pick-title');
+	const pickDescription = document.querySelector('#scanner-pick-description');
+
+	const foodFormWrap = document.querySelector('#scanner-food-form-wrap');
+	const foodName = document.querySelector('#scanner-food-name');
+	const foodBrand = document.querySelector('#scanner-food-brand');
+	const foodCategory = document.querySelector('#scanner-food-category');
+	const foodDescription = document.querySelector('#scanner-food-description');
+	const foodUnit = document.querySelector('#scanner-food-unit');
+	const foodConfidence = document.querySelector('#scanner-food-confidence');
+	const foodCalories = document.querySelector('#scanner-food-calories');
+	const foodProteins = document.querySelector('#scanner-food-proteins');
+	const foodCarbs = document.querySelector('#scanner-food-carbs');
+	const foodFats = document.querySelector('#scanner-food-fats');
+	const foodFibers = document.querySelector('#scanner-food-fibers');
+	const foodSummary = document.querySelector('#scanner-food-summary');
+
+	const plateWrap = document.querySelector('#scanner-plate-result');
+	const plateTitle = document.querySelector('#scanner-plate-title');
+	const plateSummary = document.querySelector('#scanner-plate-summary');
+	const plateConfidence = document.querySelector('#scanner-plate-confidence');
+	const plateKcal = document.querySelector('#scanner-plate-kcal');
+	const plateMacros = document.querySelector('#scanner-plate-macros');
+	const plateFoods = document.querySelector('#scanner-plate-foods');
+	const plateTips = document.querySelector('#scanner-plate-tips');
+
+	let currentMode = query.get('mode') === 'plate' ? 'plate' : 'product';
+	let currentImage = '';
+	let currentPlateAnalysis = null;
+
+	function getStoredAuth() {
+		try {
+			const raw = localStorage.getItem(authKey);
+			return raw ? JSON.parse(raw) : null;
+		} catch {
+			return null;
+		}
+	}
+
+	function setStoredAuth(payload) {
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function clearStoredAuth() {
+		localStorage.removeItem(authKey);
+	}
+
+	function showError(message) {
+		if (!(errorBox instanceof HTMLElement)) return;
+		errorBox.textContent = message;
+		errorBox.classList.remove('hidden');
+	}
+
+	function clearError() {
+		if (!(errorBox instanceof HTMLElement)) return;
+		errorBox.classList.add('hidden');
+		errorBox.textContent = '';
+	}
+
+	function setStatus(message, isLoading = false) {
+		if (statusBox instanceof HTMLElement) statusBox.textContent = message;
+		loader?.classList.toggle('hidden', !isLoading);
+	}
+
+	function readFileAsDataUrl(file) {
+		return new Promise((resolve, reject) => {
+			const reader = new FileReader();
+			reader.onload = () => resolve(String(reader.result ?? ''));
+			reader.onerror = () => reject(new Error("Impossible de lire cette image."));
+			reader.readAsDataURL(file);
+		});
+	}
+
+	function esc(value) {
+		return String(value)
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#39;');
+	}
+
+	function setMode(mode) {
+		currentMode = mode === 'plate' ? 'plate' : 'product';
+		const isPlate = currentMode === 'plate';
+
+		modeButtons.product?.classList.toggle('border-[#53d7ad]', !isPlate);
+		modeButtons.product?.classList.toggle('bg-[#e8fbf2]', !isPlate);
+		modeButtons.product?.classList.toggle('text-[#0b8c5f]', !isPlate);
+		modeButtons.product?.classList.toggle('border-[#d8e2ee]', isPlate);
+		modeButtons.product?.classList.toggle('bg-white', isPlate);
+		modeButtons.product?.classList.toggle('text-slate-600', isPlate);
+
+		modeButtons.plate?.classList.toggle('border-[#53d7ad]', isPlate);
+		modeButtons.plate?.classList.toggle('bg-[#e8fbf2]', isPlate);
+		modeButtons.plate?.classList.toggle('text-[#0b8c5f]', isPlate);
+		modeButtons.plate?.classList.toggle('border-[#d8e2ee]', !isPlate);
+		modeButtons.plate?.classList.toggle('bg-white', !isPlate);
+		modeButtons.plate?.classList.toggle('text-slate-600', !isPlate);
+
+		if (titleBox instanceof HTMLElement) titleBox.textContent = isPlate ? 'Analyser une assiette' : 'Scanner un produit';
+		if (descriptionBox instanceof HTMLElement) {
+			descriptionBox.textContent = isPlate
+				? 'Prenez votre assiette en photo pour obtenir une estimation des aliments et des macros.'
+				: 'Photographiez le produit ou son tableau nutritionnel, puis validez la fiche avant ajout.';
+		}
+		if (pickTitle instanceof HTMLElement) pickTitle.textContent = isPlate ? 'Choisir une photo d’assiette' : 'Choisir une photo';
+		if (pickDescription instanceof HTMLElement) {
+			pickDescription.textContent = isPlate
+				? 'Prenez votre repas en photo pour obtenir une estimation nutritionnelle.'
+				: 'Photographiez le produit ou son tableau nutritionnel pour générer une fiche vérifiable.';
+		}
+		if (uploadIcon instanceof SVGElement) {
+			uploadIcon.innerHTML = isPlate
+				? '<path d="M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16Z" stroke="currentColor" stroke-width="1.8"></path><path d="M8 10h8M7.5 13h9M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path>'
+				: '<path d="M4 8a2 2 0 0 1 2-2h2l1-2h6l1 2h2a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V8Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path><circle cx="12" cy="12" r="3.2" stroke="currentColor" stroke-width="1.8"></circle>';
+		}
+		foodFormWrap?.classList.toggle('hidden', isPlate);
+		plateWrap?.classList.toggle('hidden', !isPlate);
+		if (primaryButton instanceof HTMLElement) primaryButton.textContent = isPlate ? 'Ajouter au chat' : 'Ajouter à la base aliments';
+		if (hintBox instanceof HTMLElement) {
+			hintBox.textContent = isPlate
+				? "L'analyse reste une estimation visuelle. Vous pourrez l'injecter dans l'assistant."
+				: 'La fiche est toujours validée manuellement avant enregistrement.';
+		}
+		setStatus(isPlate ? "Importez une image pour lancer l'analyse visuelle." : "Importez une image pour lancer l’analyse.", false);
+	}
+
+	function buildFoodPayload() {
+		return {
+			nom: foodName instanceof HTMLInputElement ? foodName.value.trim() : '',
+			marque: foodBrand instanceof HTMLInputElement ? foodBrand.value.trim() : '',
+			categorie: foodCategory instanceof HTMLSelectElement ? foodCategory.value : 'autre',
+			description: foodDescription instanceof HTMLTextAreaElement ? foodDescription.value.trim() : '',
+			uniteParDefaut: foodUnit instanceof HTMLSelectElement ? foodUnit.value : 'g',
+			calories100g: foodCalories instanceof HTMLInputElement ? Number(foodCalories.value || 0) : 0,
+			proteines100g: foodProteins instanceof HTMLInputElement ? Number(foodProteins.value || 0) : 0,
+			glucides100g: foodCarbs instanceof HTMLInputElement ? Number(foodCarbs.value || 0) : 0,
+			lipides100g: foodFats instanceof HTMLInputElement ? Number(foodFats.value || 0) : 0,
+			fibres100g: foodFibers instanceof HTMLInputElement ? Number(foodFibers.value || 0) : 0,
+		};
+	}
+
+	function fillFoodForm(scan) {
+		if (foodName instanceof HTMLInputElement) foodName.value = scan.nom ?? '';
+		if (foodBrand instanceof HTMLInputElement) foodBrand.value = scan.marque ?? '';
+		if (foodCategory instanceof HTMLSelectElement) foodCategory.value = scan.categorie ?? 'autre';
+		if (foodDescription instanceof HTMLTextAreaElement) foodDescription.value = scan.description ?? '';
+		if (foodUnit instanceof HTMLSelectElement) foodUnit.value = scan.uniteParDefaut ?? 'g';
+		if (foodConfidence instanceof HTMLInputElement) foodConfidence.value = `${scan.confiance ?? 0}%`;
+		if (foodCalories instanceof HTMLInputElement) foodCalories.value = String(scan.calories100g ?? 0);
+		if (foodProteins instanceof HTMLInputElement) foodProteins.value = String(scan.proteines100g ?? 0);
+		if (foodCarbs instanceof HTMLInputElement) foodCarbs.value = String(scan.glucides100g ?? 0);
+		if (foodFats instanceof HTMLInputElement) foodFats.value = String(scan.lipides100g ?? 0);
+		if (foodFibers instanceof HTMLInputElement) foodFibers.value = String(scan.fibres100g ?? 0);
+		if (foodSummary instanceof HTMLElement) foodSummary.textContent = scan.resume ?? '';
+	}
+
+	function fillPlateAnalysis(analysis) {
+		currentPlateAnalysis = analysis;
+		if (plateTitle instanceof HTMLElement) plateTitle.textContent = analysis.titre ?? 'Analyse de votre assiette';
+		if (plateSummary instanceof HTMLElement) plateSummary.textContent = analysis.resume ?? '';
+		if (plateConfidence instanceof HTMLElement) plateConfidence.textContent = `${analysis.confiance ?? 0}%`;
+		if (plateKcal instanceof HTMLElement) plateKcal.textContent = `${analysis.caloriesEstimees ?? 0} kcal`;
+		if (plateMacros instanceof HTMLElement) plateMacros.textContent = `P ${analysis.proteinesG ?? 0} g · G ${analysis.glucidesG ?? 0} g · L ${analysis.lipidesG ?? 0} g`;
+		if (plateFoods instanceof HTMLElement) {
+			plateFoods.innerHTML = (analysis.alimentsDetectes ?? []).map((food) => `<span class="rounded-full bg-[#eefbf5] px-3 py-2 text-[0.84rem] font-medium text-[#0b8c5f]">${esc(food)}</span>`).join('');
+		}
+		if (plateTips instanceof HTMLElement) {
+			plateTips.innerHTML = (analysis.conseils ?? []).map((tip) => `<div class="rounded-[16px] border border-[#e3ebf4] bg-[#f8fbff] px-4 py-3 text-sm leading-6 text-slate-600">${esc(tip)}</div>`).join('');
+		}
+	}
+
+	async function runProductAnalysis() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+		if (!currentImage) {
+			showError('Ajoutez une image avant de lancer l’analyse.');
+			return;
+		}
+		try {
+			clearError();
+			setStatus('Analyse du produit en cours...', true);
+			runButton?.setAttribute('disabled', 'disabled');
+			const response = await fetch('/app-api/food-scan', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+				body: JSON.stringify({ mode: 'analyze', imageDataUrl: currentImage }),
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearStoredAuth();
+					window.location.href = '/auth/login';
+					return;
+				}
+				throw new Error(result.message || "Impossible d'analyser ce produit.");
+			}
+			fillFoodForm(result.scan);
+			setStatus('Analyse terminée. Vérifiez la fiche puis ajoutez-la à la base.', false);
+		} catch (error) {
+			setStatus('Analyse indisponible.', false);
+			showError(error instanceof Error ? error.message : "Impossible d'analyser ce produit.");
+		} finally {
+			runButton?.removeAttribute('disabled');
+		}
+	}
+
+	async function saveProduct() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+		const scan = buildFoodPayload();
+		if (!scan.nom) {
+			showError("Le nom du produit est requis.");
+			return;
+		}
+		try {
+			clearError();
+			setStatus("Ajout du produit à la base aliments...", true);
+			primaryButton?.setAttribute('disabled', 'disabled');
+			const response = await fetch('/app-api/food-scan', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+				body: JSON.stringify({ mode: 'save', imageDataUrl: currentImage, scan }),
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearStoredAuth();
+					window.location.href = '/auth/login';
+					return;
+				}
+				throw new Error(result.message || "Impossible d'ajouter cet aliment.");
+			}
+			setStoredAuth({ ...auth, token: result.token, record: auth.record });
+			setStatus('Produit ajouté à la base aliments.', false);
+
+			if (returnUrl.startsWith('/assistant')) {
+				sessionStorage.setItem(assistantReturnKey, JSON.stringify({
+					role: 'assistant',
+					content: `J'ai ajouté **${scan.nom}** à votre base aliments.\n\n- Calories : **${scan.calories100g} kcal** /100g\n- Protéines : **${scan.proteines100g} g**\n- Glucides : **${scan.glucides100g} g**\n- Lipides : **${scan.lipides100g} g**`,
+					metadata: { relatedLinks: [{ label: 'Voir les aliments', href: '/aliments' }] },
+				}));
+			}
+
+			window.setTimeout(() => {
+				window.location.href = returnUrl;
+			}, 500);
+		} catch (error) {
+			setStatus("Échec de l'enregistrement.", false);
+			showError(error instanceof Error ? error.message : "Impossible d'ajouter cet aliment.");
+		} finally {
+			primaryButton?.removeAttribute('disabled');
+		}
+	}
+
+	async function runPlateAnalysis() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+		if (!currentImage) {
+			showError("Ajoutez une image avant de lancer l'analyse.");
+			return;
+		}
+		try {
+			clearError();
+			setStatus("Analyse de l'assiette en cours...", true);
+			runButton?.setAttribute('disabled', 'disabled');
+			const response = await fetch('/app-api/assistant', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth.token}` },
+				body: JSON.stringify({ action: 'analyze_plate', imageDataUrl: currentImage }),
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearStoredAuth();
+					window.location.href = '/auth/login';
+					return;
+				}
+				throw new Error(result.message || "Impossible d'analyser cette assiette.");
+			}
+			fillPlateAnalysis(result.analysis);
+			setStatus("Analyse terminée. Vous pouvez l'envoyer dans l'assistant.", false);
+		} catch (error) {
+			setStatus('Analyse indisponible.', false);
+			showError(error instanceof Error ? error.message : "Impossible d'analyser cette assiette.");
+		} finally {
+			runButton?.removeAttribute('disabled');
+		}
+	}
+
+	function pushPlateResultToAssistant() {
+		if (!currentPlateAnalysis) {
+			showError("Analysez d'abord l'assiette.");
+			return;
+		}
+
+		sessionStorage.setItem(assistantReturnKey, JSON.stringify({
+			role: 'assistant',
+			content: `## ${currentPlateAnalysis.titre}\n${currentPlateAnalysis.resume}\n\n- **Calories estimées** : ${currentPlateAnalysis.caloriesEstimees} kcal\n- **Macros estimées** : ${currentPlateAnalysis.proteinesG} g protéines · ${currentPlateAnalysis.glucidesG} g glucides · ${currentPlateAnalysis.lipidesG} g lipides\n- **Confiance** : ${currentPlateAnalysis.confiance}%`,
+			metadata: {
+				chips: [
+					'Comment équilibrer ce repas ?',
+					'Peux-tu me proposer une version plus protéinée ?',
+					'Comment intégrer ce repas dans ma journée ?',
+				],
+			},
+		}));
+		window.location.href = '/assistant';
+	}
+
+	modeButtons.product?.addEventListener('click', () => setMode('product'));
+	modeButtons.plate?.addEventListener('click', () => setMode('plate'));
+	pickButton?.addEventListener('click', () => fileInput?.click());
+	fileInput?.addEventListener('change', async () => {
+		if (!(fileInput instanceof HTMLInputElement) || !fileInput.files?.[0]) return;
+		try {
+			clearError();
+			currentImage = await readFileAsDataUrl(fileInput.files[0]);
+			if (previewImage instanceof HTMLImageElement) previewImage.src = currentImage;
+			previewWrap?.classList.remove('hidden');
+			setStatus(currentMode === 'plate' ? 'Image prête. Lancez l’analyse visuelle.' : 'Image prête. Lancez l’analyse.', false);
+		} catch (error) {
+			showError(error instanceof Error ? error.message : "Impossible de charger cette image.");
+		}
+	});
+	runButton?.addEventListener('click', () => {
+		if (currentMode === 'plate') {
+			void runPlateAnalysis();
+			return;
+		}
+		void runProductAnalysis();
+	});
+	primaryButton?.addEventListener('click', () => {
+		if (currentMode === 'plate') {
+			pushPlateResultToAssistant();
+			return;
+		}
+		void saveProduct();
+	});
+
+	if (returnLink instanceof HTMLAnchorElement) {
+		returnLink.href = returnUrl;
+	}
+
+	setMode(currentMode);
+</script>

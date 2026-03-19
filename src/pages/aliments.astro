@@ -30,7 +30,7 @@ import Layout from '../layouts/Layout.astro';
 						</div>
 					</button>
 
-					<a href="#" class="relative overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#8f39ff_0%,#ef2ea6_100%)] px-6 py-5 text-white shadow-[0_18px_42px_rgba(161,55,223,0.20)]">
+					<a href="/scanner?mode=plate&return=/aliments" class="relative overflow-hidden rounded-[22px] bg-[linear-gradient(135deg,#8f39ff_0%,#ef2ea6_100%)] px-6 py-5 text-white shadow-[0_18px_42px_rgba(161,55,223,0.20)]">
 						<div class="absolute top-0 right-0 h-28 w-28 rounded-full bg-white/12 blur-sm"></div>
 						<div class="relative flex items-center gap-4">
 							<div class="flex h-[52px] w-[52px] items-center justify-center rounded-[16px] bg-white/16">
@@ -39,8 +39,8 @@ import Layout from '../layouts/Layout.astro';
 								</svg>
 							</div>
 							<div>
-								<h2 class="text-[1.5rem] font-semibold">Analyser une recette</h2>
-								<p class="mt-1 text-[1rem] text-white/85">Calculez les valeurs nutritionnelles de vos plats</p>
+								<h2 class="text-[1.5rem] font-semibold">Analyser une assiette</h2>
+								<p class="mt-1 text-[1rem] text-white/85">Estimez les macros de vos repas à partir d’une photo</p>
 							</div>
 						</div>
 					</a>
@@ -652,8 +652,7 @@ import Layout from '../layouts/Layout.astro';
 
 	foodsSearch?.addEventListener('input', applyFilters);
 	scanTrigger?.addEventListener('click', () => {
-		resetScanForm();
-		openScanModal();
+		window.location.href = '/scanner?mode=product&return=/aliments';
 	});
 	scanClose?.addEventListener('click', closeScanModal);
 	scanModal?.addEventListener('click', (event) => {

@@ -228,6 +228,15 @@ async function getCollectionMeta(collection: string, token: string) {
 	return pbFetch<Record<string, any>>(`/api/collections/${collection}`, undefined, token);
 }
 
+function getCollectionFieldNames(collectionMeta: Record<string, any> | null | undefined) {
+	const fields = Array.isArray(collectionMeta?.fields) ? collectionMeta.fields : [];
+	return new Set(
+		fields
+			.map((field) => String(field?.name ?? '').trim())
+			.filter(Boolean),
+	);
+}
+
 async function ensureBaseCollection(
 	name: string,
 	fields: Array<Record<string, unknown>>,
@@ -646,6 +655,7 @@ export async function getRecipeDetailBySlug(userToken: string, slug: string) {
 	const refreshedAuth = await refreshUserAuth(userToken);
 	const token = refreshedAuth.token;
 	const userId = String(refreshedAuth.record.id);
+	const adminToken = await authenticatePocketBaseAdmin();
 
 	const recipeItems = await listRecordsWithQuery<Record<string, any>>(
 		'recettes',
@@ -660,7 +670,9 @@ export async function getRecipeDetailBySlug(userToken: string, slug: string) {
 
 	const recipeId = String(recipe.id);
 
-	const [ingredientLinks, steps, reviews, similarLinks, recipeDietLinks, recipeTagLinks, allRecipes, allRecipeDietLinks] = await Promise.all([
+	await ensureFavoriteRecipeCollections(adminToken);
+
+	const [ingredientLinks, steps, reviews, similarLinks, recipeDietLinks, recipeTagLinks, allRecipes, allRecipeDietLinks, favoriteLinks] = await Promise.all([
 		listRecordsWithQuery<Record<string, any>>(
 			'ingredients_recette',
 			`perPage=200&sort=ordre&filter=${encodeURIComponent(`recette_id="${recipeId}"`)}&expand=aliment_id`,
@@ -697,6 +709,11 @@ export async function getRecipeDetailBySlug(userToken: string, slug: string) {
 			token,
 		),
 		listRecordsWithQuery<Record<string, any>>('recettes_regimes', 'perPage=400', token),
+		listRecordsWithQuery<Record<string, any>>(
+			'recettes_favorites',
+			`perPage=500&filter=${encodeURIComponent(`recette_id="${recipeId}"`)}`,
+			adminToken,
+		),
 	]);
 
 	const imageUrl = await getFileUrl('recettes', recipeId, recipe.photo);
@@ -788,6 +805,9 @@ export async function getRecipeDetailBySlug(userToken: string, slug: string) {
 			couleur: String(tag.couleur ?? ''),
 		}));
 
+	const favoriteCount = favoriteLinks.length;
+	const isFavorite = favoriteLinks.some((item) => String(item.user_id ?? '') === userId);
+
 	if (similarRecipes.length === 0) {
 		const recipeDietIds = new Set(recipeDietLinks.map((link) => String(link.regime_id ?? '')));
 		const recipeObjectiveId = String(recipe.objectif_id ?? '');
@@ -863,6 +883,8 @@ export async function getRecipeDetailBySlug(userToken: string, slug: string) {
 				: null,
 			regimes: recipeDiets,
 			tags: recipeTags,
+			isFavorite,
+			favoriteCount,
 			ingredients,
 			etapes: preparationSteps,
 			avis: recipeReviews,
@@ -975,6 +997,11 @@ function dataUrlToFormFile(dataUrl: string, fallbackName: string) {
 	};
 }
 
+function buildRecipePlaceholderImageDataUrl(title: string) {
+	void title;
+	return 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nX1EAAAAASUVORK5CYII=';
+}
+
 export async function createFoodFromScan(
 	userToken: string,
 	data: {
@@ -993,28 +1020,54 @@ export async function createFoodFromScan(
 ) {
 	const refreshedAuth = await refreshUserAuth(userToken);
 	const adminToken = await authenticatePocketBaseAdmin();
+	const foodsCollection = await getCollectionMeta('aliments', adminToken);
+	const fieldNames = getCollectionFieldNames(foodsCollection);
 
-	const formData = new FormData();
 	const cleanName = String(data.nom ?? '').trim();
 	const cleanBrand = String(data.marque ?? '').trim();
 	const description = [cleanBrand, String(data.description ?? '').trim()].filter(Boolean).join(' · ');
+	const appendIfExists = (target: FormData, field: string, value: string) => {
+		if (fieldNames.has(field)) {
+			target.append(field, value);
+		}
+	};
+	const optionalRetryFields = ['photo', 'date_creation', 'auteur_id', 'objectif_id'];
 
-	formData.append('nom', cleanName || 'Produit à vérifier');
-	formData.append('description', description);
-	formData.append('categorie', String(data.categorie ?? 'autre'));
-	formData.append('unite_par_defaut', String(data.uniteParDefaut ?? 'g'));
-	formData.append('calories_100g', String(Number(data.calories100g ?? 0)));
-	formData.append('proteines_100g', String(Number(data.proteines100g ?? 0)));
-	formData.append('glucides_100g', String(Number(data.glucides100g ?? 0)));
-	formData.append('lipides_100g', String(Number(data.lipides100g ?? 0)));
-	formData.append('fibres_100g', String(Number(data.fibres100g ?? 0)));
+	const buildFoodFormData = (includeImage: boolean) => {
+		const formData = new FormData();
+		appendIfExists(formData, 'nom', cleanName || 'Produit à vérifier');
+		appendIfExists(formData, 'description', description);
+		appendIfExists(formData, 'categorie', String(data.categorie ?? 'autre'));
+		appendIfExists(formData, 'unite_par_defaut', String(data.uniteParDefaut ?? 'g'));
+		appendIfExists(formData, 'calories_100g', String(Number(data.calories100g ?? 0)));
+		appendIfExists(formData, 'proteines_100g', String(Number(data.proteines100g ?? 0)));
+		appendIfExists(formData, 'glucides_100g', String(Number(data.glucides100g ?? 0)));
+		appendIfExists(formData, 'lipides_100g', String(Number(data.lipides100g ?? 0)));
+		appendIfExists(formData, 'fibres_100g', String(Number(data.fibres100g ?? 0)));
 
-	if (data.imageDataUrl) {
-		const file = dataUrlToFormFile(data.imageDataUrl, cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produit-scanne');
-		formData.append('image', file.blob, file.fileName);
+		if (includeImage && data.imageDataUrl && fieldNames.has('image')) {
+			const file = dataUrlToFormFile(
+				data.imageDataUrl,
+				cleanName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'produit-scanne',
+			);
+			formData.append('image', file.blob, file.fileName);
+		}
+
+		return formData;
+	};
+
+	let created: Record<string, any>;
+	try {
+		created = (await createRecord('aliments', buildFoodFormData(true), adminToken)) as Record<string, any>;
+	} catch (error) {
+		const message = error instanceof Error ? error.message.toLowerCase() : '';
+		if (data.imageDataUrl && fieldNames.has('image') && (message.includes('image') || message.includes('file') || message.includes('multipart'))) {
+			created = (await createRecord('aliments', buildFoodFormData(false), adminToken)) as Record<string, any>;
+		} else {
+			throw error;
+		}
 	}
 
-	const created = (await createRecord('aliments', formData, adminToken)) as Record<string, any>;
 	return {
 		token: refreshedAuth.token,
 		food: {
@@ -1029,6 +1082,221 @@ export async function createFoodFromScan(
 			lipides100g: Number(created.lipides_100g ?? 0),
 			fibres100g: Number(created.fibres_100g ?? 0),
 			imageUrl: await getFileUrl('aliments', String(created.id), created.image),
+		},
+	};
+}
+
+export async function createRecipeFromAssistant(
+	userToken: string,
+	draft: {
+		titre: string;
+		description: string;
+		nombrePortions: number;
+		tempsPreparationMin: number;
+		tempsCuissonMin: number;
+		tempsTotalMin: number;
+		difficulte: string;
+		caloriesParPortion: number;
+		proteinesParPortionG: number;
+		glucidesParPortionG: number;
+		lipidesParPortionG: number;
+		fibresParPortionG: number;
+		tags?: string[];
+		ingredients: Array<{
+			nom: string;
+			quantite: number;
+			unite: string;
+			preparation?: string;
+		}>;
+		etapes: Array<{
+			titre: string;
+			instruction: string;
+			dureeMin?: number;
+		}>;
+	},
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureReferenceData(adminToken);
+
+	const [user, recipesCollection, allRecipes] = await Promise.all([
+		getUserRecordById(String(refreshedAuth.record.id), adminToken),
+		getCollectionMeta('recettes', adminToken),
+		listRecordsWithQuery<Record<string, any>>('recettes', 'perPage=400', adminToken),
+	]);
+
+	const fieldNames = getCollectionFieldNames(recipesCollection);
+	const appendIfExists = (target: FormData, field: string, value: string) => {
+		if (fieldNames.has(field)) {
+			target.append(field, value);
+		}
+	};
+
+	const baseSlug = slugifyKey(String(draft.titre ?? 'recette-nutrivia')) || 'recette-nutrivia';
+	let slug = baseSlug;
+	let suffix = 2;
+	const existingSlugs = new Set(allRecipes.map((recipe) => String(recipe.slug ?? '')).filter(Boolean));
+	while (existingSlugs.has(slug)) {
+		slug = `${baseSlug}-${suffix}`;
+		suffix += 1;
+	}
+
+	const placeholderImage = dataUrlToFormFile(buildRecipePlaceholderImageDataUrl(String(draft.titre ?? 'Recette')), slug || 'recette-nutrivia');
+	const formData = new FormData();
+	appendIfExists(formData, 'titre', String(draft.titre ?? 'Recette personnalisée').trim() || 'Recette personnalisée');
+	appendIfExists(
+		formData,
+		'description',
+		String(draft.description ?? '').trim() || 'Recette personnalisée créée avec NutrivIA à partir des besoins utilisateur.',
+	);
+	appendIfExists(formData, 'slug', slug);
+	appendIfExists(formData, 'temps_preparation_min', String(Math.max(0, Number(draft.tempsPreparationMin ?? 0))));
+	appendIfExists(formData, 'temps_cuisson_min', String(Math.max(0, Number(draft.tempsCuissonMin ?? 0))));
+	appendIfExists(formData, 'temps_total_min', String(Math.max(0, Number(draft.tempsTotalMin ?? 0))));
+	appendIfExists(formData, 'nombre_portions', String(Math.max(1, Number(draft.nombrePortions ?? 1))));
+	appendIfExists(formData, 'calories_par_portion', String(Math.max(0, Number(draft.caloriesParPortion ?? 0))));
+	appendIfExists(formData, 'proteines_par_portion_g', String(Math.max(0, Number(draft.proteinesParPortionG ?? 0))));
+	appendIfExists(formData, 'glucides_par_portion_g', String(Math.max(0, Number(draft.glucidesParPortionG ?? 0))));
+	appendIfExists(formData, 'lipides_par_portion_g', String(Math.max(0, Number(draft.lipidesParPortionG ?? 0))));
+	appendIfExists(formData, 'fibres_par_portion_g', String(Math.max(0, Number(draft.fibresParPortionG ?? 0))));
+	appendIfExists(formData, 'difficulte', String(draft.difficulte ?? 'facile'));
+	appendIfExists(formData, 'is_published', 'true');
+	appendIfExists(formData, 'date_creation', new Date().toISOString());
+	if (user.objectif_id) {
+		appendIfExists(formData, 'objectif_id', String(user.objectif_id));
+	}
+	if (user.id) {
+		appendIfExists(formData, 'auteur_id', String(user.id));
+	}
+	appendIfExists(
+		formData,
+		'ingredients_json',
+		JSON.stringify(
+			(draft.ingredients ?? []).map((ingredient, index) => ({
+				id: `ia-ingredient-${index + 1}`,
+				ordre: index + 1,
+				nom: String(ingredient.nom ?? '').trim(),
+				quantite: Number(ingredient.quantite ?? 0),
+				unite: String(ingredient.unite ?? '').trim(),
+				preparation: String(ingredient.preparation ?? '').trim(),
+			})),
+		),
+	);
+	appendIfExists(
+		formData,
+		'etapes_json',
+		JSON.stringify(
+			(draft.etapes ?? []).map((step, index) => ({
+				id: `ia-step-${index + 1}`,
+				ordre: index + 1,
+				titre: String(step.titre ?? `Étape ${index + 1}`).trim(),
+				instruction: String(step.instruction ?? '').trim(),
+				duree_min: Number(step.dureeMin ?? 0),
+			})),
+		),
+	);
+
+	if (fieldNames.has('photo')) {
+		formData.append('photo', placeholderImage.blob, placeholderImage.fileName);
+	}
+
+	let created: Record<string, any>;
+	try {
+		created = (await createRecord('recettes', formData, adminToken)) as Record<string, any>;
+	} catch (error) {
+		const message = error instanceof Error ? error.message.toLowerCase() : '';
+		const shouldRetry =
+			optionalRetryFields.some((field) => message.includes(field)) ||
+			message.includes('image') ||
+			message.includes('file') ||
+			message.includes('multipart') ||
+			message.includes('validation');
+		if (!shouldRetry) {
+			throw error;
+		}
+
+		const buildRetryFormData = (omitFields: string[]) => {
+			const fallbackFormData = new FormData();
+			for (const [key, value] of formData.entries()) {
+				if (!omitFields.includes(String(key))) {
+					fallbackFormData.append(key, value as string);
+				}
+			}
+			return fallbackFormData;
+		};
+
+		try {
+			created = (await createRecord('recettes', buildRetryFormData(['photo']), adminToken)) as Record<string, any>;
+		} catch (retryError) {
+			try {
+				created = (await createRecord(
+					'recettes',
+					buildRetryFormData(['photo', 'date_creation', 'auteur_id', 'objectif_id']),
+					adminToken,
+				)) as Record<string, any>;
+			} catch {
+				throw retryError;
+			}
+		}
+	}
+
+	try {
+		if (user.regime_id) {
+			await createRecord(
+				'recettes_regimes',
+				{
+					recette_id: String(created.id),
+					regime_id: String(user.regime_id),
+				},
+				adminToken,
+			);
+		}
+	} catch {
+		// Non bloquant si la table de lien n'est pas alignée.
+	}
+
+	try {
+		if ((draft.tags ?? []).length) {
+			const tagMap = await ensureRecipeTags(adminToken);
+			for (const tagLabel of draft.tags ?? []) {
+				const slugTag = slugifyKey(String(tagLabel ?? ''));
+				let tag = tagMap.get(slugTag);
+				if (!tag && slugTag) {
+					tag = (await createRecord(
+						'tags',
+						{
+							libelle: String(tagLabel).trim(),
+							slug: slugTag,
+							couleur: '#eefbf5',
+						},
+						adminToken,
+					)) as OptionRecord & { couleur?: string };
+					tagMap.set(slugTag, tag);
+				}
+				if (tag?.id) {
+					await createRecord(
+						'recettes_tags',
+						{
+							recette_id: String(created.id),
+							tag_id: String(tag.id),
+						},
+						adminToken,
+					);
+				}
+			}
+		}
+	} catch {
+		// Non bloquant.
+	}
+
+	const detail = await getRecipeDetailBySlug(refreshedAuth.token, slug);
+	return {
+		token: refreshedAuth.token,
+		recipe: {
+			id: detail.recipe.id,
+			slug: detail.recipe.slug,
+			titre: detail.recipe.titre,
+			photoUrl: detail.recipe.photoUrl,
 		},
 	};
 }
@@ -1794,6 +2062,120 @@ async function ensurePlannerCollections(token: string) {
 		],
 		token,
 	);
+}
+
+async function ensureFavoriteRecipeCollections(token: string) {
+	const [usersCollection, recipesCollection] = await Promise.all([
+		getCollectionMeta('users', token),
+		getCollectionMeta('recettes', token),
+	]);
+
+	await ensureBaseCollection(
+		'recettes_favorites',
+		[
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'recette_id',
+				type: 'relation',
+				required: true,
+				collectionId: recipesCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+		],
+		token,
+	);
+}
+
+async function getFavoriteRecipeLinksForUser(userId: string, token: string) {
+	await ensureFavoriteRecipeCollections(token);
+	return listRecordsWithQuery<Record<string, any>>(
+		'recettes_favorites',
+		`perPage=400&filter=${encodeURIComponent(`user_id="${userId}"`)}&expand=recette_id`,
+		token,
+	);
+}
+
+export async function getFavoriteRecipesForUser(userToken: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	const links = await getFavoriteRecipeLinksForUser(String(refreshedAuth.record.id), adminToken);
+
+	const recipes = await Promise.all(
+		links
+			.map((item) => item.expand?.recette_id)
+			.filter(Boolean)
+			.map(async (recipe: Record<string, any>) => ({
+				id: String(recipe.id),
+				slug: String(recipe.slug ?? ''),
+				titre: String(recipe.titre ?? ''),
+				description: String(recipe.description ?? ''),
+				caloriesParPortion: Number(recipe.calories_par_portion ?? 0),
+				tempsPreparationMin: Number(recipe.temps_preparation_min ?? 0),
+				photoUrl: await getFileUrl('recettes', String(recipe.id), recipe.photo),
+			})),
+	);
+
+	return {
+		token: refreshedAuth.token,
+		recipes,
+	};
+}
+
+export async function toggleFavoriteRecipe(userToken: string, recipeId: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	const userId = String(refreshedAuth.record.id);
+	const cleanRecipeId = String(recipeId ?? '').trim();
+	if (!cleanRecipeId) {
+		throw new Error('Recette favorite manquante.');
+	}
+
+	await ensureFavoriteRecipeCollections(adminToken);
+	const existing = await listRecordsWithQuery<Record<string, any>>(
+		'recettes_favorites',
+		`perPage=10&filter=${encodeURIComponent(`user_id="${userId}" && recette_id="${cleanRecipeId}"`)}`,
+		adminToken,
+	);
+
+	let isFavorite = false;
+	if (existing[0]?.id) {
+		await deleteRecord('recettes_favorites', String(existing[0].id), adminToken);
+		isFavorite = false;
+	} else {
+		await createRecord(
+			'recettes_favorites',
+			{
+				user_id: userId,
+				recette_id: cleanRecipeId,
+			},
+			adminToken,
+		);
+		isFavorite = true;
+	}
+
+	const favoriteCount = (
+		await listRecordsWithQuery<Record<string, any>>(
+			'recettes_favorites',
+			`perPage=500&filter=${encodeURIComponent(`recette_id="${cleanRecipeId}"`)}`,
+			adminToken,
+		)
+	).length;
+
+	return {
+		token: refreshedAuth.token,
+		isFavorite,
+		favoriteCount,
+	};
 }
 
 async function getUserPlannerEntries(userId: string, token: string) {

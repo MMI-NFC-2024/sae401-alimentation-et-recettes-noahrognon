@@ -52,10 +52,13 @@ export const prerender = false;
 										class="absolute top-4 right-4 flex items-center gap-2"
 									>
 										<button
+											id="recipe-favorite-toggle"
 											type="button"
-											class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-600 shadow-[0_10px_22px_rgba(51,73,107,0.16)]"
+											class="inline-flex h-11 w-11 items-center justify-center rounded-full bg-white/95 text-slate-600 shadow-[0_10px_22px_rgba(51,73,107,0.16)] transition"
+											aria-label="Ajouter la recette aux favoris"
 										>
 											<svg
+												id="recipe-favorite-icon"
 												viewBox="0 0 24 24"
 												class="h-5 w-5"
 												fill="none"
@@ -419,6 +422,12 @@ export const prerender = false;
 								>
 									Ajouter au suivi
 								</button>
+								<a
+									href="/scanner?mode=plate&return=/assistant"
+									class="mt-3 inline-flex min-h-[48px] w-full items-center justify-center rounded-[14px] border border-[#cad8e7] bg-[#f7fbff] px-5 py-3 text-[0.98rem] font-medium text-slate-700"
+								>
+									Analyser une photo d’assiette
+								</a>
 								<p
 									id="recipe-action-message"
 									class="mt-3 hidden rounded-[14px] bg-[#f4fbf7] px-4 py-3 text-[0.9rem] text-[#0b8c5f]"
@@ -480,6 +489,8 @@ export const prerender = false;
 	const trackingMeal = document.querySelector("#recipe-tracking-meal");
 	const trackingButton = document.querySelector("#recipe-add-tracking");
 	const actionMessage = document.querySelector("#recipe-action-message");
+	const favoriteButton = document.querySelector("#recipe-favorite-toggle");
+	const favoriteIcon = document.querySelector("#recipe-favorite-icon");
 
 	let recipeData = null;
 	let selectedServings = 1;
@@ -600,6 +611,31 @@ export const prerender = false;
 			const filled = index < fullStars;
 			return `<span class="${filled ? "text-[#f8b517]" : "text-slate-300"}">&#9733;</span>`;
 		}).join("");
+	}
+
+	function renderFavoriteState() {
+		if (!(favoriteButton instanceof HTMLButtonElement) || !(favoriteIcon instanceof SVGElement) || !recipeData) {
+			return;
+		}
+
+		const favoritePath = favoriteIcon.querySelector("path");
+		if (!(favoritePath instanceof SVGPathElement)) {
+			return;
+		}
+
+		const isFavorite = Boolean(recipeData.isFavorite);
+		favoriteButton.classList.toggle("bg-[#08b37d]", isFavorite);
+		favoriteButton.classList.toggle("text-white", isFavorite);
+		favoriteButton.classList.toggle("bg-white/95", !isFavorite);
+		favoriteButton.classList.toggle("text-slate-600", !isFavorite);
+		favoriteButton.title = `${isFavorite ? "Retirer des" : "Ajouter aux"} favoris · ${Number(recipeData.favoriteCount || 0)}`;
+		favoriteButton.setAttribute(
+			"aria-label",
+			isFavorite
+				? `Retirer des favoris (${Number(recipeData.favoriteCount || 0)})`
+				: `Ajouter aux favoris (${Number(recipeData.favoriteCount || 0)})`,
+		);
+		favoritePath.setAttribute("fill", isFavorite ? "currentColor" : "none");
 	}
 
 	function getPortionRatio() {
@@ -781,6 +817,7 @@ export const prerender = false;
 				'<div class="rounded-[18px] border border-dashed border-[#d8e2ee] px-4 py-4 text-[0.95rem] text-slate-400">Aucune recette similaire disponible.</div>';
 		}
 
+		renderFavoriteState();
 		updateNutritionCalculator();
 
 		if (recipeShell instanceof HTMLElement) {
@@ -897,6 +934,54 @@ export const prerender = false;
 		);
 	}
 
+	async function toggleRecipeFavorite() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = "/auth/login";
+			return;
+		}
+
+		if (!recipeData?.id) {
+			return;
+		}
+
+		const response = await fetch("/app-api/favorite-recipes", {
+			method: "POST",
+			headers: {
+				"Content-Type": "application/json",
+				Authorization: `Bearer ${auth.token}`,
+			},
+			body: JSON.stringify({
+				recipeId: recipeData.id,
+			}),
+		});
+		const result = await response.json();
+
+		if (!response.ok) {
+			if (response.status === 401) {
+				clearStoredAuth();
+				window.location.href = "/auth/login";
+				return;
+			}
+			throw new Error(result.message || "Impossible de mettre Ã  jour les favoris.");
+		}
+
+		setStoredAuth({
+			...auth,
+			token: result.token,
+			record: auth.record,
+		});
+
+		recipeData.isFavorite = Boolean(result.isFavorite);
+		recipeData.favoriteCount = Number(result.favoriteCount || 0);
+		renderFavoriteState();
+		showActionMessage(
+			result.isFavorite
+				? "La recette a Ã©tÃ© ajoutÃ©e Ã  vos favoris."
+				: "La recette a Ã©tÃ© retirÃ©e de vos favoris.",
+		);
+	}
+
 	async function loadRecipe() {
 		const auth = getStoredAuth();
 		if (!auth?.token) {
@@ -975,6 +1060,19 @@ export const prerender = false;
 				error instanceof Error
 					? error.message
 					: "Impossible d'ajouter la recette au suivi.",
+				true,
+			);
+		}
+	});
+
+	favoriteButton?.addEventListener("click", async () => {
+		try {
+			await toggleRecipeFavorite();
+		} catch (error) {
+			showActionMessage(
+				error instanceof Error
+					? error.message
+					: "Impossible de mettre Ã  jour les favoris.",
 				true,
 			);
 		}

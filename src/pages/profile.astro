@@ -118,6 +118,14 @@ import Layout from '../layouts/Layout.astro';
 							</div>
 						</section>
 
+						<section class="self-start rounded-[22px] border border-slate-200 bg-white px-5 py-5 shadow-[0_18px_45px_rgba(58,91,133,0.12)] sm:px-6">
+							<div class="flex items-center justify-between gap-3">
+								<h2 class="text-[1.3rem] font-semibold text-[#16223c]">Recettes favorites</h2>
+								<a href="/recettes" class="text-[0.95rem] font-medium text-[#08b37d]">Voir tout</a>
+							</div>
+							<div id="favorite-recipes" class="mt-5 grid gap-4 sm:grid-cols-2"></div>
+						</section>
+
 						<section class="self-start overflow-hidden rounded-[22px] border border-[#d9e7df] bg-[linear-gradient(135deg,#eef8f1_0%,#f7fbf8_100%)] px-5 py-5 text-[#16223c] shadow-[0_18px_45px_rgba(58,91,133,0.08)] sm:px-6 sm:py-6">
 							<div class="max-w-[640px]">
 								<div class="inline-flex rounded-full bg-[#d8efe3] px-4 py-1.5 text-[0.88rem] font-semibold text-[#0c8f68]">SPONSORISÉ</div>
@@ -315,6 +323,32 @@ import Layout from '../layouts/Layout.astro';
 		});
 	}
 
+	function renderFavoriteRecipes(recipes) {
+		const container = document.querySelector('#favorite-recipes');
+		if (!(container instanceof HTMLElement)) return;
+
+		if (!Array.isArray(recipes) || recipes.length === 0) {
+			container.innerHTML = '<div class="rounded-[18px] border border-dashed border-[#d8e2ee] px-4 py-5 text-[0.95rem] text-slate-400 sm:col-span-2">Aucune recette favorite pour le moment.</div>';
+			return;
+		}
+
+		container.innerHTML = recipes
+			.slice(0, 4)
+			.map((recipe) => `
+				<a href="/recette/${recipe.slug}" class="overflow-hidden rounded-[18px] border border-[#d8e2ee] bg-white shadow-[0_12px_26px_rgba(71,104,145,0.08)] transition hover:border-[#bcd1e6]">
+					<div class="aspect-[1.4/1] overflow-hidden bg-slate-100">
+						${recipe.photoUrl ? `<img src="${recipe.photoUrl}" alt="${recipe.titre}" class="h-full w-full object-cover" />` : '<div class="flex h-full items-center justify-center text-sm text-slate-400">Aucune image</div>'}
+					</div>
+					<div class="p-4">
+						<p class="text-[1rem] font-semibold text-[#16223c]">${recipe.titre}</p>
+						<p class="mt-2 line-clamp-2 text-[0.9rem] leading-6 text-slate-500">${recipe.description || 'Recette favorite Nutrivia.'}</p>
+						<p class="mt-3 text-[0.86rem] text-slate-500">${Number(recipe.caloriesParPortion || 0)} kcal · ${Number(recipe.tempsPreparationMin || 0)} min</p>
+					</div>
+				</a>
+			`)
+			.join('');
+	}
+
 	function renderProfile(payload) {
 		profileData = payload;
 		const user = payload.user;
@@ -387,6 +421,7 @@ import Layout from '../layouts/Layout.astro';
 		document.querySelector('#achievement-sessions').textContent = `${sessions * 12} séances sport`;
 
 		renderWeightChart(buildWeightSeries(currentWeight, targetWeight));
+		renderFavoriteRecipes(payload.favoriteRecipes || []);
 	}
 
 	function setEditMode(enabled) {

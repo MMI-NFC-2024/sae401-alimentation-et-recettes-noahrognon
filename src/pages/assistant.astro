@@ -24,8 +24,8 @@ import Layout from '../layouts/Layout.astro';
 								<button id="assistant-scan-trigger" type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-slate-50" aria-label="Scanner un produit">
 									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M8 7h.01M5 19h14a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3l-1-2H9L8 6H5a2 2 0 0 0-2 2v9a2 2 0 0 0 2 2Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
 								</button>
-								<button type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-slate-50" aria-label="Saisie vocale">
-									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 15a3 3 0 0 0 3-3V7a3 3 0 0 0-6 0v5a3 3 0 0 0 3 3ZM19 11a7 7 0 0 1-14 0M12 18v3M8 21h8" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+								<button id="assistant-plate-trigger" type="button" class="inline-flex h-9 w-9 items-center justify-center rounded-full transition hover:bg-slate-50" aria-label="Analyser une assiette">
+									<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16Z" stroke="currentColor" stroke-width="1.8"></path><path d="M8 10h8M7.5 13h9M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
 								</button>
 							</div>
 						</div>
@@ -95,11 +95,78 @@ import Layout from '../layouts/Layout.astro';
 				</div>
 			</div>
 		</div>
+
+		<div id="assistant-plate-modal" class="pointer-events-none fixed inset-0 z-[90] hidden items-center justify-center bg-slate-950/45 p-4 opacity-0 transition md:p-6">
+			<div class="flex max-h-[92vh] w-full max-w-[860px] flex-col overflow-hidden rounded-[28px] bg-white shadow-[0_24px_70px_rgba(15,23,42,0.28)]">
+				<div class="flex items-center justify-between border-b border-[#e6eef7] px-5 py-4 md:px-6">
+					<div>
+						<h2 class="text-[1.35rem] font-semibold tracking-[-0.03em] text-[#16223c]">Analyser une photo d’assiette</h2>
+						<p class="mt-1 text-sm text-slate-500">Estimation visuelle des aliments et des macros à partir d’une photo.</p>
+					</div>
+					<button id="assistant-plate-close" type="button" class="inline-flex h-11 w-11 items-center justify-center rounded-full border border-[#d7e4f2] text-slate-500 transition hover:bg-slate-50" aria-label="Fermer">
+						<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="m7 7 10 10M17 7 7 17" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+					</button>
+				</div>
+				<div class="min-h-0 flex-1 overflow-y-auto px-5 py-5 md:px-6">
+					<p id="assistant-plate-error" class="mb-4 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+					<div class="grid gap-5 lg:grid-cols-[0.9fr_1.1fr]">
+						<div class="space-y-4">
+							<input id="assistant-plate-input" type="file" accept="image/*" capture="environment" class="hidden" />
+							<button id="assistant-plate-pick" type="button" class="flex min-h-[220px] w-full flex-col items-center justify-center rounded-[24px] border border-dashed border-[#bfd3e8] bg-[#f7fbff] px-6 py-8 text-center transition hover:border-[#08b37d] hover:bg-[#f3fbf7]">
+								<div class="flex h-16 w-16 items-center justify-center rounded-[20px] bg-[#e7fbf3] text-[#08b37d]">
+									<svg viewBox="0 0 24 24" class="h-7 w-7" fill="none"><path d="M12 4a8 8 0 1 0 0 16a8 8 0 1 0 0-16Z" stroke="currentColor" stroke-width="1.8"></path><path d="M8 10h8M7.5 13h9M9.5 16h5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+								</div>
+								<p class="mt-4 text-[1.02rem] font-medium text-[#16223c]">Choisir une photo d’assiette</p>
+								<p class="mt-2 max-w-[18rem] text-sm leading-6 text-slate-500">Prenez votre repas en photo pour obtenir une estimation nutritionnelle.</p>
+							</button>
+							<div id="assistant-plate-preview-wrap" class="hidden overflow-hidden rounded-[24px] border border-[#d8e2ee] bg-white">
+								<img id="assistant-plate-preview" alt="Aperçu de l’assiette" class="h-[240px] w-full object-cover" />
+							</div>
+						</div>
+						<div class="space-y-4">
+							<div class="flex items-center gap-3 rounded-[20px] border border-[#d8e2ee] bg-white px-4 py-4">
+								<div id="assistant-plate-loader" class="hidden h-5 w-5 animate-spin rounded-full border-2 border-[#08b37d]/20 border-t-[#08b37d]"></div>
+								<p id="assistant-plate-status" class="text-sm text-slate-500">Importez une image pour lancer l’analyse visuelle.</p>
+							</div>
+							<div class="rounded-[24px] border border-[#d8e2ee] bg-white p-4 md:p-5">
+								<div class="flex items-start justify-between gap-4">
+									<div>
+										<p id="assistant-plate-title" class="text-[1.1rem] font-semibold text-[#16223c]">Analyse de votre assiette</p>
+										<p id="assistant-plate-summary" class="mt-2 text-sm leading-6 text-slate-500">En attente d’analyse.</p>
+									</div>
+									<p id="assistant-plate-confidence" class="rounded-full bg-[#eefbf5] px-3 py-1 text-[0.82rem] font-semibold text-[#0b8c5f]">0%</p>
+								</div>
+								<div class="mt-4 grid gap-3 sm:grid-cols-2">
+									<div class="rounded-[18px] bg-[#eef4ff] px-4 py-4"><p class="text-[0.8rem] font-medium text-[#4f7df4]">Calories estimées</p><p id="assistant-plate-kcal" class="mt-1 text-[1.15rem] font-semibold text-[#1d58eb]">0 kcal</p></div>
+									<div class="rounded-[18px] bg-[#fff5ea] px-4 py-4"><p class="text-[0.8rem] font-medium text-[#e35a00]">Macros</p><p id="assistant-plate-macros" class="mt-1 text-[0.96rem] font-semibold text-[#16223c]">P 0 g · G 0 g · L 0 g</p></div>
+								</div>
+								<div class="mt-4">
+									<p class="text-[0.82rem] font-medium text-slate-600">Aliments détectés</p>
+									<div id="assistant-plate-foods" class="mt-2 flex flex-wrap gap-2"></div>
+								</div>
+								<div class="mt-4">
+									<p class="text-[0.82rem] font-medium text-slate-600">Conseils rapides</p>
+									<div id="assistant-plate-tips" class="mt-2 grid gap-2"></div>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+				<div class="flex flex-col-reverse gap-3 border-t border-[#e6eef7] px-5 py-4 md:flex-row md:items-center md:justify-between md:px-6">
+					<div class="text-sm text-slate-500">Estimation visuelle, à confirmer avec les portions réelles.</div>
+					<div class="flex flex-col gap-3 sm:flex-row">
+						<button id="assistant-plate-analyze" type="button" class="inline-flex min-h-[48px] items-center justify-center rounded-[16px] border border-[#cad8e7] bg-white px-5 py-3 text-[0.96rem] font-medium text-slate-700 transition hover:border-[#08b37d] hover:text-[#08b37d]">Analyser l’image</button>
+						<button id="assistant-plate-send" type="button" class="inline-flex min-h-[48px] items-center justify-center rounded-[16px] bg-[#08b37d] px-5 py-3 text-[0.96rem] font-semibold text-white shadow-[0_16px_36px_rgba(8,179,125,0.2)] transition hover:bg-[#069c6c]">Ajouter au chat</button>
+					</div>
+				</div>
+			</div>
+		</div>
 	</section>
 </Layout>
 
 <script>
 	const authKey = 'nutrivia_auth';
+	const scannerReturnKey = 'nutrivia_scanner_assistant_payload';
 	const errorBox = document.querySelector('#assistant-error');
 	const messagesBox = document.querySelector('#assistant-messages');
 	const form = document.querySelector('#assistant-form');
@@ -109,6 +176,7 @@ import Layout from '../layouts/Layout.astro';
 	const quickActionsMobile = document.querySelector('#assistant-actions-mobile');
 	const faqsBox = document.querySelector('#assistant-faqs');
 	const scanTrigger = document.querySelector('#assistant-scan-trigger');
+	const plateTrigger = document.querySelector('#assistant-plate-trigger');
 	const scanModal = document.querySelector('#assistant-scan-modal');
 	const scanClose = document.querySelector('#assistant-scan-close');
 	const scanInput = document.querySelector('#assistant-scan-input');
@@ -132,10 +200,30 @@ import Layout from '../layouts/Layout.astro';
 	const scanCarbs = document.querySelector('#assistant-food-carbs');
 	const scanFats = document.querySelector('#assistant-food-fats');
 	const scanFibers = document.querySelector('#assistant-food-fibers');
+	const plateModal = document.querySelector('#assistant-plate-modal');
+	const plateClose = document.querySelector('#assistant-plate-close');
+	const plateInput = document.querySelector('#assistant-plate-input');
+	const platePick = document.querySelector('#assistant-plate-pick');
+	const platePreviewWrap = document.querySelector('#assistant-plate-preview-wrap');
+	const platePreview = document.querySelector('#assistant-plate-preview');
+	const plateAnalyze = document.querySelector('#assistant-plate-analyze');
+	const plateSend = document.querySelector('#assistant-plate-send');
+	const plateStatus = document.querySelector('#assistant-plate-status');
+	const plateLoader = document.querySelector('#assistant-plate-loader');
+	const plateError = document.querySelector('#assistant-plate-error');
+	const plateTitle = document.querySelector('#assistant-plate-title');
+	const plateSummary = document.querySelector('#assistant-plate-summary');
+	const plateConfidence = document.querySelector('#assistant-plate-confidence');
+	const plateKcal = document.querySelector('#assistant-plate-kcal');
+	const plateMacros = document.querySelector('#assistant-plate-macros');
+	const plateFoods = document.querySelector('#assistant-plate-foods');
+	const plateTips = document.querySelector('#assistant-plate-tips');
 	let assistantState = null;
 	let isSending = false;
 	let pendingUserMessage = '';
 	let currentScanImage = '';
+	let currentPlateImage = '';
+	let currentPlateAnalysis = null;
 
 	function getStoredAuth() {
 		try {
@@ -152,6 +240,32 @@ import Layout from '../layouts/Layout.astro';
 
 	function clearStoredAuth() {
 		localStorage.removeItem(authKey);
+	}
+
+	function consumeScannerReturn() {
+		if (!assistantState) return;
+		try {
+			const raw = sessionStorage.getItem(scannerReturnKey);
+			if (!raw) return;
+			sessionStorage.removeItem(scannerReturnKey);
+			const payload = JSON.parse(raw);
+			if (!payload || typeof payload !== 'object') return;
+			assistantState = {
+				...assistantState,
+				messages: [
+					...assistantState.messages,
+					{
+						id: `scanner-${Date.now()}`,
+						role: payload.role === 'user' ? 'user' : 'assistant',
+						content: String(payload.content ?? '').trim(),
+						createdAt: new Date().toISOString(),
+						metadata: payload.metadata && typeof payload.metadata === 'object' ? payload.metadata : {},
+					},
+				],
+			};
+		} catch {
+			sessionStorage.removeItem(scannerReturnKey);
+		}
 	}
 
 	function showError(message) {
@@ -178,11 +292,30 @@ import Layout from '../layouts/Layout.astro';
 		scanError.classList.add('hidden');
 	}
 
+	function showPlateError(message) {
+		if (!(plateError instanceof HTMLElement)) return;
+		plateError.textContent = message;
+		plateError.classList.remove('hidden');
+	}
+
+	function clearPlateError() {
+		if (!(plateError instanceof HTMLElement)) return;
+		plateError.textContent = '';
+		plateError.classList.add('hidden');
+	}
+
 	function setScanStatus(message, loading = false) {
 		if (scanStatus instanceof HTMLElement) {
 			scanStatus.textContent = message;
 		}
 		scanLoader?.classList.toggle('hidden', !loading);
+	}
+
+	function setPlateStatus(message, loading = false) {
+		if (plateStatus instanceof HTMLElement) {
+			plateStatus.textContent = message;
+		}
+		plateLoader?.classList.toggle('hidden', !loading);
 	}
 
 	function openScanModal() {
@@ -196,6 +329,20 @@ import Layout from '../layouts/Layout.astro';
 		if (!(scanModal instanceof HTMLElement)) return;
 		scanModal.classList.add('hidden', 'pointer-events-none', 'opacity-0');
 		scanModal.classList.remove('flex', 'opacity-100');
+		document.body.classList.remove('overflow-hidden');
+	}
+
+	function openPlateModal() {
+		if (!(plateModal instanceof HTMLElement)) return;
+		plateModal.classList.remove('hidden', 'pointer-events-none', 'opacity-0');
+		plateModal.classList.add('flex', 'opacity-100');
+		document.body.classList.add('overflow-hidden');
+	}
+
+	function closePlateModal() {
+		if (!(plateModal instanceof HTMLElement)) return;
+		plateModal.classList.add('hidden', 'pointer-events-none', 'opacity-0');
+		plateModal.classList.remove('flex', 'opacity-100');
 		document.body.classList.remove('overflow-hidden');
 	}
 
@@ -220,6 +367,23 @@ import Layout from '../layouts/Layout.astro';
 		if (scanFibers instanceof HTMLInputElement) scanFibers.value = '';
 	}
 
+	function resetPlateForm() {
+		currentPlateImage = '';
+		currentPlateAnalysis = null;
+		clearPlateError();
+		if (plateInput instanceof HTMLInputElement) plateInput.value = '';
+		if (platePreview instanceof HTMLImageElement) platePreview.src = '';
+		platePreviewWrap?.classList.add('hidden');
+		setPlateStatus('Importez une image pour lancer l’analyse visuelle.', false);
+		if (plateTitle instanceof HTMLElement) plateTitle.textContent = 'Analyse de votre assiette';
+		if (plateSummary instanceof HTMLElement) plateSummary.textContent = 'En attente d’analyse.';
+		if (plateConfidence instanceof HTMLElement) plateConfidence.textContent = '0%';
+		if (plateKcal instanceof HTMLElement) plateKcal.textContent = '0 kcal';
+		if (plateMacros instanceof HTMLElement) plateMacros.textContent = 'P 0 g · G 0 g · L 0 g';
+		if (plateFoods instanceof HTMLElement) plateFoods.innerHTML = '';
+		if (plateTips instanceof HTMLElement) plateTips.innerHTML = '';
+	}
+
 	function readFileAsDataUrl(file) {
 		return new Promise((resolve, reject) => {
 			const reader = new FileReader();
@@ -242,6 +406,27 @@ import Layout from '../layouts/Layout.astro';
 		if (scanFats instanceof HTMLInputElement) scanFats.value = String(scan.lipides100g ?? 0);
 		if (scanFibers instanceof HTMLInputElement) scanFibers.value = String(scan.fibres100g ?? 0);
 		if (scanSummary instanceof HTMLElement) scanSummary.textContent = scan.resume ?? '';
+	}
+
+	function fillPlateAnalysis(analysis) {
+		currentPlateAnalysis = analysis;
+		if (plateTitle instanceof HTMLElement) plateTitle.textContent = analysis.titre ?? 'Analyse de votre assiette';
+		if (plateSummary instanceof HTMLElement) plateSummary.textContent = analysis.resume ?? '';
+		if (plateConfidence instanceof HTMLElement) plateConfidence.textContent = `${analysis.confiance ?? 0}%`;
+		if (plateKcal instanceof HTMLElement) plateKcal.textContent = `${analysis.caloriesEstimees ?? 0} kcal`;
+		if (plateMacros instanceof HTMLElement) {
+			plateMacros.textContent = `P ${analysis.proteinesG ?? 0} g · G ${analysis.glucidesG ?? 0} g · L ${analysis.lipidesG ?? 0} g`;
+		}
+		if (plateFoods instanceof HTMLElement) {
+			plateFoods.innerHTML = (analysis.alimentsDetectes ?? [])
+				.map((item) => `<span class="inline-flex items-center rounded-full bg-[#eefbf5] px-3 py-1 text-[0.82rem] font-medium text-[#0b8c5f]">${esc(item)}</span>`)
+				.join('');
+		}
+		if (plateTips instanceof HTMLElement) {
+			plateTips.innerHTML = (analysis.conseils ?? [])
+				.map((item) => `<div class="rounded-[14px] bg-[#f7fbff] px-3 py-3 text-sm leading-6 text-slate-600">${esc(item)}</div>`)
+				.join('');
+		}
 	}
 
 	function esc(value) {
@@ -387,6 +572,7 @@ import Layout from '../layouts/Layout.astro';
 			const chips = Array.isArray(message.metadata?.chips) ? message.metadata.chips : [];
 			const relatedRecipes = Array.isArray(message.metadata?.relatedRecipes) ? message.metadata.relatedRecipes : [];
 			const relatedLinks = Array.isArray(message.metadata?.relatedLinks) ? message.metadata.relatedLinks : [];
+			const recipeDraft = message.metadata?.recipeDraft && typeof message.metadata.recipeDraft === 'object' ? message.metadata.recipeDraft : null;
 
 			return `
 				<div class="${isAssistant ? 'mb-7' : 'mb-6 flex justify-end'}">
@@ -415,6 +601,7 @@ import Layout from '../layouts/Layout.astro';
 									</button>
 								</div>
 								${chips.length ? `<div class="mt-4 flex flex-wrap gap-2">${chips.map((chip) => `<button type="button" data-chip="${esc(chip)}" class="rounded-full border border-[#d7e4f2] bg-white px-3 py-2 text-[0.9rem] text-slate-600 transition hover:border-[#bcd1e6] hover:text-[#16223c]">${esc(chip)}</button>`).join('')}</div>` : ''}
+								${recipeDraft ? `<div class="mt-4 flex flex-wrap gap-2"><button type="button" data-save-recipe="${esc(encodeURIComponent(JSON.stringify(recipeDraft)))}" class="inline-flex min-h-[44px] items-center justify-center rounded-[14px] bg-[#08b37d] px-4 py-2.5 text-[0.92rem] font-semibold text-white transition hover:bg-[#069c6c]">Ajouter cette recette à Nutrivia</button></div>` : ''}
 								${relatedLinks.length ? `<div class="mt-4 flex flex-wrap gap-2">${relatedLinks.map((link) => `<a href="${esc(link.href)}" class="rounded-full bg-[#eefbf5] px-3 py-2 text-[0.88rem] font-medium text-[#0b8c5f]">${esc(link.label)}</a>`).join('')}</div>` : ''}
 								${relatedRecipes.length ? `<div class="mt-4 grid gap-3 sm:grid-cols-2">${relatedRecipes.map((recipe) => `<a href="/recette/${esc(recipe.slug)}" class="flex items-center gap-3 rounded-[16px] border border-[#dfe9f5] bg-white p-3 transition hover:border-[#bfd3e8]">${recipe.imageUrl ? `<img src="${esc(recipe.imageUrl)}" alt="${esc(recipe.title)}" class="h-[58px] w-[58px] rounded-[14px] object-cover" />` : '<div class="h-[58px] w-[58px] rounded-[14px] bg-slate-100"></div>'}<div class="min-w-0"><p class="truncate text-[0.92rem] font-semibold text-[#16223c]">${esc(recipe.title)}</p><p class="mt-1 text-[0.82rem] text-slate-400">${esc(recipe.calories)} kcal · ${esc(recipe.duration)} min</p></div></a>`).join('')}</div>` : ''}
 							</div>
@@ -428,6 +615,13 @@ import Layout from '../layouts/Layout.astro';
 			button.addEventListener('click', () => {
 				const prompt = button.getAttribute('data-chip');
 				if (prompt) sendMessage(prompt);
+			});
+		});
+		messagesBox.querySelectorAll('[data-save-recipe]').forEach((button) => {
+			button.addEventListener('click', async () => {
+				const encoded = button.getAttribute('data-save-recipe');
+				if (!encoded) return;
+				await saveRecipeDraftToDatabase(JSON.parse(decodeURIComponent(encoded)));
 			});
 		});
 
@@ -608,6 +802,129 @@ import Layout from '../layouts/Layout.astro';
 		}
 	}
 
+	async function analyzeCurrentPlate() {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+		if (!currentPlateImage) {
+			showPlateError("Ajoutez une image avant de lancer l'analyse.");
+			return;
+		}
+
+		try {
+			clearPlateError();
+			setPlateStatus("Analyse de l'assiette en cours...", true);
+			plateAnalyze?.setAttribute('disabled', 'disabled');
+			const response = await fetch('/app-api/assistant', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${auth.token}`,
+				},
+				body: JSON.stringify({
+					action: 'analyze_plate',
+					imageDataUrl: currentPlateImage,
+				}),
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearStoredAuth();
+					window.location.href = '/auth/login';
+					return;
+				}
+				throw new Error(result.message || "Impossible d'analyser cette assiette.");
+			}
+			fillPlateAnalysis(result.analysis);
+			setPlateStatus('Analyse terminée. Vous pouvez maintenant l’ajouter au chat.', false);
+		} catch (error) {
+			setPlateStatus('Analyse indisponible.', false);
+			showPlateError(error instanceof Error ? error.message : "Impossible d'analyser cette assiette.");
+		} finally {
+			plateAnalyze?.removeAttribute('disabled');
+		}
+	}
+
+	function sendPlateAnalysisToChat() {
+		if (!assistantState || !currentPlateAnalysis) return;
+
+		assistantState = {
+			...assistantState,
+			messages: [
+				...assistantState.messages,
+				{
+					id: `plate-${Date.now()}`,
+					role: 'assistant',
+					content: `## ${currentPlateAnalysis.titre}\n${currentPlateAnalysis.resume}\n\n- **Calories estimées** : ${currentPlateAnalysis.caloriesEstimees} kcal\n- **Macros estimées** : ${currentPlateAnalysis.proteinesG} g protéines · ${currentPlateAnalysis.glucidesG} g glucides · ${currentPlateAnalysis.lipidesG} g lipides\n- **Confiance** : ${currentPlateAnalysis.confiance}%`,
+					createdAt: new Date().toISOString(),
+					metadata: {
+						chips: [
+							'Comment équilibrer ce repas ?',
+							'Peux-tu me proposer une version plus protéinée ?',
+							'Comment intégrer ce repas dans ma journée ?',
+						],
+					},
+				},
+			],
+		};
+		renderMessages();
+		closePlateModal();
+	}
+
+	async function saveRecipeDraftToDatabase(draft) {
+		const auth = getStoredAuth();
+		if (!auth?.token) {
+			window.location.href = '/auth/login';
+			return;
+		}
+
+		try {
+			clearError();
+			const response = await fetch('/app-api/assistant', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					Authorization: `Bearer ${auth.token}`,
+				},
+				body: JSON.stringify({
+					action: 'save_recipe',
+					draft,
+				}),
+			});
+			const result = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearStoredAuth();
+					window.location.href = '/auth/login';
+					return;
+				}
+				throw new Error(result.message || "Impossible d'ajouter cette recette.");
+			}
+
+			setStoredAuth({ ...auth, token: result.token, record: auth.record });
+			assistantState = {
+				...assistantState,
+				messages: [
+					...assistantState.messages,
+					{
+						id: `recipe-save-${Date.now()}`,
+						role: 'assistant',
+						content: `J’ai ajouté **${result.recipe?.titre ?? draft?.titre ?? 'cette recette'}** à la base recettes de Nutrivia.`,
+						createdAt: new Date().toISOString(),
+						metadata: {
+							relatedLinks: result.recipe?.slug ? [{ label: 'Voir la recette', href: `/recette/${result.recipe.slug}` }, { label: 'Voir toutes les recettes', href: '/recettes' }] : [{ label: 'Voir toutes les recettes', href: '/recettes' }],
+						},
+					},
+				],
+			};
+			renderMessages();
+		} catch (error) {
+			showError(error instanceof Error ? error.message : "Impossible d'ajouter cette recette.");
+		}
+	}
+
 	async function fetchAssistantWorkspace() {
 		const auth = getStoredAuth();
 		if (!auth?.token) {
@@ -630,6 +947,7 @@ import Layout from '../layouts/Layout.astro';
 
 		setStoredAuth({ ...auth, token: result.token, record: auth.record });
 		assistantState = result;
+		consumeScannerReturn();
 		renderSidebar();
 		renderMessages();
 	}
@@ -710,21 +1028,31 @@ import Layout from '../layouts/Layout.astro';
 	});
 
 	scanTrigger?.addEventListener('click', () => {
-		resetScanForm();
-		openScanModal();
+		window.location.href = '/scanner?mode=product&return=/assistant';
+	});
+	plateTrigger?.addEventListener('click', () => {
+		window.location.href = '/scanner?mode=plate&return=/assistant';
 	});
 	scanClose?.addEventListener('click', closeScanModal);
+	plateClose?.addEventListener('click', closePlateModal);
 	scanModal?.addEventListener('click', (event) => {
 		if (event.target === scanModal) {
 			closeScanModal();
 		}
 	});
+	plateModal?.addEventListener('click', (event) => {
+		if (event.target === plateModal) {
+			closePlateModal();
+		}
+	});
 	document.addEventListener('keydown', (event) => {
 		if (event.key === 'Escape') {
 			closeScanModal();
+			closePlateModal();
 		}
 	});
 	scanPick?.addEventListener('click', () => scanInput?.click());
+	platePick?.addEventListener('click', () => plateInput?.click());
 	scanInput?.addEventListener('change', async () => {
 		if (!(scanInput instanceof HTMLInputElement) || !scanInput.files?.[0]) return;
 		try {
@@ -737,8 +1065,22 @@ import Layout from '../layouts/Layout.astro';
 			showScanError(error instanceof Error ? error.message : "Impossible de charger cette image.");
 		}
 	});
+	plateInput?.addEventListener('change', async () => {
+		if (!(plateInput instanceof HTMLInputElement) || !plateInput.files?.[0]) return;
+		try {
+			clearPlateError();
+			currentPlateImage = await readFileAsDataUrl(plateInput.files[0]);
+			if (platePreview instanceof HTMLImageElement) platePreview.src = currentPlateImage;
+			platePreviewWrap?.classList.remove('hidden');
+			setPlateStatus('Image prête. Lancez l’analyse.', false);
+		} catch (error) {
+			showPlateError(error instanceof Error ? error.message : "Impossible de charger cette image.");
+		}
+	});
 	scanAnalyze?.addEventListener('click', analyzeCurrentScan);
 	scanSave?.addEventListener('click', saveCurrentScan);
+	plateAnalyze?.addEventListener('click', analyzeCurrentPlate);
+	plateSend?.addEventListener('click', sendPlateAnalysisToChat);
 
 	(async () => {
 		try {
