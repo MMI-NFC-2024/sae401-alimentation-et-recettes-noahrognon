@@ -1,218 +1,531 @@
 ---
-import Layout from '../../layouts/Layout.astro';
-import { getRegistrationOptions } from '../../lib/pocketbase';
+import Layout from "../../layouts/Layout.astro";
+import { getRegistrationOptions } from "../../lib/pocketbase";
 
 const options = await getRegistrationOptions();
 const optionsJson = JSON.stringify(options);
 ---
 
 <Layout title="Inscription - Nutrivia">
-	<section class="bg-[radial-gradient(circle_at_left_top,rgba(200,248,224,0.8),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(207,230,255,0.75),transparent_28%),linear-gradient(180deg,#ecfbf4_0%,#f8fdff_72%,#eef6ff_100%)] py-12 lg:py-16">
+	<section
+		class="bg-[radial-gradient(circle_at_left_top,rgba(200,248,224,0.8),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(207,230,255,0.75),transparent_28%),linear-gradient(180deg,#ecfbf4_0%,#f8fdff_72%,#eef6ff_100%)] py-12 lg:py-16"
+	>
 		<div class="mx-auto w-full max-w-[1180px] px-4 md:px-6">
 			<div class="mx-auto max-w-[700px]">
 				<div class="mb-10">
-					<div class="mb-3 flex items-center justify-between text-[1.05rem] font-medium text-slate-600">
+					<div
+						class="mb-3 flex items-center justify-between text-[1.05rem] font-medium text-slate-600"
+					>
 						<span id="step-label">Étape 1 sur 7</span>
-						<span id="step-percent" class="text-[#08b37d]">14%</span>
+						<span id="step-percent" class="text-[#08b37d]">14%</span
+						>
 					</div>
 					<div class="h-2 rounded-full bg-slate-200">
-						<div id="step-progress" class="h-2 rounded-full bg-[#08b37d] transition-all duration-300" style="width: 14%;"></div>
+						<div
+							id="step-progress"
+							class="h-2 rounded-full bg-[#08b37d] transition-all duration-300"
+							style="width: 14%;"
+						>
+						</div>
 					</div>
 				</div>
 
-				<form id="register-form" class="rounded-[24px] border border-slate-200 bg-white px-5 py-7 shadow-[0_22px_55px_rgba(58,91,133,0.16)] sm:px-7 lg:px-10 lg:py-10">
+				<form
+					id="register-form"
+					class="rounded-[24px] border border-slate-200 bg-white px-5 py-7 shadow-[0_22px_55px_rgba(58,91,133,0.16)] sm:px-7 lg:px-10 lg:py-10"
+				>
 					<div class="grid gap-8">
 						<section data-step="1" class="grid gap-6">
 							<div class="text-center">
-								<h1 class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]">Informations personnelles</h1>
-								<p class="mt-3 text-[1.05rem] text-slate-500">Commençons par quelques informations de base</p>
+								<h1
+									class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]"
+								>
+									Informations personnelles
+								</h1>
+								<p class="mt-3 text-[1.05rem] text-slate-500">
+									Commençons par quelques informations de base
+								</p>
 							</div>
 
 							<div class="grid gap-5 sm:grid-cols-2">
 								<label class="grid gap-2">
-									<span class="text-[1rem] font-medium text-slate-700">Âge</span>
-									<input name="age" type="number" min="14" max="100" value="25" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Âge</span
+									>
+									<input
+										name="age"
+										type="number"
+										min="14"
+										max="100"
+										value="25"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 								<label class="grid gap-2">
-									<span class="text-[1rem] font-medium text-slate-700">Sexe</span>
-									<select name="sexe" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]">
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Sexe</span
+									>
+									<select
+										name="sexe"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									>
 										<option value="homme">Homme</option>
 										<option value="femme">Femme</option>
 										<option value="autre">Autre</option>
 									</select>
 								</label>
 								<label class="grid gap-2">
-									<span class="text-[1rem] font-medium text-slate-700">Taille (cm)</span>
-									<input name="taille_cm" type="number" min="120" max="230" value="175" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Taille (cm)</span
+									>
+									<input
+										name="taille_cm"
+										type="number"
+										min="120"
+										max="230"
+										value="175"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 								<label class="grid gap-2">
-									<span class="text-[1rem] font-medium text-slate-700">Poids actuel (kg)</span>
-									<input name="poids_actuel_kg" type="number" min="35" max="250" value="70" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Poids actuel (kg)</span
+									>
+									<input
+										name="poids_actuel_kg"
+										type="number"
+										min="35"
+										max="250"
+										value="70"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 								<label class="grid gap-2 sm:col-span-2">
-									<span class="text-[1rem] font-medium text-slate-700">Poids objectif (kg)</span>
-									<input name="poids_objectif_kg" type="number" min="35" max="250" value="65" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Poids objectif (kg)</span
+									>
+									<input
+										name="poids_objectif_kg"
+										type="number"
+										min="35"
+										max="250"
+										value="65"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 							</div>
 						</section>
 
 						<section data-step="2" class="hidden grid gap-6">
 							<div class="text-center">
-								<h2 class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]">Objectif principal</h2>
-								<p class="mt-3 text-[1.05rem] text-slate-500">Quel est votre objectif nutritionnel ?</p>
+								<h2
+									class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]"
+								>
+									Objectif principal
+								</h2>
+								<p class="mt-3 text-[1.05rem] text-slate-500">
+									Quel est votre objectif nutritionnel ?
+								</p>
 							</div>
-							<input type="hidden" name="objectif_slug" value="perte-poids" />
-							<div id="goal-grid" class="grid gap-4 sm:grid-cols-2"></div>
+							<input
+								type="hidden"
+								name="objectif_slug"
+								value="perte-poids"
+							/>
+							<div
+								id="goal-grid"
+								class="grid gap-4 sm:grid-cols-2"
+							>
+							</div>
 						</section>
 
 						<section data-step="3" class="hidden grid gap-6">
 							<div class="text-center">
-								<h2 class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]">Activité physique</h2>
-								<p class="mt-3 text-[1.05rem] text-slate-500">Quel est votre niveau d'activité ?</p>
+								<h2
+									class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]"
+								>
+									Activité physique
+								</h2>
+								<p class="mt-3 text-[1.05rem] text-slate-500">
+									Quel est votre niveau d'activité ?
+								</p>
 							</div>
 
-							<input type="hidden" name="niveau_activite_libelle" value="Modéré" />
-							<input type="hidden" name="type_activite_slug" value="cardio" />
+							<input
+								type="hidden"
+								name="niveau_activite_libelle"
+								value="Modéré"
+							/>
+							<input
+								type="hidden"
+								name="type_activite_slug"
+								value="cardio"
+							/>
 
 							<div class="grid gap-2">
-								<label class="text-[1rem] font-medium text-slate-700">Niveau d'activité général</label>
-								<select id="activity-level-select" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"></select>
+								<label
+									class="text-[1rem] font-medium text-slate-700"
+									>Niveau d'activité général</label
+								>
+								<select
+									id="activity-level-select"
+									class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+								></select>
 							</div>
 
 							<div class="grid gap-3">
-								<div class="flex items-center justify-between text-[1rem] font-medium text-slate-700">
-									<span id="sessions-label">Entraînements par semaine: 3</span>
+								<div
+									class="flex items-center justify-between text-[1rem] font-medium text-slate-700"
+								>
+									<span id="sessions-label"
+										>Entraînements par semaine: 3</span
+									>
 								</div>
-								<input name="seances_par_semaine" id="sessions-range" type="range" min="0" max="7" value="3" class="accent-[#08b37d]" />
-								<div class="flex justify-between text-sm text-slate-400">
+								<input
+									name="seances_par_semaine"
+									id="sessions-range"
+									type="range"
+									min="0"
+									max="7"
+									value="3"
+									class="accent-[#08b37d]"
+								/>
+								<div
+									class="flex justify-between text-sm text-slate-400"
+								>
 									<span>0</span>
 									<span>7</span>
 								</div>
 							</div>
 
 							<div class="grid gap-3">
-								<label class="text-[1rem] font-medium text-slate-700">Type d'activité principale</label>
-								<div id="activity-type-grid" class="grid gap-3 sm:grid-cols-3"></div>
+								<label
+									class="text-[1rem] font-medium text-slate-700"
+									>Type d'activité principale</label
+								>
+								<div
+									id="activity-type-grid"
+									class="grid gap-3 sm:grid-cols-3"
+								>
+								</div>
 							</div>
 						</section>
 
 						<section data-step="4" class="hidden grid gap-6">
 							<div class="text-center">
-								<h2 class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]">Préférences alimentaires</h2>
-								<p class="mt-3 text-[1.05rem] text-slate-500">Choisissez votre régime alimentaire</p>
+								<h2
+									class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]"
+								>
+									Préférences alimentaires
+								</h2>
+								<p class="mt-3 text-[1.05rem] text-slate-500">
+									Choisissez votre régime alimentaire
+								</p>
 							</div>
-							<input type="hidden" name="regime_slug" value="classique" />
-							<div id="diet-grid" class="grid gap-4 sm:grid-cols-2"></div>
+							<input
+								type="hidden"
+								name="regime_slug"
+								value="classique"
+							/>
+							<div
+								id="diet-grid"
+								class="grid gap-4 sm:grid-cols-2"
+							>
+							</div>
 						</section>
 
 						<section data-step="5" class="hidden grid gap-6">
 							<div class="text-center">
-								<h2 class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]">Restrictions alimentaires</h2>
-								<p class="mt-3 text-[1.05rem] text-slate-500">Avez-vous des allergies ou intolérances ? (optionnel)</p>
+								<h2
+									class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]"
+								>
+									Restrictions alimentaires
+								</h2>
+								<p class="mt-3 text-[1.05rem] text-slate-500">
+									Avez-vous des allergies ou intolérances ?
+									(optionnel)
+								</p>
 							</div>
 
 							<label class="grid gap-2">
-								<span class="text-[1rem] font-medium text-slate-700">Allergies ou intolérances</span>
-								<textarea name="restrictions_text" rows="5" placeholder="Ex: lactose, gluten, fruits à coque..." class="rounded-[16px] border border-slate-300 px-4 py-4 text-[1rem] outline-none focus:border-[#08b37d]"></textarea>
+								<span
+									class="text-[1rem] font-medium text-slate-700"
+									>Allergies ou intolérances</span
+								>
+								<textarea
+									name="restrictions_text"
+									rows="5"
+									placeholder="Ex: lactose, gluten, fruits à coque..."
+									class="rounded-[16px] border border-slate-300 px-4 py-4 text-[1rem] outline-none focus:border-[#08b37d]"
+								></textarea>
 							</label>
 
-							<div class="rounded-[18px] border border-blue-100 bg-blue-50 px-5 py-5 text-blue-700">
-								<p class="text-[1.02rem] font-semibold">💡 Conseil</p>
-								<p class="mt-3 text-[1rem] leading-7">Ces informations nous permettront de filtrer automatiquement les recettes et de vous proposer des alternatives adaptées.</p>
+							<div
+								class="rounded-[18px] border border-blue-100 bg-blue-50 px-5 py-5 text-blue-700"
+							>
+								<p class="text-[1.02rem] font-semibold">
+									💡 Conseil
+								</p>
+								<p class="mt-3 text-[1rem] leading-7">
+									Ces informations nous permettront de filtrer
+									automatiquement les recettes et de vous
+									proposer des alternatives adaptées.
+								</p>
 							</div>
 						</section>
 
 						<section data-step="6" class="hidden grid gap-6">
 							<div class="text-center">
-								<h2 class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]">Informations de contact</h2>
-								<p class="mt-3 text-[1.05rem] text-slate-500">Pour vous aider à suivre votre progression</p>
+								<h2
+									class="text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]"
+								>
+									Informations de contact
+								</h2>
+								<p class="mt-3 text-[1.05rem] text-slate-500">
+									Pour vous aider à suivre votre progression
+								</p>
 							</div>
 
 							<div class="grid gap-5 sm:grid-cols-2">
 								<label class="grid gap-2">
-									<span class="text-[1rem] font-medium text-slate-700">Prénom</span>
-									<input name="prenom" type="text" required placeholder="Jean" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Prénom</span
+									>
+									<input
+										name="prenom"
+										type="text"
+										required
+										placeholder="Jean"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 								<label class="grid gap-2">
-									<span class="text-[1rem] font-medium text-slate-700">Nom</span>
-									<input name="nom" type="text" required placeholder="Dupont" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Nom</span
+									>
+									<input
+										name="nom"
+										type="text"
+										required
+										placeholder="Dupont"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 								<label class="grid gap-2">
-									<span class="text-[1rem] font-medium text-slate-700">Email</span>
-									<input name="email" type="email" required placeholder="jean.dupont@example.com" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Email</span
+									>
+									<input
+										name="email"
+										type="email"
+										required
+										placeholder="jean.dupont@example.com"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 								<label class="grid gap-2">
-									<span class="text-[1rem] font-medium text-slate-700">Téléphone</span>
-									<input name="telephone" type="tel" placeholder="06 12 34 56 78" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Téléphone</span
+									>
+									<input
+										name="telephone"
+										type="tel"
+										placeholder="06 12 34 56 78"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 								<label class="grid gap-2 sm:col-span-2">
-									<span class="text-[1rem] font-medium text-slate-700">Mot de passe</span>
-									<input name="password" type="password" required placeholder="Minimum 8 caractères" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Mot de passe</span
+									>
+									<input
+										name="password"
+										type="password"
+										required
+										placeholder="Minimum 8 caractères"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 								<label class="grid gap-2 sm:col-span-2">
-									<span class="text-[1rem] font-medium text-slate-700">Confirmation du mot de passe</span>
-									<input name="passwordConfirm" type="password" required placeholder="Retapez votre mot de passe" class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Confirmation du mot de passe</span
+									>
+									<input
+										name="passwordConfirm"
+										type="password"
+										required
+										placeholder="Retapez votre mot de passe"
+										class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] outline-none focus:border-[#08b37d]"
+									/>
 								</label>
 								<label class="grid gap-2 sm:col-span-2">
-									<span class="text-[1rem] font-medium text-slate-700">Avatar</span>
-									<input name="avatar" type="file" accept="image/*" class="block w-fit rounded-[16px] bg-[#08b37d] px-5 py-3 text-[1rem] font-medium text-white file:hidden" />
+									<span
+										class="text-[1rem] font-medium text-slate-700"
+										>Avatar</span
+									>
+									<input
+										name="avatar"
+										type="file"
+										accept="image/*"
+										class="block w-fit rounded-[16px] bg-[#08b37d] px-5 py-3 text-[1rem] font-medium text-white file:hidden"
+									/>
 								</label>
 							</div>
 						</section>
 
 						<section data-step="7" class="hidden grid gap-6">
 							<div class="text-center">
-								<div class="mx-auto flex h-[58px] w-[58px] items-center justify-center rounded-full bg-[#d7fae5] text-[1.8rem] text-[#08b37d]">✓</div>
-								<h2 class="mt-5 text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]">Vos besoins nutritionnels</h2>
-								<p class="mt-3 text-[1.05rem] text-slate-500">Calculés en fonction de votre profil</p>
+								<div
+									class="mx-auto flex h-[58px] w-[58px] items-center justify-center rounded-full bg-[#d7fae5] text-[1.8rem] text-[#08b37d]"
+								>
+									✓
+								</div>
+								<h2
+									class="mt-5 text-[2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[2.8rem]"
+								>
+									Vos besoins nutritionnels
+								</h2>
+								<p class="mt-3 text-[1.05rem] text-slate-500">
+									Calculés en fonction de votre profil
+								</p>
 							</div>
 
-							<div class="rounded-[22px] bg-[#08b37d] px-5 py-6 text-center text-white">
-								<p class="text-[1.05rem] text-white/85">Apport journalier recommandé</p>
-								<p id="summary-calories" class="mt-1 text-[3.5rem] font-semibold leading-none">0</p>
-								<p class="mt-2 text-[1.05rem] text-white/85">kilocalories</p>
+							<div
+								class="rounded-[22px] bg-[#08b37d] px-5 py-6 text-center text-white"
+							>
+								<p class="text-[1.05rem] text-white/85">
+									Apport journalier recommandé
+								</p>
+								<p
+									id="summary-calories"
+									class="mt-1 text-[3.5rem] font-semibold leading-none"
+								>
+									0
+								</p>
+								<p class="mt-2 text-[1.05rem] text-white/85">
+									kilocalories
+								</p>
 							</div>
 
 							<div class="grid gap-4 sm:grid-cols-3">
-								<div class="rounded-[18px] bg-[#edf3ff] px-5 py-5 text-center text-[#2b67f3]">
+								<div
+									class="rounded-[18px] bg-[#edf3ff] px-5 py-5 text-center text-[#2b67f3]"
+								>
 									<p class="text-[1rem]">Protéines</p>
-									<p id="summary-proteins" class="mt-2 text-[2.4rem] font-semibold">0g</p>
+									<p
+										id="summary-proteins"
+										class="mt-2 text-[2.4rem] font-semibold"
+									>
+										0g
+									</p>
 									<p class="text-[0.95rem]">par jour</p>
 								</div>
-								<div class="rounded-[18px] bg-[#fff3e8] px-5 py-5 text-center text-[#ff6b00]">
+								<div
+									class="rounded-[18px] bg-[#fff3e8] px-5 py-5 text-center text-[#ff6b00]"
+								>
 									<p class="text-[1rem]">Glucides</p>
-									<p id="summary-carbs" class="mt-2 text-[2.4rem] font-semibold">0g</p>
+									<p
+										id="summary-carbs"
+										class="mt-2 text-[2.4rem] font-semibold"
+									>
+										0g
+									</p>
 									<p class="text-[0.95rem]">par jour</p>
 								</div>
-								<div class="rounded-[18px] bg-[#f5ebff] px-5 py-5 text-center text-[#9a35ff]">
+								<div
+									class="rounded-[18px] bg-[#f5ebff] px-5 py-5 text-center text-[#9a35ff]"
+								>
 									<p class="text-[1rem]">Lipides</p>
-									<p id="summary-fats" class="mt-2 text-[2.4rem] font-semibold">0g</p>
+									<p
+										id="summary-fats"
+										class="mt-2 text-[2.4rem] font-semibold"
+									>
+										0g
+									</p>
 									<p class="text-[0.95rem]">par jour</p>
 								</div>
 							</div>
 
-							<div class="rounded-[18px] border border-slate-200 bg-slate-50 px-5 py-5">
-								<h3 class="text-[1.15rem] font-semibold text-[#16223c]">Récapitulatif de votre profil</h3>
-								<div class="mt-4 grid gap-3 text-[1rem] text-slate-500">
-									<div class="flex items-center justify-between gap-4"><span>Objectif :</span><strong id="summary-goal" class="font-medium text-[#16223c]"></strong></div>
-									<div class="flex items-center justify-between gap-4"><span>Régime :</span><strong id="summary-diet" class="font-medium text-[#16223c]"></strong></div>
-									<div class="flex items-center justify-between gap-4"><span>Activité :</span><strong id="summary-activity" class="font-medium text-[#16223c]"></strong></div>
+							<div
+								class="rounded-[18px] border border-slate-200 bg-slate-50 px-5 py-5"
+							>
+								<h3
+									class="text-[1.15rem] font-semibold text-[#16223c]"
+								>
+									Récapitulatif de votre profil
+								</h3>
+								<div
+									class="mt-4 grid gap-3 text-[1rem] text-slate-500"
+								>
+									<div
+										class="flex items-center justify-between gap-4"
+									>
+										<span>Objectif :</span><strong
+											id="summary-goal"
+											class="font-medium text-[#16223c]"
+										></strong>
+									</div>
+									<div
+										class="flex items-center justify-between gap-4"
+									>
+										<span>Régime :</span><strong
+											id="summary-diet"
+											class="font-medium text-[#16223c]"
+										></strong>
+									</div>
+									<div
+										class="flex items-center justify-between gap-4"
+									>
+										<span>Activité :</span><strong
+											id="summary-activity"
+											class="font-medium text-[#16223c]"
+										></strong>
+									</div>
 								</div>
 							</div>
 						</section>
 
-						<p id="register-error" class="hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+						<p
+							id="register-error"
+							class="hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"
+						>
+						</p>
 
-						<div class="flex items-center justify-between gap-4 border-t border-slate-200 pt-6">
-							<button id="prev-step" type="button" class="inline-flex min-h-[50px] items-center justify-center rounded-[16px] border border-slate-300 px-6 py-3 text-[1.05rem] font-medium text-slate-600">← Retour</button>
-							<button id="next-step" type="button" class="inline-flex min-h-[50px] items-center justify-center rounded-[16px] bg-[#08b37d] px-6 py-3 text-[1.05rem] font-semibold text-white shadow-[0_14px_28px_rgba(8,179,125,0.18)]">Suivant →</button>
+						<div
+							class="flex items-center justify-between gap-4 border-t border-slate-200 pt-6"
+						>
+							<button
+								id="prev-step"
+								type="button"
+								class="inline-flex min-h-[50px] items-center justify-center rounded-[16px] border border-slate-300 px-6 py-3 text-[1.05rem] font-medium text-slate-600"
+								>← Retour</button
+							>
+							<button
+								id="next-step"
+								type="button"
+								class="inline-flex min-h-[50px] items-center justify-center rounded-[16px] bg-[#08b37d] px-6 py-3 text-[1.05rem] font-semibold text-white shadow-[0_14px_28px_rgba(8,179,125,0.18)]"
+								>Suivant →</button
+							>
 						</div>
 					</div>
 				</form>
 
 				<div class="mt-6 text-center text-[1rem] text-slate-500">
 					Déjà un compte ?
-					<a href="/auth/login" class="font-medium text-[#08b37d]">Se connecter</a>
+					<a href="/auth/login" class="font-medium text-[#08b37d]"
+						>Se connecter</a
+					>
 				</div>
 			</div>
 		</div>
@@ -224,116 +537,159 @@ const optionsJson = JSON.stringify(options);
 	const totalSteps = 7;
 	let currentStep = 1;
 
-	const form = document.querySelector('#register-form');
-	const stepLabel = document.querySelector('#step-label');
-	const stepPercent = document.querySelector('#step-percent');
-	const stepProgress = document.querySelector('#step-progress');
-	const prevButton = document.querySelector('#prev-step');
-	const nextButton = document.querySelector('#next-step');
-	const errorBox = document.querySelector('#register-error');
-	const sessionsRange = document.querySelector('#sessions-range');
-	const sessionsLabel = document.querySelector('#sessions-label');
+	const form = document.querySelector("#register-form");
+	const stepLabel = document.querySelector("#step-label");
+	const stepPercent = document.querySelector("#step-percent");
+	const stepProgress = document.querySelector("#step-progress");
+	const prevButton = document.querySelector("#prev-step");
+	const nextButton = document.querySelector("#next-step");
+	const errorBox = document.querySelector("#register-error");
+	const sessionsRange = document.querySelector("#sessions-range");
+	const sessionsLabel = document.querySelector("#sessions-label");
 
 	const formState = {
-		goalLabel: 'Perte de poids',
-		dietLabel: 'Classique',
-		activityLabel: 'Modéré',
+		goalLabel: "Perte de poids",
+		dietLabel: "Classique",
+		activityLabel: "Modéré",
 	};
 
 	function calculateTargets() {
-		const getNumber = (name) => Number(form?.querySelector(`[name="${name}"]`)?.value || 0);
-		const getValue = (name) => String(form?.querySelector(`[name="${name}"]`)?.value || '');
+		const getNumber = (name) =>
+			Number(form?.querySelector(`[name="${name}"]`)?.value || 0);
+		const getValue = (name) =>
+			String(form?.querySelector(`[name="${name}"]`)?.value || "");
 
-		const age = getNumber('age');
-		const sex = getValue('sexe');
-		const heightCm = getNumber('taille_cm');
-		const weightKg = getNumber('poids_actuel_kg');
-		const goalSlug = getValue('objectif_slug');
-		const activityLabelValue = getValue('niveau_activite_libelle');
-		const activityLevel = parsedOptions.activityLevels.find((item) => item.libelle === activityLabelValue);
+		const age = getNumber("age");
+		const sex = getValue("sexe");
+		const heightCm = getNumber("taille_cm");
+		const weightKg = getNumber("poids_actuel_kg");
+		const goalSlug = getValue("objectif_slug");
+		const activityLabelValue = getValue("niveau_activite_libelle");
+		const activityLevel = parsedOptions.activityLevels.find(
+			(item) => item.libelle === activityLabelValue,
+		);
 		const activityCoefficient = Number(activityLevel?.coefficient ?? 1.55);
 
-		const sexFactor = sex === 'homme' ? 5 : sex === 'femme' ? -161 : -78;
+		const sexFactor = sex === "homme" ? 5 : sex === "femme" ? -161 : -78;
 		const bmr = 10 * weightKg + 6.25 * heightCm - 5 * age + sexFactor;
 		const maintenanceCalories = bmr * activityCoefficient;
 		const goalAdjustments = {
-			'perte-poids': -400,
-			'prise-masse': 250,
+			"perte-poids": -400,
+			"prise-masse": 250,
 			maintien: 0,
 			equilibre: -100,
 		};
-		const calories = Math.max(1200, Math.round(maintenanceCalories + (goalAdjustments[goalSlug] ?? 0)));
+		const calories = Math.max(
+			1200,
+			Math.round(maintenanceCalories + (goalAdjustments[goalSlug] ?? 0)),
+		);
 		const proteinMultiplier =
-			goalSlug === 'prise-masse' ? 2.2 :
-			goalSlug === 'perte-poids' ? 2 :
-			1.8;
+			goalSlug === "prise-masse"
+				? 2.2
+				: goalSlug === "perte-poids"
+					? 2
+					: 1.8;
 
 		const proteins = Math.round(weightKg * proteinMultiplier);
 		const fats = Math.round(weightKg * 0.9);
-		const carbs = Math.max(60, Math.round((calories - proteins * 4 - fats * 9) / 4));
+		const carbs = Math.max(
+			60,
+			Math.round((calories - proteins * 4 - fats * 9) / 4),
+		);
 
 		return { calories, proteins, carbs, fats };
 	}
 
-	function renderCards(containerId, items, hiddenFieldName, activeValueKey, labelField, descriptionField, iconResolver) {
+	function renderCards(
+		containerId,
+		items,
+		hiddenFieldName,
+		activeValueKey,
+		labelField,
+		descriptionField,
+		iconResolver,
+	) {
 		const container = document.querySelector(containerId);
 		if (!(container instanceof HTMLElement)) return;
 
-		container.innerHTML = '';
+		container.innerHTML = "";
 
 		items.forEach((item, index) => {
-			const button = document.createElement('button');
-			button.type = 'button';
-			button.className = 'rounded-[18px] border border-slate-200 p-5 text-left transition hover:border-[#10c995] hover:shadow-[0_10px_25px_rgba(16,179,137,0.08)]';
+			const button = document.createElement("button");
+			button.type = "button";
+			button.className =
+				"rounded-[18px] border border-slate-200 p-5 text-left transition hover:border-[#10c995] hover:shadow-[0_10px_25px_rgba(16,179,137,0.08)]";
 			button.dataset.value = String(item[activeValueKey]);
-			if (index === 0 && !form?.querySelector(`[name="${hiddenFieldName}"]`)?.value) {
-				form.querySelector(`[name="${hiddenFieldName}"]`).value = String(item[activeValueKey]);
+			if (
+				index === 0 &&
+				!form?.querySelector(`[name="${hiddenFieldName}"]`)?.value
+			) {
+				form.querySelector(`[name="${hiddenFieldName}"]`).value =
+					String(item[activeValueKey]);
 			}
 
 			button.innerHTML = `
 				<div class="mb-5 flex h-[46px] w-[46px] items-center justify-center rounded-2xl bg-slate-100 text-[1.3rem] text-slate-600">${iconResolver(index)}</div>
 				<h3 class="text-[1.1rem] font-semibold text-[#16223c]">${item[labelField]}</h3>
-				<p class="mt-2 text-[1rem] text-slate-500">${item[descriptionField] ?? ''}</p>
+				<p class="mt-2 text-[1rem] text-slate-500">${item[descriptionField] ?? ""}</p>
 			`;
 
-			button.addEventListener('click', () => {
-				form.querySelector(`[name="${hiddenFieldName}"]`).value = String(item[activeValueKey]);
-				if (hiddenFieldName === 'objectif_slug') formState.goalLabel = item[labelField];
-				if (hiddenFieldName === 'regime_slug') formState.dietLabel = item[labelField];
-				if (hiddenFieldName === 'type_activite_slug') formState.activityTypeLabel = item[labelField];
+			button.addEventListener("click", () => {
+				form.querySelector(`[name="${hiddenFieldName}"]`).value =
+					String(item[activeValueKey]);
+				if (hiddenFieldName === "objectif_slug")
+					formState.goalLabel = item[labelField];
+				if (hiddenFieldName === "regime_slug")
+					formState.dietLabel = item[labelField];
+				if (hiddenFieldName === "type_activite_slug")
+					formState.activityTypeLabel = item[labelField];
 				updateSelectedCards(container, String(item[activeValueKey]));
 			});
 
 			container.appendChild(button);
 		});
 
-		updateSelectedCards(container, String(form?.querySelector(`[name="${hiddenFieldName}"]`)?.value || items[0]?.[activeValueKey]));
+		updateSelectedCards(
+			container,
+			String(
+				form?.querySelector(`[name="${hiddenFieldName}"]`)?.value ||
+					items[0]?.[activeValueKey],
+			),
+		);
 	}
 
 	function updateSelectedCards(container, selectedValue) {
-		container.querySelectorAll('button').forEach((button) => {
+		container.querySelectorAll("button").forEach((button) => {
 			const active = button.dataset.value === selectedValue;
 			button.className = active
-				? 'rounded-[18px] border border-[#10c995] bg-[#ebfbf5] p-5 text-left shadow-[0_10px_25px_rgba(16,179,137,0.08)]'
-				: 'rounded-[18px] border border-slate-200 p-5 text-left transition hover:border-[#10c995] hover:shadow-[0_10px_25px_rgba(16,179,137,0.08)]';
+				? "rounded-[18px] border border-[#10c995] bg-[#ebfbf5] p-5 text-left shadow-[0_10px_25px_rgba(16,179,137,0.08)]"
+				: "rounded-[18px] border border-slate-200 p-5 text-left transition hover:border-[#10c995] hover:shadow-[0_10px_25px_rgba(16,179,137,0.08)]";
 		});
 	}
 
 	function updateProgress() {
 		const percentage = Math.round((currentStep / totalSteps) * 100);
-		if (stepLabel instanceof HTMLElement) stepLabel.textContent = `Étape ${currentStep} sur ${totalSteps}`;
-		if (stepPercent instanceof HTMLElement) stepPercent.textContent = `${percentage}%`;
-		if (stepProgress instanceof HTMLElement) stepProgress.style.width = `${percentage}%`;
-		if (prevButton instanceof HTMLButtonElement) prevButton.disabled = currentStep === 1;
+		if (stepLabel instanceof HTMLElement)
+			stepLabel.textContent = `Étape ${currentStep} sur ${totalSteps}`;
+		if (stepPercent instanceof HTMLElement)
+			stepPercent.textContent = `${percentage}%`;
+		if (stepProgress instanceof HTMLElement)
+			stepProgress.style.width = `${percentage}%`;
+		if (prevButton instanceof HTMLButtonElement)
+			prevButton.disabled = currentStep === 1;
 		if (nextButton instanceof HTMLButtonElement) {
-			nextButton.textContent = currentStep === totalSteps ? 'Créer mon compte →' : 'Suivant →';
+			nextButton.textContent =
+				currentStep === totalSteps ? "Créer mon compte →" : "Suivant →";
 		}
 	}
 
 	function updateStepVisibility() {
-		document.querySelectorAll('[data-step]').forEach((section) => {
+		document.querySelectorAll("[data-step]").forEach((section) => {
 			if (!(section instanceof HTMLElement)) return;
-			section.classList.toggle('hidden', Number(section.dataset.step) !== currentStep);
+			section.classList.toggle(
+				"hidden",
+				Number(section.dataset.step) !== currentStep,
+			);
 		});
 		updateProgress();
 		if (currentStep === totalSteps) {
@@ -343,22 +699,38 @@ const optionsJson = JSON.stringify(options);
 
 	function updateSummary() {
 		const targets = calculateTargets();
-		document.querySelector('#summary-calories').textContent = String(targets.calories);
-		document.querySelector('#summary-proteins').textContent = `${targets.proteins}g`;
-		document.querySelector('#summary-carbs').textContent = `${targets.carbs}g`;
-		document.querySelector('#summary-fats').textContent = `${targets.fats}g`;
-		document.querySelector('#summary-goal').textContent = formState.goalLabel || '';
-		document.querySelector('#summary-diet').textContent = formState.dietLabel || '';
-		document.querySelector('#summary-activity').textContent = `${formState.activityLabel} • ${form.querySelector('[name="seances_par_semaine"]').value} séance(s)/semaine`;
+		document.querySelector("#summary-calories").textContent = String(
+			targets.calories,
+		);
+		document.querySelector("#summary-proteins").textContent =
+			`${targets.proteins}g`;
+		document.querySelector("#summary-carbs").textContent =
+			`${targets.carbs}g`;
+		document.querySelector("#summary-fats").textContent =
+			`${targets.fats}g`;
+		document.querySelector("#summary-goal").textContent =
+			formState.goalLabel || "";
+		document.querySelector("#summary-diet").textContent =
+			formState.dietLabel || "";
+		document.querySelector("#summary-activity").textContent =
+			`${formState.activityLabel} • ${form.querySelector('[name="seances_par_semaine"]').value} séance(s)/semaine`;
 	}
 
 	function validateCurrentStep() {
-		const currentSection = document.querySelector(`[data-step="${currentStep}"]`);
+		const currentSection = document.querySelector(
+			`[data-step="${currentStep}"]`,
+		);
 		if (!(currentSection instanceof HTMLElement)) return true;
 
-		const requiredFields = currentSection.querySelectorAll('input[required], select[required], textarea[required]');
+		const requiredFields = currentSection.querySelectorAll(
+			"input[required], select[required], textarea[required]",
+		);
 		for (const field of requiredFields) {
-			if (field instanceof HTMLInputElement || field instanceof HTMLSelectElement || field instanceof HTMLTextAreaElement) {
+			if (
+				field instanceof HTMLInputElement ||
+				field instanceof HTMLSelectElement ||
+				field instanceof HTMLTextAreaElement
+			) {
 				if (!field.value.trim()) {
 					field.focus();
 					return false;
@@ -368,12 +740,16 @@ const optionsJson = JSON.stringify(options);
 
 		if (currentStep === 6) {
 			const password = form.querySelector('[name="password"]');
-			const passwordConfirm = form.querySelector('[name="passwordConfirm"]');
+			const passwordConfirm = form.querySelector(
+				'[name="passwordConfirm"]',
+			);
 			if (password.value !== passwordConfirm.value) {
-				throw new Error('Les mots de passe ne correspondent pas.');
+				throw new Error("Les mots de passe ne correspondent pas.");
 			}
 			if (password.value.length < 8) {
-				throw new Error('Le mot de passe doit contenir au moins 8 caractères.');
+				throw new Error(
+					"Le mot de passe doit contenir au moins 8 caractères.",
+				);
 			}
 		}
 
@@ -383,33 +759,50 @@ const optionsJson = JSON.stringify(options);
 	function showError(message) {
 		if (!(errorBox instanceof HTMLElement)) return;
 		errorBox.textContent = message;
-		errorBox.classList.remove('hidden');
+		errorBox.classList.remove("hidden");
 	}
 
 	function clearError() {
 		if (!(errorBox instanceof HTMLElement)) return;
-		errorBox.textContent = '';
-		errorBox.classList.add('hidden');
+		errorBox.textContent = "";
+		errorBox.classList.add("hidden");
 	}
 
 	async function submitRegistration() {
 		if (!(form instanceof HTMLFormElement)) return;
 		const payload = new FormData(form);
-		const response = await fetch('/app-api/auth/register', {
-			method: 'POST',
+		const response = await fetch("/app-api/auth/register", {
+			method: "POST",
 			body: payload,
 		});
-		const result = await response.json();
 
-		if (!response.ok) {
-			throw new Error(result.message || 'Inscription impossible.');
+		const responseText = await response.text();
+		let result = {};
+		if (responseText) {
+			try {
+				result = JSON.parse(responseText);
+			} catch {
+				result = { message: responseText };
+			}
 		}
 
-		localStorage.setItem('nutrivia_auth', JSON.stringify(result));
-		window.location.href = '/profile';
+		if (!response.ok) {
+			const errorMessage =
+				response.status === 403 &&
+				String(result?.message || "")
+					.toLowerCase()
+					.includes("cross-site")
+					? "Inscription bloquee par la protection serveur (origine de requete). Le correctif de deploiement est en cours."
+					: result?.message ||
+						`Inscription impossible (${response.status}).`;
+			throw new Error(errorMessage);
+		}
+
+		localStorage.setItem("nutrivia_auth", JSON.stringify(result));
+		window.location.href = "/profile";
 	}
 
-	prevButton?.addEventListener('click', () => {
+	prevButton?.addEventListener("click", () => {
 		clearError();
 		if (currentStep > 1) {
 			currentStep -= 1;
@@ -417,7 +810,7 @@ const optionsJson = JSON.stringify(options);
 		}
 	});
 
-	nextButton?.addEventListener('click', async () => {
+	nextButton?.addEventListener("click", async () => {
 		try {
 			clearError();
 			if (!validateCurrentStep()) return;
@@ -430,38 +823,70 @@ const optionsJson = JSON.stringify(options);
 
 			await submitRegistration();
 		} catch (error) {
-			showError(error instanceof Error ? error.message : 'Impossible de continuer.');
+			showError(
+				error instanceof Error
+					? error.message
+					: "Impossible de continuer.",
+			);
 		}
 	});
 
-	sessionsRange?.addEventListener('input', () => {
+	sessionsRange?.addEventListener("input", () => {
 		if (!(sessionsRange instanceof HTMLInputElement)) return;
 		if (sessionsLabel instanceof HTMLElement) {
 			sessionsLabel.textContent = `Entraînements par semaine: ${sessionsRange.value}`;
 		}
 	});
 
-	document.querySelector('#activity-level-select')?.addEventListener('change', (event) => {
-		const target = event.target;
-		if (!(target instanceof HTMLSelectElement)) return;
-		form.querySelector('[name="niveau_activite_libelle"]').value = target.value;
-		formState.activityLabel = target.value;
-	});
+	document
+		.querySelector("#activity-level-select")
+		?.addEventListener("change", (event) => {
+			const target = event.target;
+			if (!(target instanceof HTMLSelectElement)) return;
+			form.querySelector('[name="niveau_activite_libelle"]').value =
+				target.value;
+			formState.activityLabel = target.value;
+		});
 
-	const activityLevelSelect = document.querySelector('#activity-level-select');
+	const activityLevelSelect = document.querySelector(
+		"#activity-level-select",
+	);
 	if (activityLevelSelect instanceof HTMLSelectElement) {
 		parsedOptions.activityLevels.forEach((item) => {
-			const option = document.createElement('option');
+			const option = document.createElement("option");
 			option.value = item.libelle;
 			option.textContent = `${item.libelle} (${item.description})`;
 			activityLevelSelect.appendChild(option);
 		});
-		activityLevelSelect.value = 'Modéré';
+		activityLevelSelect.value = "Modéré";
 	}
 
-	renderCards('#goal-grid', parsedOptions.goals, 'objectif_slug', 'slug', 'libelle', 'description', (index) => ['◎', '⌘', '✓', '◔'][index] ?? '•');
-	renderCards('#activity-type-grid', parsedOptions.activityTypes, 'type_activite_slug', 'slug', 'libelle', 'description', () => '');
-	renderCards('#diet-grid', parsedOptions.diets, 'regime_slug', 'slug', 'libelle', 'description', () => '');
+	renderCards(
+		"#goal-grid",
+		parsedOptions.goals,
+		"objectif_slug",
+		"slug",
+		"libelle",
+		"description",
+		(index) => ["◎", "⌘", "✓", "◔"][index] ?? "•",
+	);
+	renderCards(
+		"#activity-type-grid",
+		parsedOptions.activityTypes,
+		"type_activite_slug",
+		"slug",
+		"libelle",
+		"description",
+		() => "",
+	);
+	renderCards(
+		"#diet-grid",
+		parsedOptions.diets,
+		"regime_slug",
+		"slug",
+		"libelle",
+		"description",
+		() => "",
+	);
 	updateStepVisibility();
 </script>
-
