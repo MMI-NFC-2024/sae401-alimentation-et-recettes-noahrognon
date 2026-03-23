@@ -7,8 +7,10 @@ Groupe B | Dev
 
 **Site en ligne**  
 https://nutrivia.noahrognon.fr
-mail de demo (si on ne veut pas voir le processus de créationd de compte): noah.rognon@gmail.com
-MDP : Demonutrivia2026
+- mail de demo (si on ne veut pas voir le processus de créationd de compte): noah.rognon@gmail.com
+- MDP : Demonutrivia2026
+- mail pour backoffice : pierre.pracht@nutrivia.app
+- MDP pour backoffice : Demonutrivia2026
 ## Présentation du projet
 
 Nutrivia est une plateforme web dédiée à la nutrition, à l’organisation des repas et à l’accompagnement alimentaire personnalisé.
