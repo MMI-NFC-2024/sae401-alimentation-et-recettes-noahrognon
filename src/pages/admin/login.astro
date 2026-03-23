@@ -1,0 +1,76 @@
+---
+import Layout from '../../layouts/Layout.astro';
+---
+
+<Layout title="Connexion admin - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_left_top,rgba(200,248,224,0.8),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(207,230,255,0.75),transparent_28%),linear-gradient(180deg,#ecfbf4_0%,#f8fdff_72%,#eef6ff_100%)] py-12 lg:py-16">
+		<div class="mx-auto flex max-w-[1180px] flex-col items-center px-4 md:px-6">
+			<div class="mb-5 flex h-[58px] w-[58px] items-center justify-center rounded-[18px] bg-[#16223c] text-[1.35rem] font-semibold text-white shadow-[0_18px_40px_rgba(15,23,42,0.18)]">
+				AD
+			</div>
+			<h1 class="text-center text-[2.2rem] font-semibold tracking-[-0.04em] text-[#16223c] sm:text-[3rem]">Connexion administrateur</h1>
+			<p class="mt-3 text-center text-[1.05rem] text-slate-500">Accédez au back-office de pilotage de Nutrivia</p>
+
+			<div class="mt-8 w-full max-w-[430px] rounded-[24px] border border-slate-200 bg-white px-5 py-7 shadow-[0_22px_55px_rgba(58,91,133,0.16)] sm:px-8">
+				<form id="admin-login-form" class="grid gap-5">
+					<div class="grid gap-2">
+						<label for="admin-email" class="text-[1rem] font-medium text-slate-700">Email admin</label>
+						<input id="admin-email" name="email" type="email" required class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] text-slate-700 outline-none" />
+					</div>
+
+					<div class="grid gap-2">
+						<label for="admin-password" class="text-[1rem] font-medium text-slate-700">Mot de passe</label>
+						<input id="admin-password" name="password" type="password" required class="h-12 rounded-[16px] border border-slate-300 px-4 text-[1rem] text-slate-700 outline-none" />
+					</div>
+
+					<p id="admin-login-error" class="hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
+
+					<button type="submit" class="inline-flex min-h-[52px] items-center justify-center rounded-[16px] bg-[#16223c] px-5 py-3 text-[1.05rem] font-semibold text-white shadow-[0_14px_28px_rgba(15,23,42,0.18)]">
+						Se connecter au back-office
+					</button>
+				</form>
+
+				<a href="/auth/login" class="mt-5 inline-flex w-full items-center justify-center rounded-[16px] border border-slate-300 px-5 py-3 text-[1rem] font-medium text-slate-700">
+					Retour à la connexion utilisateur
+				</a>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const form = document.querySelector('#admin-login-form');
+	const errorBox = document.querySelector('#admin-login-error');
+	const storageKey = 'nutrivia_admin_auth';
+
+	form?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		if (!(form instanceof HTMLFormElement)) return;
+
+		errorBox?.classList.add('hidden');
+		const formData = new FormData(form);
+
+		try {
+			const response = await fetch('/app-api/admin/auth', {
+				method: 'POST',
+				headers: { 'Content-Type': 'application/json' },
+				body: JSON.stringify({
+					email: String(formData.get('email') ?? ''),
+					password: String(formData.get('password') ?? ''),
+				}),
+			});
+			const payload = await response.json();
+			if (!response.ok) {
+				throw new Error(payload.message || 'Connexion admin impossible.');
+			}
+
+			localStorage.setItem(storageKey, JSON.stringify(payload));
+			window.location.href = '/admin';
+		} catch (error) {
+			if (errorBox instanceof HTMLElement) {
+				errorBox.textContent = error instanceof Error ? error.message : 'Connexion admin impossible.';
+				errorBox.classList.remove('hidden');
+			}
+		}
+	});
+</script>

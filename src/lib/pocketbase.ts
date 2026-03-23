@@ -170,6 +170,29 @@ export async function authenticatePocketBaseAdmin(): Promise<string> {
 	return response.token;
 }
 
+export async function authenticatePocketBaseSuperuser(identity: string, password: string) {
+	return pbFetch<{ token: string; record: Record<string, any> }>(
+		'/api/collections/_superusers/auth-with-password',
+		{
+			method: 'POST',
+			body: JSON.stringify({
+				identity,
+				password,
+			}),
+		},
+	);
+}
+
+export async function refreshPocketBaseSuperuserAuth(token: string) {
+	return pbFetch<{ token: string; record: Record<string, any> }>(
+		'/api/collections/_superusers/auth-refresh',
+		{
+			method: 'POST',
+		},
+		token,
+	);
+}
+
 export async function getPocketBaseBaseUrl(): Promise<string> {
 	const config = await getPocketBaseConfig();
 	return config.url;
@@ -234,6 +257,14 @@ function getCollectionFieldNames(collectionMeta: Record<string, any> | null | un
 		fields
 			.map((field) => String(field?.name ?? '').trim())
 			.filter(Boolean),
+	);
+}
+
+function sortByNewest<T extends Record<string, any>>(items: T[]) {
+	return [...items].sort(
+		(left, right) =>
+			new Date(String(right.created ?? right.updated ?? 0)).getTime() -
+			new Date(String(left.created ?? left.updated ?? 0)).getTime(),
 	);
 }
 
@@ -2855,6 +2886,26 @@ function formatCommunityHashtagStorage(tags: string[]) {
 	return tags.map((tag) => `#${tag}`).join(' ');
 }
 
+function formatCommunityHashtags(value: unknown) {
+	if (Array.isArray(value)) {
+		return value
+			.map((tag) => String(tag ?? '').trim())
+			.filter(Boolean)
+			.map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
+	}
+
+	const source = String(value ?? '').trim();
+	if (!source) {
+		return [];
+	}
+
+	return source
+		.split(/[\s,]+/)
+		.map((tag) => String(tag ?? '').trim())
+		.filter(Boolean)
+		.map((tag) => (tag.startsWith('#') ? tag : `#${tag}`));
+}
+
 function getCommunityDisplayName(user?: Record<string, any> | null) {
 	if (!user) {
 		return 'Utilisateur';
@@ -4469,4 +4520,623 @@ export async function deleteProfessionalAvailability(
 
 	await deleteRecord('nutrition_disponibilites', availabilityId, adminToken);
 	return getProfessionalDashboard(refreshedAuth.token);
+}
+
+const ADMIN_VALIDATION_STATUSES = ['pending', 'approved', 'rejected'] as const;
+const ADMIN_MODERATION_STATUSES = ['visible', 'hidden'] as const;
+const ADMIN_FOOD_CATEGORIES = [
+	'proteines',
+	'poissons',
+	'viandes',
+	'legumes',
+	'fruits',
+	'cereales',
+	'epicerie',
+	'produits_laitiers',
+	'snacks',
+	'boissons',
+	'autre',
+] as const;
+
+function normalizeAdminValidationStatus(value: unknown) {
+	const source = String(value ?? '').trim().toLowerCase();
+	return ADMIN_VALIDATION_STATUSES.includes(source as (typeof ADMIN_VALIDATION_STATUSES)[number]) ? source : 'pending';
+}
+
+function normalizeAdminModerationStatus(value: unknown) {
+	const source = String(value ?? '').trim().toLowerCase();
+	return ADMIN_MODERATION_STATUSES.includes(source as (typeof ADMIN_MODERATION_STATUSES)[number]) ? source : 'visible';
+}
+
+function normalizeAdminFoodCategory(value: unknown) {
+	const source = String(value ?? '').trim().toLowerCase();
+	return ADMIN_FOOD_CATEGORIES.includes(source as (typeof ADMIN_FOOD_CATEGORIES)[number]) ? source : 'autre';
+}
+
+function getAdminRecipeValidationStatus(recipe: Record<string, any>) {
+	return normalizeAdminValidationStatus(recipe.validation_status ?? (recipe.is_published ? 'approved' : 'pending'));
+}
+
+function getAdminFoodValidationStatus(food: Record<string, any>) {
+	return normalizeAdminValidationStatus(food.validation_status ?? 'approved');
+}
+
+function getAdminProfessionalApprovalStatus(professional: Record<string, any>) {
+	return normalizeAdminValidationStatus(professional.approval_status ?? (professional.is_active ? 'approved' : 'pending'));
+}
+
+function getAdminModerationDisplayStatus(record: Record<string, any>) {
+	return normalizeAdminModerationStatus(record.moderation_status ?? 'visible');
+}
+
+function parseAdminIngredientsText(source: string) {
+	return String(source ?? '')
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter(Boolean)
+		.map((line, index) => {
+			const [namePart, valuePart = ''] = line.split(/\s[-–:]\s/, 2);
+			const quantityMatch = valuePart.trim().match(/^([\d.,]+)\s*(.*)$/);
+			return {
+				id: `admin-ingredient-${index + 1}`,
+				ordre: index + 1,
+				nom: String(namePart ?? '').trim() || `Ingrédient ${index + 1}`,
+				quantite: Number(quantityMatch?.[1]?.replace(',', '.') ?? 1) || 1,
+				unite: String(quantityMatch?.[2] ?? valuePart ?? '').trim(),
+				preparation: '',
+			};
+		});
+}
+
+function parseAdminStepsText(source: string) {
+	return String(source ?? '')
+		.split(/\r?\n/)
+		.map((line) => line.trim())
+		.filter(Boolean)
+		.map((line, index) => ({
+			id: `admin-step-${index + 1}`,
+			ordre: index + 1,
+			titre: `Étape ${index + 1}`,
+			instruction: line,
+			duree_min: 0,
+		}));
+}
+
+async function ensureAdminBackofficeFields(token: string) {
+	await ensureCollectionFields(
+		'recettes',
+		[
+			{
+				name: 'validation_status',
+				type: 'select',
+				required: false,
+				maxSelect: 1,
+				values: [...ADMIN_VALIDATION_STATUSES],
+			},
+			{
+				name: 'source_type',
+				type: 'select',
+				required: false,
+				maxSelect: 1,
+				values: ['site', 'assistant', 'admin'],
+			},
+		],
+		token,
+	);
+
+	await ensureCollectionFields(
+		'aliments',
+		[
+			{
+				name: 'validation_status',
+				type: 'select',
+				required: false,
+				maxSelect: 1,
+				values: [...ADMIN_VALIDATION_STATUSES],
+			},
+			{
+				name: 'source_type',
+				type: 'select',
+				required: false,
+				maxSelect: 1,
+				values: ['scan', 'admin'],
+			},
+		],
+		token,
+	);
+
+	await ensureCollectionFields(
+		'nutrition_professionnels',
+		[
+			{
+				name: 'approval_status',
+				type: 'select',
+				required: false,
+				maxSelect: 1,
+				values: [...ADMIN_VALIDATION_STATUSES],
+			},
+		],
+		token,
+	);
+
+	await ensureCollectionFields(
+		'communaute_posts',
+		[
+			{
+				name: 'moderation_status',
+				type: 'select',
+				required: false,
+				maxSelect: 1,
+				values: [...ADMIN_MODERATION_STATUSES],
+			},
+		],
+		token,
+	);
+
+	await ensureCollectionFields(
+		'communaute_commentaires',
+		[
+			{
+				name: 'moderation_status',
+				type: 'select',
+				required: false,
+				maxSelect: 1,
+				values: [...ADMIN_MODERATION_STATUSES],
+			},
+		],
+		token,
+	);
+}
+
+export async function getAdminBackoffice(adminToken: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+
+	await ensureReferenceData(token);
+	await ensureProfessionalCollections(token);
+	await ensureCommunityCollections(token);
+	await ensureAssistantCollections(token);
+	await ensureAdminBackofficeFields(token);
+
+	const [goals, users, recipes, foods, posts, comments, professionals, appointments] = await Promise.all([
+		listRecords<OptionRecord>('objectifs', token),
+		listRecordsWithQuery<Record<string, any>>('users', 'perPage=200', token),
+		listRecordsWithQuery<Record<string, any>>('recettes', 'perPage=200&expand=objectif_id', token),
+		listRecordsWithQuery<Record<string, any>>('aliments', 'perPage=200', token),
+		listRecordsWithQuery<Record<string, any>>('communaute_posts', 'perPage=200&expand=user_id,recette_id', token),
+		listRecordsWithQuery<Record<string, any>>('communaute_commentaires', 'perPage=300&expand=user_id,post_id', token),
+		listRecordsWithQuery<Record<string, any>>('nutrition_professionnels', 'perPage=200', token),
+		listRecordsWithQuery<Record<string, any>>('nutrition_rendezvous', 'perPage=300&expand=professionnel_id,user_id', token),
+	]);
+
+	const mappedUsers = sortByNewest(users).map((user) => ({
+		id: String(user.id),
+		fullName: String(`${user.prenom ?? ''} ${user.nom ?? ''}`.trim() || user.name || user.email || 'Utilisateur'),
+		email: String(user.email ?? ''),
+		role: String(user.role ?? 'user') || 'user',
+		created: String(user.created ?? ''),
+	}));
+
+	const mappedRecipes = await Promise.all(
+		sortByNewest(recipes).map(async (recipe) => ({
+			id: String(recipe.id),
+			title: String(recipe.titre ?? 'Recette'),
+			slug: String(recipe.slug ?? ''),
+			published: Boolean(recipe.is_published ?? false),
+			goal: String(recipe.expand?.objectif_id?.libelle ?? ''),
+			goalId: String(recipe.objectif_id ?? ''),
+			created: String(recipe.created ?? recipe.date_creation ?? ''),
+			validationStatus: getAdminRecipeValidationStatus(recipe),
+			sourceType: String(recipe.source_type ?? (recipe.auteur_id ? 'site' : 'admin')),
+			imageUrl: await getFileUrl('recettes', String(recipe.id), recipe.photo),
+		})),
+	);
+
+	const mappedFoods = await Promise.all(
+		sortByNewest(foods).map(async (food) => ({
+			id: String(food.id),
+			name: String(food.nom ?? 'Aliment'),
+			category: String(food.categorie ?? 'autre'),
+			calories: Number(food.calories_100g ?? 0),
+			proteins: Number(food.proteines_100g ?? 0),
+			carbs: Number(food.glucides_100g ?? 0),
+			fats: Number(food.lipides_100g ?? 0),
+			fibers: Number(food.fibres_100g ?? 0),
+			created: String(food.created ?? ''),
+			validationStatus: getAdminFoodValidationStatus(food),
+			sourceType: String(food.source_type ?? 'scan'),
+			imageUrl: await getFileUrl('aliments', String(food.id), food.image),
+		})),
+	);
+
+	const mappedPosts = await Promise.all(
+		sortByNewest(posts).map(async (post) => ({
+			id: String(post.id),
+			author: String(
+				`${post.expand?.user_id?.prenom ?? ''} ${post.expand?.user_id?.nom ?? ''}`.trim() ||
+					post.expand?.user_id?.name ||
+					post.expand?.user_id?.email ||
+					'Utilisateur',
+			),
+			description: String(post.description ?? ''),
+			hashtags: formatCommunityHashtags(post.hashtags),
+			likes: Number(post.likes_count ?? 0),
+			comments: Number(post.comments_count ?? 0),
+			created: String(post.created ?? ''),
+			moderationStatus: getAdminModerationDisplayStatus(post),
+			imageUrl: await resolveCommunityPostImage(post),
+			linkedRecipeTitle: String(post.expand?.recette_id?.titre ?? ''),
+		})),
+	);
+
+	const mappedComments = sortByNewest(comments).map((comment) => ({
+		id: String(comment.id),
+		author: String(
+			`${comment.expand?.user_id?.prenom ?? ''} ${comment.expand?.user_id?.nom ?? ''}`.trim() ||
+				comment.expand?.user_id?.name ||
+				comment.expand?.user_id?.email ||
+				'Utilisateur',
+		),
+		content: String(comment.contenu ?? ''),
+		postId: String(comment.post_id ?? ''),
+		created: String(comment.created ?? ''),
+		likes: Number(comment.likes_count ?? 0),
+		moderationStatus: getAdminModerationDisplayStatus(comment),
+	}));
+
+	const mappedProfessionals = sortByNewest(professionals).map((professional) => ({
+		id: String(professional.id),
+		name: String(professional.nom_affiche ?? 'Professionnel'),
+		speciality: getProfessionalSpecialityLabel(String(professional.specialite ?? '')),
+		specialitySlug: String(professional.specialite ?? ''),
+		city: String(professional.ville ?? ''),
+		isActive: Boolean(professional.is_active ?? true),
+		approvalStatus: getAdminProfessionalApprovalStatus(professional),
+		slug: String(professional.slug ?? ''),
+		created: String(professional.created ?? ''),
+	}));
+
+	const mappedAppointments = sortByNewest(appointments).map((item) => ({
+		id: String(item.id),
+		userName: String(
+			`${item.expand?.user_id?.prenom ?? ''} ${item.expand?.user_id?.nom ?? ''}`.trim() ||
+				item.user_nom_snapshot ||
+				item.expand?.user_id?.email ||
+				'Utilisateur',
+		),
+		professionalName: String(item.expand?.professionnel_id?.nom_affiche ?? 'Professionnel'),
+		dateLabel: formatAppointmentDateLabel(String(item.debut_at)),
+		timeLabel: `${formatAppointmentTimeLabel(String(item.debut_at))} - ${formatAppointmentTimeLabel(String(item.fin_at))}`,
+		status: String(item.statut ?? 'confirme'),
+	}));
+
+	const confirmedAppointments = mappedAppointments.filter((item) => item.status === 'confirme');
+	const topPost = [...mappedPosts].sort((left, right) => right.likes - left.likes)[0] ?? null;
+
+	return {
+		token,
+		viewer: {
+			email: String(refreshedAuth.record.email ?? ''),
+		},
+		stats: {
+			users: users.length,
+			professionals: professionals.length,
+			appointments: confirmedAppointments.length,
+			recipes: recipes.length,
+			foods: foods.length,
+			posts: posts.length,
+			comments: comments.length,
+			pendingRecipes: mappedRecipes.filter((recipe) => recipe.validationStatus === 'pending').length,
+			pendingFoods: mappedFoods.filter((food) => food.validationStatus === 'pending').length,
+			pendingProfessionals: mappedProfessionals.filter((professional) => professional.approvalStatus === 'pending').length,
+			hiddenPosts: mappedPosts.filter((post) => post.moderationStatus === 'hidden').length,
+			hiddenComments: mappedComments.filter((comment) => comment.moderationStatus === 'hidden').length,
+			publishedRecipes: mappedRecipes.filter((recipe) => recipe.published).length,
+			activeProfessionals: mappedProfessionals.filter((professional) => professional.isActive).length,
+		},
+		highlights: {
+			recentUsers: mappedUsers.slice(0, 8),
+			recentRecipes: mappedRecipes.slice(0, 5),
+			topPosts: [...mappedPosts].sort((left, right) => right.likes - left.likes).slice(0, 5),
+			upcomingAppointments: confirmedAppointments.slice(0, 8),
+			topPost,
+		},
+		options: {
+			goals: goals.map((goal) => ({
+				id: String(goal.id),
+				label: String(goal.libelle ?? goal.nom ?? 'Objectif'),
+			})),
+			foodCategories: [...ADMIN_FOOD_CATEGORIES].map((value) => ({
+				value,
+				label: value.replaceAll('_', ' '),
+			})),
+			validationStatuses: [...ADMIN_VALIDATION_STATUSES],
+			moderationStatuses: [...ADMIN_MODERATION_STATUSES],
+			professionalSpecialities: [
+				{ value: 'dieteticien', label: getProfessionalSpecialityLabel('dieteticien') },
+				{ value: 'nutritionniste', label: getProfessionalSpecialityLabel('nutritionniste') },
+				{ value: 'nutritionniste_sportif', label: getProfessionalSpecialityLabel('nutritionniste_sportif') },
+				{ value: 'coach_alimentaire', label: getProfessionalSpecialityLabel('coach_alimentaire') },
+			],
+		},
+		users: mappedUsers,
+		recipes: mappedRecipes,
+		foods: mappedFoods,
+		posts: mappedPosts,
+		comments: mappedComments,
+		professionals: mappedProfessionals,
+		appointments: mappedAppointments,
+	};
+}
+
+export async function createAdminRecipe(
+	adminToken: string,
+	data: {
+		title: string;
+		description: string;
+		goalId?: string;
+		timeMinutes?: number;
+		portions?: number;
+		calories?: number;
+		proteins?: number;
+		carbs?: number;
+		fats?: number;
+		fibers?: number;
+		difficulty?: string;
+		ingredientsText?: string;
+		stepsText?: string;
+		published?: boolean;
+		validationStatus?: string;
+		imageDataUrl?: string;
+	},
+) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await ensureReferenceData(token);
+	await ensureAdminBackofficeFields(token);
+
+	const [recipesCollection, recipes] = await Promise.all([
+		getCollectionMeta('recettes', token),
+		listRecordsWithQuery<Record<string, any>>('recettes', 'perPage=400', token),
+	]);
+
+	const fieldNames = getCollectionFieldNames(recipesCollection);
+	const appendIfExists = (target: FormData, field: string, value: string) => {
+		if (fieldNames.has(field)) {
+			target.append(field, value);
+		}
+	};
+
+	const title = String(data.title ?? '').trim() || 'Nouvelle recette admin';
+	const baseSlug = slugifyKey(title) || 'recette-admin';
+	let slug = baseSlug;
+	let suffix = 2;
+	const existingSlugs = new Set(recipes.map((recipe) => String(recipe.slug ?? '')).filter(Boolean));
+	while (existingSlugs.has(slug)) {
+		slug = `${baseSlug}-${suffix}`;
+		suffix += 1;
+	}
+
+	const formData = new FormData();
+	appendIfExists(formData, 'titre', title);
+	appendIfExists(formData, 'description', String(data.description ?? '').trim());
+	appendIfExists(formData, 'slug', slug);
+	appendIfExists(formData, 'temps_total_min', String(Math.max(0, Number(data.timeMinutes ?? 20))));
+	appendIfExists(formData, 'temps_preparation_min', String(Math.max(0, Number(data.timeMinutes ?? 20))));
+	appendIfExists(formData, 'temps_cuisson_min', '0');
+	appendIfExists(formData, 'nombre_portions', String(Math.max(1, Number(data.portions ?? 2))));
+	appendIfExists(formData, 'calories_par_portion', String(Math.max(0, Number(data.calories ?? 0))));
+	appendIfExists(formData, 'proteines_par_portion_g', String(Math.max(0, Number(data.proteins ?? 0))));
+	appendIfExists(formData, 'glucides_par_portion_g', String(Math.max(0, Number(data.carbs ?? 0))));
+	appendIfExists(formData, 'lipides_par_portion_g', String(Math.max(0, Number(data.fats ?? 0))));
+	appendIfExists(formData, 'fibres_par_portion_g', String(Math.max(0, Number(data.fibers ?? 0))));
+	appendIfExists(formData, 'difficulte', String(data.difficulty ?? 'facile').trim() || 'facile');
+	appendIfExists(formData, 'is_published', Boolean(data.published) ? 'true' : 'false');
+	appendIfExists(formData, 'validation_status', normalizeAdminValidationStatus(data.validationStatus));
+	appendIfExists(formData, 'source_type', 'admin');
+	appendIfExists(formData, 'date_creation', new Date().toISOString());
+	if (String(data.goalId ?? '').trim()) {
+		appendIfExists(formData, 'objectif_id', String(data.goalId).trim());
+	}
+	appendIfExists(formData, 'ingredients_json', JSON.stringify(parseAdminIngredientsText(String(data.ingredientsText ?? ''))));
+	appendIfExists(formData, 'etapes_json', JSON.stringify(parseAdminStepsText(String(data.stepsText ?? ''))));
+
+	const placeholderImage = dataUrlToFormFile(
+		String(data.imageDataUrl ?? '').trim() || buildRecipePlaceholderImageDataUrl(title),
+		slug,
+	);
+	if (fieldNames.has('photo')) {
+		formData.append('photo', placeholderImage.blob, placeholderImage.fileName);
+	}
+
+	try {
+		await createRecord('recettes', formData, token);
+	} catch {
+		const retry = new FormData();
+		for (const [key, value] of formData.entries()) {
+			if (String(key) !== 'photo') {
+				retry.append(key, value as string);
+			}
+		}
+		await createRecord('recettes', retry, token);
+	}
+
+	return getAdminBackoffice(token);
+}
+
+export async function createAdminFood(
+	adminToken: string,
+	data: {
+		name: string;
+		category?: string;
+		description?: string;
+		calories?: number;
+		proteins?: number;
+		carbs?: number;
+		fats?: number;
+		fibers?: number;
+		unit?: string;
+		validationStatus?: string;
+		imageDataUrl?: string;
+	},
+) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await ensureAdminBackofficeFields(token);
+
+	const foodsCollection = await getCollectionMeta('aliments', token);
+	const fieldNames = getCollectionFieldNames(foodsCollection);
+	const appendIfExists = (target: FormData, field: string, value: string) => {
+		if (fieldNames.has(field)) {
+			target.append(field, value);
+		}
+	};
+
+	const name = String(data.name ?? '').trim() || 'Nouvel aliment admin';
+	const formData = new FormData();
+	appendIfExists(formData, 'nom', name);
+	appendIfExists(formData, 'description', String(data.description ?? '').trim());
+	appendIfExists(formData, 'categorie', normalizeAdminFoodCategory(data.category));
+	appendIfExists(formData, 'unite_par_defaut', String(data.unit ?? 'g').trim() || 'g');
+	appendIfExists(formData, 'calories_100g', String(Math.max(0, Number(data.calories ?? 0))));
+	appendIfExists(formData, 'proteines_100g', String(Math.max(0, Number(data.proteins ?? 0))));
+	appendIfExists(formData, 'glucides_100g', String(Math.max(0, Number(data.carbs ?? 0))));
+	appendIfExists(formData, 'lipides_100g', String(Math.max(0, Number(data.fats ?? 0))));
+	appendIfExists(formData, 'fibres_100g', String(Math.max(0, Number(data.fibers ?? 0))));
+	appendIfExists(formData, 'validation_status', normalizeAdminValidationStatus(data.validationStatus));
+	appendIfExists(formData, 'source_type', 'admin');
+
+	if (String(data.imageDataUrl ?? '').trim() && fieldNames.has('image')) {
+		const imageFile = dataUrlToFormFile(String(data.imageDataUrl), slugifyKey(name) || 'aliment-admin');
+		formData.append('image', imageFile.blob, imageFile.fileName);
+	}
+
+	try {
+		await createRecord('aliments', formData, token);
+	} catch {
+		const retry = new FormData();
+		for (const [key, value] of formData.entries()) {
+			if (String(key) !== 'image') {
+				retry.append(key, value as string);
+			}
+		}
+		await createRecord('aliments', retry, token);
+	}
+
+	return getAdminBackoffice(token);
+}
+
+export async function updateAdminUserRole(adminToken: string, userId: string, role: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await ensureCollectionFields(
+		'users',
+		[
+			{
+				name: 'role',
+				type: 'select',
+				required: false,
+				maxSelect: 1,
+				values: ['user', 'professionnel'],
+			},
+		],
+		token,
+	);
+
+	const safeRole = role === 'professionnel' ? 'professionnel' : 'user';
+	await updateRecord('users', userId, { role: safeRole }, token);
+	return getAdminBackoffice(token);
+}
+
+export async function toggleAdminRecipePublish(adminToken: string, recipeId: string, published: boolean) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await updateRecord('recettes', recipeId, { is_published: Boolean(published) }, token);
+	return getAdminBackoffice(token);
+}
+
+export async function updateAdminRecipeValidation(adminToken: string, recipeId: string, validationStatus: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await ensureAdminBackofficeFields(token);
+	const normalized = normalizeAdminValidationStatus(validationStatus);
+	await updateRecord(
+		'recettes',
+		recipeId,
+		{
+			validation_status: normalized,
+			is_published: normalized === 'approved',
+		},
+		token,
+	);
+	return getAdminBackoffice(token);
+}
+
+export async function toggleAdminProfessionalActive(adminToken: string, professionalId: string, isActive: boolean) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await updateRecord('nutrition_professionnels', professionalId, { is_active: Boolean(isActive) }, token);
+	return getAdminBackoffice(token);
+}
+
+export async function updateAdminProfessionalApproval(adminToken: string, professionalId: string, approvalStatus: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await ensureAdminBackofficeFields(token);
+	const normalized = normalizeAdminValidationStatus(approvalStatus);
+	await updateRecord(
+		'nutrition_professionnels',
+		professionalId,
+		{
+			approval_status: normalized,
+			is_active: normalized === 'approved',
+		},
+		token,
+	);
+	return getAdminBackoffice(token);
+}
+
+export async function updateAdminFoodValidation(adminToken: string, foodId: string, validationStatus: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await ensureAdminBackofficeFields(token);
+	await updateRecord('aliments', foodId, { validation_status: normalizeAdminValidationStatus(validationStatus) }, token);
+	return getAdminBackoffice(token);
+}
+
+export async function updateAdminPostModeration(adminToken: string, postId: string, moderationStatus: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await ensureAdminBackofficeFields(token);
+	await updateRecord('communaute_posts', postId, { moderation_status: normalizeAdminModerationStatus(moderationStatus) }, token);
+	return getAdminBackoffice(token);
+}
+
+export async function updateAdminCommentModeration(adminToken: string, commentId: string, moderationStatus: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await ensureAdminBackofficeFields(token);
+	await updateRecord('communaute_commentaires', commentId, { moderation_status: normalizeAdminModerationStatus(moderationStatus) }, token);
+	return getAdminBackoffice(token);
+}
+
+export async function deleteAdminFood(adminToken: string, foodId: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await deleteRecord('aliments', foodId, token);
+	return getAdminBackoffice(token);
+}
+
+export async function deleteAdminPost(adminToken: string, postId: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await deleteRecord('communaute_posts', postId, token);
+	return getAdminBackoffice(token);
+}
+
+export async function deleteAdminComment(adminToken: string, commentId: string) {
+	const refreshedAuth = await refreshPocketBaseSuperuserAuth(adminToken);
+	const token = refreshedAuth.token;
+	await deleteRecord('communaute_commentaires', commentId, token);
+	return getAdminBackoffice(token);
 }
