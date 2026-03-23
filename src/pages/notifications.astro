@@ -1,0 +1,242 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Notifications">
+	<section class="bg-[radial-gradient(circle_at_top_left,_rgba(205,248,224,0.75),_transparent_42%),linear-gradient(180deg,#fbffff_0%,#f5fbff_100%)]">
+		<div class="mx-auto max-w-[1080px] px-4 py-8 md:px-6 md:py-10">
+			<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+				<div>
+					<span class="inline-flex rounded-full bg-[#d8f7e1] px-3 py-1 text-sm font-semibold text-[#0a9a68]">Centre de notifications</span>
+					<h1 class="mt-4 text-3xl font-semibold tracking-[-0.03em] text-slate-900 md:text-[2.4rem]">Notifications</h1>
+					<p class="mt-3 max-w-[720px] text-base leading-7 text-slate-600">
+						Retrouvez vos confirmations, interactions communautaires et rappels utiles liés à Nutrivia.
+					</p>
+				</div>
+				<button
+					id="notifications-mark-all"
+					type="button"
+					class="inline-flex items-center justify-center rounded-[18px] border border-[#cad8e7] bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#08b37d] hover:text-[#08b37d]"
+				>
+					Tout marquer comme lu
+				</button>
+			</div>
+
+			<div id="notifications-auth-needed" class="mt-8 hidden rounded-[28px] border border-[#d8e5f1] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-8">
+				<h2 class="text-2xl font-semibold text-slate-900">Connexion requise</h2>
+				<p class="mt-3 text-sm leading-6 text-slate-600">Connectez-vous pour accéder à votre centre de notifications.</p>
+				<a href="/auth/login?redirect=/notifications" class="mt-5 inline-flex rounded-[18px] bg-[#08b37d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#079765]">
+					Se connecter
+				</a>
+			</div>
+
+			<div id="notifications-error" class="mt-8 hidden rounded-2xl border border-[#ffd8d8] bg-[#fff6f6] px-4 py-3 text-sm font-medium text-[#c24141]"></div>
+			<div id="notifications-loading" class="mt-8 text-sm font-medium text-slate-500">Chargement de vos notifications...</div>
+
+			<div id="notifications-shell" class="mt-8 hidden rounded-[28px] border border-[#d8e5f1] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-7">
+				<div class="flex items-center justify-between gap-4 border-b border-[#e5edf5] pb-4">
+					<p class="text-lg font-semibold text-slate-900">Flux récent</p>
+					<span id="notifications-unread-count" class="rounded-full bg-[#d8f7e1] px-3 py-1 text-sm font-semibold text-[#0a9a68]">0 non lues</span>
+				</div>
+				<div id="notifications-list" class="mt-5 space-y-4"></div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const authNeeded = document.querySelector('#notifications-auth-needed');
+	const loading = document.querySelector('#notifications-loading');
+	const shell = document.querySelector('#notifications-shell');
+	const errorBox = document.querySelector('#notifications-error');
+	const list = document.querySelector('#notifications-list');
+	const unreadCount = document.querySelector('#notifications-unread-count');
+	const markAllButton = document.querySelector('#notifications-mark-all');
+
+	function readStoredAuth() {
+		try {
+			return JSON.parse(localStorage.getItem(authKey) || 'null');
+		} catch {
+			return null;
+		}
+	}
+
+	function saveAuth(payload) {
+		if (!payload?.token) return;
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function clearAuth() {
+		localStorage.removeItem(authKey);
+	}
+
+	function escapeHtml(value) {
+		return String(value ?? '')
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#039;');
+	}
+
+	function formatRelativeDate(value) {
+		const date = new Date(value);
+		if (Number.isNaN(date.getTime())) return '';
+		const diffMs = Date.now() - date.getTime();
+		const minutes = Math.max(1, Math.round(diffMs / 60000));
+		if (minutes < 60) return `Il y a ${minutes} min`;
+		const hours = Math.round(minutes / 60);
+		if (hours < 24) return `Il y a ${hours} h`;
+		const days = Math.round(hours / 24);
+		if (days < 7) return `Il y a ${days} j`;
+		return date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' });
+	}
+
+	function showError(message = '') {
+		if (!errorBox) return;
+		errorBox.textContent = message;
+		errorBox.classList.toggle('hidden', !message);
+	}
+
+	function renderNotifications(items) {
+		if (!list) return;
+		if (!items.length) {
+			list.innerHTML = `<div class="rounded-[24px] border border-dashed border-[#cad8e7] bg-slate-50 p-6 text-sm text-slate-500">Aucune notification pour le moment.</div>`;
+			return;
+		}
+
+		list.innerHTML = items
+			.map(
+				(item) => `
+					<article class="rounded-[24px] border ${item.isRead ? 'border-[#e1eaf2] bg-white' : 'border-[#c4eadc] bg-[#f5fcf8]'} p-5">
+						<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+							<div class="min-w-0">
+								<div class="flex items-center gap-3">
+									<span class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl ${item.isRead ? 'bg-slate-100 text-slate-500' : 'bg-[#d8f7e1] text-[#0a9a68]'}">
+										<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none"><path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0m6 0H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+									</span>
+									<div class="min-w-0">
+										<p class="text-[1rem] font-semibold text-slate-900">${escapeHtml(item.title)}</p>
+										<p class="mt-1 text-sm leading-6 text-slate-600">${escapeHtml(item.message)}</p>
+									</div>
+								</div>
+								<div class="mt-3 flex flex-wrap items-center gap-3 pl-[52px] text-xs font-medium text-slate-400">
+									<span>${escapeHtml(formatRelativeDate(item.createdAt))}</span>
+									${item.isRead ? '<span>Déjà lue</span>' : '<span class="text-[#0a9a68]">Non lue</span>'}
+								</div>
+							</div>
+							<div class="flex shrink-0 items-center gap-3 md:pt-1">
+								${item.link ? `<a href="${escapeHtml(item.link)}" class="inline-flex items-center justify-center rounded-[14px] border border-[#cad8e7] px-4 py-2 text-sm font-semibold text-slate-700 transition hover:border-[#08b37d] hover:text-[#08b37d]">Ouvrir</a>` : ''}
+								${item.isRead ? '' : `<button type="button" data-id="${escapeHtml(item.id)}" class="inline-flex items-center justify-center rounded-[14px] bg-[#08b37d] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[#079765]">Marquer comme lue</button>`}
+							</div>
+						</div>
+					</article>
+				`,
+			)
+			.join('');
+
+		Array.from(list.querySelectorAll('button[data-id]')).forEach((button) => {
+			button.addEventListener('click', () => markNotificationRead(button.getAttribute('data-id') || ''));
+		});
+	}
+
+	function updateSummary(payload) {
+		if (unreadCount) {
+			unreadCount.textContent = `${Number(payload.unreadCount || 0)} non lues`;
+		}
+		renderNotifications(payload.notifications || []);
+	}
+
+	async function fetchNotifications() {
+		const auth = readStoredAuth();
+		if (!auth?.token) {
+			loading.classList.add('hidden');
+			authNeeded.classList.remove('hidden');
+			markAllButton?.classList.add('hidden');
+			return null;
+		}
+
+		const response = await fetch('/app-api/notifications', {
+			headers: {
+				Authorization: `Bearer ${auth.token}`,
+			},
+		});
+		const payload = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				clearAuth();
+				authNeeded.classList.remove('hidden');
+				markAllButton?.classList.add('hidden');
+				return null;
+			}
+			throw new Error(payload.message || 'Impossible de charger vos notifications.');
+		}
+
+		if (payload.token) {
+			saveAuth({ ...auth, token: payload.token });
+		}
+
+		return payload;
+	}
+
+	async function loadNotifications() {
+		showError('');
+		try {
+			const payload = await fetchNotifications();
+			if (!payload) return;
+			updateSummary(payload);
+			shell.classList.remove('hidden');
+		} catch (error) {
+			showError(error instanceof Error ? error.message : 'Impossible de charger vos notifications.');
+		} finally {
+			loading.classList.add('hidden');
+		}
+	}
+
+	async function patchNotifications(body) {
+		const auth = readStoredAuth();
+		if (!auth?.token) return;
+
+		const response = await fetch('/app-api/notifications', {
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json',
+				Authorization: `Bearer ${auth.token}`,
+			},
+			body: JSON.stringify(body),
+		});
+		const payload = await response.json();
+		if (!response.ok) {
+			if (response.status === 401) {
+				clearAuth();
+				window.location.href = '/auth/login?redirect=/notifications';
+				return;
+			}
+			throw new Error(payload.message || 'Impossible de mettre à jour les notifications.');
+		}
+		if (payload.token) {
+			saveAuth({ ...auth, token: payload.token });
+		}
+		updateSummary(payload);
+	}
+
+	async function markNotificationRead(notificationId) {
+		if (!notificationId) return;
+		try {
+			await patchNotifications({ action: 'mark-one', notificationId });
+		} catch (error) {
+			showError(error instanceof Error ? error.message : 'Impossible de mettre à jour la notification.');
+		}
+	}
+
+	markAllButton?.addEventListener('click', async () => {
+		try {
+			await patchNotifications({ action: 'mark-all' });
+		} catch (error) {
+			showError(error instanceof Error ? error.message : 'Impossible de mettre à jour les notifications.');
+		}
+	});
+
+	loadNotifications();
+</script>

@@ -423,6 +423,197 @@ export async function getUserRecordById(userId: string, token: string) {
 	);
 }
 
+async function ensureNotificationsCollection(token: string) {
+	const usersCollection = await getCollectionMeta('users', token);
+
+	await ensureBaseCollection(
+		'notifications',
+		[
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'type',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 120,
+			},
+			{
+				name: 'titre',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 180,
+			},
+			{
+				name: 'message',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 1000,
+			},
+			{
+				name: 'lien',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 280,
+			},
+			{
+				name: 'is_read',
+				type: 'bool',
+				required: false,
+			},
+			{
+				name: 'metadata_json',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 4000,
+			},
+		],
+		token,
+	);
+}
+
+function formatNotificationMetadata(value: Record<string, unknown> | undefined) {
+	if (!value) return '';
+	try {
+		return JSON.stringify(value);
+	} catch {
+		return '';
+	}
+}
+
+function parseNotificationMetadata(value: unknown) {
+	if (!value) return {};
+	try {
+		return JSON.parse(String(value)) as Record<string, any>;
+	} catch {
+		return {};
+	}
+}
+
+async function createUserNotification(
+	userId: string,
+	data: {
+		type: string;
+		titre: string;
+		message: string;
+		lien?: string;
+		metadata?: Record<string, unknown>;
+	},
+	token: string,
+) {
+	if (!userId) return null;
+	await ensureNotificationsCollection(token);
+
+	return createRecord(
+		'notifications',
+		{
+			user_id: userId,
+			type: data.type,
+			titre: data.titre,
+			message: data.message,
+			lien: String(data.lien ?? '').trim(),
+			is_read: false,
+			metadata_json: formatNotificationMetadata(data.metadata),
+		},
+		token,
+	);
+}
+
+function mapNotificationRecord(item: Record<string, any>) {
+	return {
+		id: String(item.id),
+		type: String(item.type ?? ''),
+		title: String(item.titre ?? ''),
+		message: String(item.message ?? ''),
+		link: String(item.lien ?? ''),
+		isRead: Boolean(item.is_read ?? false),
+		createdAt: String(item.created ?? item.date_creation ?? ''),
+		metadata: parseNotificationMetadata(item.metadata_json),
+	};
+}
+
+export async function getUserNotifications(userToken: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureNotificationsCollection(adminToken);
+
+	const userId = String(refreshedAuth.record.id);
+	const items = await listRecordsWithQuery<Record<string, any>>(
+		'notifications',
+		`perPage=200&filter=${encodeURIComponent(`user_id="${userId}"`)}`,
+		adminToken,
+	);
+
+	const mapped = sortByNewest(items).map(mapNotificationRecord);
+	return {
+		token: refreshedAuth.token,
+		notifications: mapped,
+		unreadCount: mapped.filter((item) => !item.isRead).length,
+		recent: mapped.slice(0, 6),
+	};
+}
+
+export async function markNotificationRead(userToken: string, notificationId: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureNotificationsCollection(adminToken);
+
+	const userId = String(refreshedAuth.record.id);
+	const notification = await getRecordById('notifications', String(notificationId), adminToken);
+	if (!notification?.id || String(notification.user_id ?? '') !== userId) {
+		throw new Error('Notification introuvable.');
+	}
+
+	await updateRecord(
+		'notifications',
+		String(notification.id),
+		{
+			is_read: true,
+		},
+		adminToken,
+	);
+
+	return getUserNotifications(refreshedAuth.token);
+}
+
+export async function markAllNotificationsRead(userToken: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureNotificationsCollection(adminToken);
+
+	const userId = String(refreshedAuth.record.id);
+	const items = await listRecordsWithQuery<Record<string, any>>(
+		'notifications',
+		`perPage=200&filter=${encodeURIComponent(`user_id="${userId}" && is_read=false`)}`,
+		adminToken,
+	);
+
+	for (const item of items) {
+		if (!item?.id) continue;
+		await updateRecord(
+			'notifications',
+			String(item.id),
+			{
+				is_read: true,
+			},
+			adminToken,
+		);
+	}
+
+	return getUserNotifications(refreshedAuth.token);
+}
+
 export async function getFileUrl(
 	collection: string,
 	recordId: string,
@@ -1099,6 +1290,20 @@ export async function createFoodFromScan(
 		}
 	}
 
+	await createUserNotification(
+		String(refreshedAuth.record.id),
+		{
+			type: 'food_scan_saved',
+			titre: 'Produit ajouté à la base',
+			message: `Le produit "${String((created.nom ?? cleanName) || 'Produit')}" a bien été ajouté à votre base aliments.`,
+			lien: '/aliments',
+			metadata: {
+				foodId: String(created.id),
+			},
+		},
+		adminToken,
+	);
+
 	return {
 		token: refreshedAuth.token,
 		food: {
@@ -1321,6 +1526,22 @@ export async function createRecipeFromAssistant(
 	}
 
 	const detail = await getRecipeDetailBySlug(refreshedAuth.token, slug);
+
+	await createUserNotification(
+		String(user.id),
+		{
+			type: 'assistant_recipe_saved',
+			titre: 'Recette IA ajoutée',
+			message: `Votre recette "${detail.recipe.titre}" a été ajoutée au catalogue Nutrivia.`,
+			lien: `/recette/${detail.recipe.slug}`,
+			metadata: {
+				recipeId: detail.recipe.id,
+				recipeSlug: detail.recipe.slug,
+			},
+		},
+		adminToken,
+	);
+
 	return {
 		token: refreshedAuth.token,
 		recipe: {
@@ -3398,6 +3619,23 @@ export async function toggleCommunityPostLike(
 			},
 			adminToken,
 		);
+
+		const post = await getRecordById('communaute_posts', String(data.postId), adminToken);
+		const likedUser = await getUserRecordById(currentUserId, adminToken);
+		const postAuthorId = String(post?.user_id ?? '');
+		if (postAuthorId && postAuthorId !== currentUserId) {
+			await createUserNotification(
+				postAuthorId,
+				{
+					type: 'community_post_like',
+					titre: 'Nouveau like sur votre publication',
+					message: `${getCommunityDisplayName(likedUser)} a aimé votre publication.`,
+					lien: '/communaute',
+					metadata: { postId: String(data.postId) },
+				},
+				adminToken,
+			);
+		}
 	}
 
 	return getCommunityFeed(refreshedAuth.token, data.sortMode ?? 'recent');
@@ -3425,6 +3663,22 @@ export async function addCommunityComment(
 		},
 		adminToken,
 	);
+
+	const post = await getRecordById('communaute_posts', String(data.postId), adminToken);
+	const postAuthorId = String(post?.user_id ?? '');
+	if (postAuthorId && postAuthorId !== String(refreshedAuth.record.id)) {
+		await createUserNotification(
+			postAuthorId,
+			{
+				type: 'community_comment',
+				titre: 'Nouveau commentaire',
+				message: `${getCommunityDisplayName(refreshedAuth.record)} a commenté votre publication.`,
+				lien: '/communaute',
+				metadata: { postId: String(data.postId) },
+			},
+			adminToken,
+		);
+	}
 
 	return getCommunityFeed(refreshedAuth.token, data.sortMode ?? 'recent');
 }
@@ -3455,6 +3709,23 @@ export async function toggleCommunityCommentLike(
 			},
 			adminToken,
 		);
+
+		const comment = await getRecordById('communaute_commentaires', String(data.commentId), adminToken);
+		const likedUser = await getUserRecordById(currentUserId, adminToken);
+		const commentAuthorId = String(comment?.user_id ?? '');
+		if (commentAuthorId && commentAuthorId !== currentUserId) {
+			await createUserNotification(
+				commentAuthorId,
+				{
+					type: 'community_comment_like',
+					titre: 'Like sur votre commentaire',
+					message: `${getCommunityDisplayName(likedUser)} a aimé votre commentaire.`,
+					lien: '/communaute',
+					metadata: { commentId: String(data.commentId), postId: String(comment?.post_id ?? '') },
+				},
+				adminToken,
+			);
+		}
 	}
 
 	return getCommunityFeed(refreshedAuth.token, data.sortMode ?? 'recent');
@@ -4250,6 +4521,39 @@ export async function bookProfessionalAppointment(
 		},
 		adminToken,
 	)) as Record<string, any>;
+
+	await createUserNotification(
+		String(user.id),
+		{
+			type: 'appointment_confirmed',
+			titre: 'Rendez-vous confirmé',
+			message: `Votre rendez-vous avec ${String(professional.nom_affiche ?? 'le professionnel')} est confirmé pour le ${formatAppointmentDateLabel(String(created.debut_at))}.`,
+			lien: '/mes-rendez-vous',
+			metadata: {
+				appointmentId: String(created.id),
+				professionalId: String(professional.id),
+			},
+		},
+		adminToken,
+	);
+
+	const professionalUserId = String(professional.user_id ?? '');
+	if (professionalUserId && professionalUserId !== String(user.id)) {
+		await createUserNotification(
+			professionalUserId,
+			{
+				type: 'professional_new_appointment',
+				titre: 'Nouveau rendez-vous réservé',
+				message: `${String(`${user.prenom ?? ''} ${user.nom ?? ''}`.trim() || user.name || user.email || 'Un utilisateur')} a réservé un créneau le ${formatAppointmentDateLabel(String(created.debut_at))}.`,
+				lien: '/espace-pro',
+				metadata: {
+					appointmentId: String(created.id),
+					userId: String(user.id),
+				},
+			},
+			adminToken,
+		);
+	}
 
 	return {
 		token: refreshedAuth.token,

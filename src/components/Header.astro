@@ -60,6 +60,31 @@ const navItems = [
 				<span>Assistant IA</span>
 			</a>
 
+			<div class="relative">
+				<button
+					id="header-notifications-trigger"
+					type="button"
+					aria-label="Notifications"
+					class="inline-flex h-[42px] w-[42px] items-center justify-center rounded-[15px] bg-slate-50 text-slate-500 transition hover:bg-slate-100 hover:text-slate-700 lg:h-12 lg:w-12 lg:rounded-2xl"
+				>
+					<svg viewBox="0 0 24 24" class="h-5 w-5" fill="none">
+						<path d="M15 17h5l-1.4-1.4A2 2 0 0 1 18 14.2V11a6 6 0 1 0-12 0v3.2c0 .5-.2 1-.6 1.4L4 17h5m6 0a3 3 0 1 1-6 0m6 0H9" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+					</svg>
+					<span id="header-notifications-badge" class="absolute -top-1 -right-1 hidden min-w-[20px] rounded-full bg-[#ff6b6b] px-1.5 py-0.5 text-center text-[0.7rem] font-semibold leading-none text-white">0</span>
+				</button>
+
+				<div id="header-notifications-panel" class="pointer-events-none invisible absolute top-[calc(100%+12px)] right-0 z-30 hidden w-[340px] translate-y-2 rounded-[22px] border border-[#d8e2ee] bg-white p-4 opacity-0 shadow-[0_20px_60px_rgba(15,23,42,0.16)] transition lg:block">
+					<div class="flex items-center justify-between gap-3 border-b border-[#e7eef6] pb-3">
+						<div>
+							<p class="text-[1rem] font-semibold text-slate-900">Notifications</p>
+							<p id="header-notifications-summary" class="mt-1 text-xs text-slate-500">Chargement...</p>
+						</div>
+						<a href="/notifications" class="text-sm font-semibold text-[#08b37d]">Voir tout</a>
+					</div>
+					<div id="header-notifications-list" class="mt-3 space-y-2"></div>
+				</div>
+			</div>
+
 			<a
 				href="/profile"
 				aria-label="Mon compte"
@@ -111,7 +136,143 @@ const navItems = [
 						<span>Assistant IA</span>
 					</a>
 				</li>
+				<li>
+					<a href="/notifications" class="flex items-center gap-[14px] rounded-[14px] px-[14px] py-3 text-base font-medium text-slate-700">
+						<HeaderNavIcon name="assistant" />
+						<span>Notifications</span>
+					</a>
+				</li>
 			</ul>
 		</nav>
 	</div>
 </header>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const notificationsTrigger = document.querySelector('#header-notifications-trigger');
+	const notificationsBadge = document.querySelector('#header-notifications-badge');
+	const notificationsPanel = document.querySelector('#header-notifications-panel');
+	const notificationsList = document.querySelector('#header-notifications-list');
+	const notificationsSummary = document.querySelector('#header-notifications-summary');
+	let notificationsOpen = false;
+
+	function readStoredAuth() {
+		try {
+			return JSON.parse(localStorage.getItem(authKey) || 'null');
+		} catch {
+			return null;
+		}
+	}
+
+	function saveAuth(payload) {
+		if (!payload?.token) return;
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function clearAuth() {
+		localStorage.removeItem(authKey);
+	}
+
+	function escapeHtml(value) {
+		return String(value ?? '')
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#039;');
+	}
+
+	function formatRelativeDate(value) {
+		const date = new Date(value);
+		if (Number.isNaN(date.getTime())) return '';
+		const diffMs = Date.now() - date.getTime();
+		const minutes = Math.max(1, Math.round(diffMs / 60000));
+		if (minutes < 60) return `Il y a ${minutes} min`;
+		const hours = Math.round(minutes / 60);
+		if (hours < 24) return `Il y a ${hours} h`;
+		const days = Math.round(hours / 24);
+		if (days < 7) return `Il y a ${days} j`;
+		return date.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' });
+	}
+
+	function setPanelState(open) {
+		if (!notificationsPanel) return;
+		notificationsOpen = open;
+		notificationsPanel.classList.toggle('pointer-events-none', !open);
+		notificationsPanel.classList.toggle('invisible', !open);
+		notificationsPanel.classList.toggle('opacity-0', !open);
+		notificationsPanel.classList.toggle('translate-y-2', !open);
+	}
+
+	function renderHeaderNotifications(payload) {
+		if (!notificationsBadge || !notificationsSummary || !notificationsList) return;
+		const unread = Number(payload?.unreadCount || 0);
+		notificationsSummary.textContent = unread > 0 ? `${unread} non lue${unread > 1 ? 's' : ''}` : 'Tout est à jour';
+		notificationsBadge.textContent = unread > 99 ? '99+' : String(unread);
+		notificationsBadge.classList.toggle('hidden', unread <= 0);
+
+		const items = Array.isArray(payload?.recent) ? payload.recent : [];
+		if (!items.length) {
+			notificationsList.innerHTML = `<div class="rounded-[18px] border border-dashed border-[#d8e2ee] px-4 py-5 text-sm text-slate-500">Aucune notification récente.</div>`;
+			return;
+		}
+
+		notificationsList.innerHTML = items
+			.map(
+				(item) => `
+					<a href="${escapeHtml(item.link || '/notifications')}" class="block rounded-[18px] border ${item.isRead ? 'border-[#e7eef6] bg-white' : 'border-[#c4eadc] bg-[#f5fcf8]'} px-4 py-3 transition hover:border-[#08b37d]">
+						<p class="text-sm font-semibold text-slate-900">${escapeHtml(item.title)}</p>
+						<p class="mt-1 text-xs leading-5 text-slate-500">${escapeHtml(item.message)}</p>
+						<p class="mt-2 text-[0.72rem] font-medium text-slate-400">${escapeHtml(formatRelativeDate(item.createdAt))}</p>
+					</a>
+				`,
+			)
+			.join('');
+	}
+
+	async function loadHeaderNotifications() {
+		const auth = readStoredAuth();
+		if (!auth?.token) {
+			renderHeaderNotifications({ unreadCount: 0, recent: [] });
+			return;
+		}
+
+		try {
+			const response = await fetch('/app-api/notifications', {
+				headers: {
+					Authorization: `Bearer ${auth.token}`,
+				},
+			});
+			const payload = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearAuth();
+					renderHeaderNotifications({ unreadCount: 0, recent: [] });
+					return;
+				}
+				throw new Error(payload.message || 'Impossible de charger les notifications.');
+			}
+
+			if (payload.token) {
+				saveAuth({ ...auth, token: payload.token });
+			}
+			renderHeaderNotifications(payload);
+		} catch {
+			renderHeaderNotifications({ unreadCount: 0, recent: [] });
+		}
+	}
+
+	notificationsTrigger?.addEventListener('click', () => {
+		setPanelState(!notificationsOpen);
+	});
+
+	document.addEventListener('click', (event) => {
+		if (!notificationsOpen) return;
+		const target = event.target;
+		if (!(target instanceof Node)) return;
+		if (notificationsPanel?.contains(target) || notificationsTrigger?.contains(target)) return;
+		setPanelState(false);
+	});
+
+	loadHeaderNotifications();
+</script>

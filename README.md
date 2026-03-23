@@ -7,7 +7,8 @@ Groupe B | Dev
 
 **Site en ligne**  
 https://nutrivia.noahrognon.fr
-
+mail de demo (si on ne veut pas voir le processus de créationd de compte): noah.rognon@gmail.com
+MDP : Demonutrivia2026
 ## Présentation du projet
 
 Nutrivia est une plateforme web dédiée à la nutrition, à l’organisation des repas et à l’accompagnement alimentaire personnalisé.
@@ -110,7 +111,30 @@ Il permet de voir rapidement :
 Lien :  
 https://nutrivia.noahrognon.fr/dashboard
 
-### 5. Catalogue de recettes
+### 5. Centre de notifications
+
+Nutrivia intègre un centre de notifications interne directement relié aux actions importantes du site.
+
+L’utilisateur peut :
+- voir un compteur de notifications non lues dans le header ;
+- ouvrir un aperçu rapide des dernières notifications ;
+- accéder à une page dédiée avec l’historique récent ;
+- marquer une notification comme lue ;
+- tout marquer comme lu.
+
+Les notifications V1 couvrent notamment :
+- la confirmation d’un rendez-vous ;
+- un nouveau rendez-vous côté professionnel ;
+- un nouveau commentaire sur une publication ;
+- un like sur une publication ;
+- un like sur un commentaire ;
+- l’ajout d’un produit scanné à la base ;
+- l’ajout d’une recette créée avec l’IA.
+
+Lien :  
+https://nutrivia.noahrognon.fr/notifications
+
+### 6. Catalogue de recettes
 
 L’utilisateur dispose d’une base de recettes filtrable.
 
@@ -125,7 +149,7 @@ Fonctionnalités :
 Lien :  
 https://nutrivia.noahrognon.fr/recettes
 
-### 6. Détail d’une recette
+### 7. Détail d’une recette
 
 Chaque recette possède une fiche complète.
 
@@ -143,11 +167,11 @@ L’utilisateur peut :
 Exemple de lien :  
 https://nutrivia.noahrognon.fr/recette/riz-saute-crevettes
 
-### 7. Favoris
+### 8. Favoris
 
 L’utilisateur peut enregistrer ses recettes favorites depuis la fiche recette et les retrouver dans son profil.
 
-### 8. Base d’aliments
+### 9. Base d’aliments
 
 Le site propose une base de données d’aliments avec leurs valeurs nutritionnelles.
 
@@ -161,7 +185,7 @@ L’utilisateur peut :
 Lien :  
 https://nutrivia.noahrognon.fr/aliments
 
-### 9. Scanner intelligent
+### 10. Scanner intelligent
 
 Le site dispose d’une page de scan dédiée avec deux usages :
 
@@ -180,7 +204,7 @@ Le site dispose d’une page de scan dédiée avec deux usages :
 Lien :  
 https://nutrivia.noahrognon.fr/scanner
 
-### 10. Régimes alimentaires
+### 11. Régimes alimentaires
 
 Une page dédiée présente les différents régimes présents sur la plateforme.
 
@@ -194,7 +218,7 @@ Chaque régime affiche :
 Lien :  
 https://nutrivia.noahrognon.fr/regimes
 
-### 11. Suivi alimentaire
+### 12. Suivi alimentaire
 
 Cette page permet à l’utilisateur de suivre précisément ce qu’il mange.
 
@@ -211,7 +235,7 @@ Fonctionnalités :
 Lien :  
 https://nutrivia.noahrognon.fr/suivi
 
-### 12. Planificateur de repas
+### 13. Planificateur de repas
 
 Le planificateur permet d’organiser toute une semaine.
 
@@ -226,7 +250,7 @@ L’utilisateur peut :
 Lien :  
 https://nutrivia.noahrognon.fr/planificateur
 
-### 13. Liste de courses
+### 14. Liste de courses
 
 La liste de courses est générée automatiquement à partir du planning hebdomadaire.
 
@@ -243,7 +267,7 @@ Fonctionnalités :
 Lien :  
 https://nutrivia.noahrognon.fr/liste-courses
 
-### 14. Communauté
+### 15. Communauté
 
 Nutrivia intègre une vraie page communautaire.
 
@@ -261,7 +285,7 @@ Les utilisateurs peuvent :
 Lien :  
 https://nutrivia.noahrognon.fr/communaute
 
-### 15. Assistant IA
+### 16. Assistant IA
 
 L’assistant IA est un module central du projet.
 
@@ -288,7 +312,7 @@ L’assistant est contextualisé selon :
 Lien :  
 https://nutrivia.noahrognon.fr/assistant
 
-### 16. Professionnels de la nutrition
+### 17. Professionnels de la nutrition
 
 Le site permet la mise en relation avec des professionnels.
 
@@ -305,7 +329,7 @@ Liens :
 - https://nutrivia.noahrognon.fr/professionnels
 - https://nutrivia.noahrognon.fr/mes-rendez-vous
 
-### 17. Espace professionnel
+### 18. Espace professionnel
 
 Un professionnel dispose d’un espace dédié.
 
@@ -318,7 +342,7 @@ Il peut :
 Lien :  
 https://nutrivia.noahrognon.fr/espace-pro
 
-### 18. Back-office administrateur
+### 19. Back-office administrateur
 
 Le site intègre un back-office admin complet.
 
@@ -349,6 +373,7 @@ Un utilisateur peut :
 - construire son profil nutritionnel ;
 - recevoir des objectifs personnalisés ;
 - consulter son tableau de bord ;
+- consulter ses notifications ;
 - suivre son alimentation ;
 - planifier ses repas ;
 - générer une liste de courses ;
@@ -367,6 +392,7 @@ Un professionnel peut :
 - avoir un espace dédié ;
 - définir ses disponibilités ;
 - consulter ses rendez-vous à venir ;
+- recevoir des notifications liées aux réservations ;
 - gérer son profil professionnel.
 
 ## Ce que peut faire un administrateur
@@ -387,6 +413,7 @@ Nutrivia ne se limite pas à un simple catalogue de recettes.
 Le projet propose un écosystème complet qui relie :
 - le profil utilisateur ;
 - les besoins nutritionnels ;
+- les notifications ;
 - les recettes ;
 - les aliments ;
 - le planning ;
