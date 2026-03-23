@@ -54,7 +54,7 @@ Le site repose sur un profil nutritionnel personnalisé. Lors de l’inscription
 - les apports cibles en lipides.
 
 Toutes les fonctionnalités du site s’appuient ensuite sur ce profil.
-
+Le site pourrai gagner de l'argent avec les liens sponsorisés et du coup la prise de rendez vous grace à l'application web le site prend une part.
 ## Fonctionnalités principales
 
 ### 1. Accueil
