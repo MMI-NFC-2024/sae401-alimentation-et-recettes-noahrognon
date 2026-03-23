@@ -3689,3 +3689,784 @@ export async function saveAssistantConversationTurn(
 		messages: messages.map(mapAssistantMessage),
 	};
 }
+
+const nutritionProfessionalSeeds = [
+	{
+		slug: 'claire-martin-dieteticienne',
+		nom_affiche: 'Claire Martin',
+		specialite: 'dieteticien',
+		description:
+			'Diététicienne spécialisée en rééquilibrage alimentaire, perte de poids durable et organisation des repas du quotidien.',
+		experience_annees: 9,
+		ville: 'Paris',
+		tarif_consultation: 55,
+		modes_consultation: 'cabinet,visio',
+	},
+	{
+		slug: 'yanis-belkacem-nutrition-sportive',
+		nom_affiche: 'Yanis Belkacem',
+		specialite: 'nutritionniste_sportif',
+		description:
+			'Expert en nutrition sportive pour la prise de masse, la performance et la récupération chez les sportifs réguliers.',
+		experience_annees: 6,
+		ville: 'Lyon',
+		tarif_consultation: 65,
+		modes_consultation: 'visio',
+	},
+	{
+		slug: 'sarah-lefevre-coach-alimentaire',
+		nom_affiche: 'Sarah Lefèvre',
+		specialite: 'coach_alimentaire',
+		description:
+			'Coach alimentaire orientée habitudes durables, gestion des fringales et planification simple des repas en famille.',
+		experience_annees: 7,
+		ville: 'Bordeaux',
+		tarif_consultation: 49,
+		modes_consultation: 'cabinet,visio',
+	},
+] as const;
+
+function getProfessionalSpecialityLabel(value?: string) {
+	const labels: Record<string, string> = {
+		dieteticien: 'Diététicien',
+		nutritionniste: 'Nutritionniste',
+		nutritionniste_sportif: 'Nutrition sportive',
+		coach_alimentaire: 'Coach alimentaire',
+	};
+	return labels[String(value ?? '')] ?? 'Professionnel nutrition';
+}
+
+function formatAppointmentDateLabel(value: string) {
+	return new Intl.DateTimeFormat('fr-FR', {
+		weekday: 'long',
+		day: 'numeric',
+		month: 'long',
+		year: 'numeric',
+	}).format(new Date(value));
+}
+
+function formatAppointmentTimeLabel(value: string) {
+	return new Intl.DateTimeFormat('fr-FR', {
+		hour: '2-digit',
+		minute: '2-digit',
+	}).format(new Date(value));
+}
+
+function toIsoDateTime(date: string, time: string) {
+	return new Date(`${date}T${time}:00`).toISOString();
+}
+
+function hasTimeOverlap(
+	startA: string,
+	endA: string,
+	startB: string,
+	endB: string,
+) {
+	const aStart = new Date(startA).getTime();
+	const aEnd = new Date(endA).getTime();
+	const bStart = new Date(startB).getTime();
+	const bEnd = new Date(endB).getTime();
+	return aStart < bEnd && bStart < aEnd;
+}
+
+async function ensureProfessionalCollections(token: string) {
+	const usersCollection = await getCollectionMeta('users', token);
+
+	await ensureCollectionFields(
+		'users',
+		[
+			{
+				name: 'role',
+				type: 'select',
+				required: false,
+				maxSelect: 1,
+				values: ['user', 'professionnel'],
+			},
+		],
+		token,
+	);
+
+	await ensureBaseCollection(
+		'nutrition_professionnels',
+		[
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: false,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 0,
+				maxSelect: 1,
+			},
+			{
+				name: 'slug',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 160,
+			},
+			{
+				name: 'nom_affiche',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 140,
+			},
+			{
+				name: 'specialite',
+				type: 'select',
+				required: true,
+				maxSelect: 1,
+				values: ['dieteticien', 'nutritionniste', 'nutritionniste_sportif', 'coach_alimentaire'],
+			},
+			{
+				name: 'description',
+				type: 'text',
+				required: true,
+				min: 1,
+				max: 4000,
+			},
+			{
+				name: 'experience_annees',
+				type: 'number',
+				required: false,
+				min: 0,
+				max: 60,
+				noDecimal: true,
+			},
+			{
+				name: 'ville',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 160,
+			},
+			{
+				name: 'tarif_consultation',
+				type: 'number',
+				required: false,
+				min: 0,
+				max: 999,
+				noDecimal: false,
+			},
+			{
+				name: 'modes_consultation',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 200,
+			},
+			{
+				name: 'is_active',
+				type: 'bool',
+				required: false,
+			},
+		],
+		token,
+	);
+
+	const professionalsCollection = await getCollectionMeta('nutrition_professionnels', token);
+
+	await ensureBaseCollection(
+		'nutrition_disponibilites',
+		[
+			{
+				name: 'professionnel_id',
+				type: 'relation',
+				required: true,
+				collectionId: professionalsCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'debut_at',
+				type: 'date',
+				required: true,
+			},
+			{
+				name: 'fin_at',
+				type: 'date',
+				required: true,
+			},
+			{
+				name: 'notes',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 400,
+			},
+		],
+		token,
+	);
+
+	const availabilitiesCollection = await getCollectionMeta('nutrition_disponibilites', token);
+
+	await ensureBaseCollection(
+		'nutrition_rendezvous',
+		[
+			{
+				name: 'professionnel_id',
+				type: 'relation',
+				required: true,
+				collectionId: professionalsCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'user_id',
+				type: 'relation',
+				required: true,
+				collectionId: usersCollection.id,
+				cascadeDelete: true,
+				minSelect: 1,
+				maxSelect: 1,
+			},
+			{
+				name: 'disponibilite_id',
+				type: 'relation',
+				required: false,
+				collectionId: availabilitiesCollection.id,
+				cascadeDelete: false,
+				minSelect: 0,
+				maxSelect: 1,
+			},
+			{
+				name: 'debut_at',
+				type: 'date',
+				required: true,
+			},
+			{
+				name: 'fin_at',
+				type: 'date',
+				required: true,
+			},
+			{
+				name: 'statut',
+				type: 'select',
+				required: true,
+				maxSelect: 1,
+				values: ['confirme', 'annule'],
+			},
+			{
+				name: 'motif',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 1000,
+			},
+			{
+				name: 'user_nom_snapshot',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 180,
+			},
+			{
+				name: 'user_email_snapshot',
+				type: 'text',
+				required: false,
+				min: 0,
+				max: 180,
+			},
+		],
+		token,
+	);
+}
+
+async function seedProfessionalsIfEmpty(token: string) {
+	await ensureProfessionalCollections(token);
+	const existing = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_professionnels',
+		'perPage=100',
+		token,
+	);
+
+	if (existing.length === 0) {
+		for (const seed of nutritionProfessionalSeeds) {
+			await createRecord(
+				'nutrition_professionnels',
+				{
+					...seed,
+					is_active: true,
+				},
+				token,
+			);
+		}
+	}
+
+	const professionals = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_professionnels',
+		'perPage=100',
+		token,
+	);
+	const availabilities = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_disponibilites',
+		'perPage=300',
+		token,
+	);
+
+	if (availabilities.length > 0) {
+		return;
+	}
+
+	for (const professional of professionals.slice(0, 3)) {
+		for (let dayOffset = 1; dayOffset <= 10; dayOffset += 1) {
+			const baseDate = addDays(new Date(), dayOffset);
+			const dateKey = baseDate.toISOString().slice(0, 10);
+			const slots = ['09:00', '11:00', '14:00'];
+			for (const time of slots) {
+				const startAt = toIsoDateTime(dateKey, time);
+				const endDate = new Date(startAt);
+				endDate.setMinutes(endDate.getMinutes() + 45);
+				await createRecord(
+					'nutrition_disponibilites',
+					{
+						professionnel_id: String(professional.id),
+						debut_at: startAt,
+						fin_at: endDate.toISOString(),
+						notes: '',
+					},
+					token,
+				);
+			}
+		}
+	}
+}
+
+function buildProfessionalCard(professional: Record<string, any>) {
+	const firstName = String(professional.nom_affiche ?? '').trim().split(' ')[0] || 'Pro';
+	return {
+		id: String(professional.id),
+		slug: String(professional.slug ?? ''),
+		name: String(professional.nom_affiche ?? ''),
+		firstName,
+		initials: firstName.slice(0, 2).toUpperCase(),
+		speciality: String(professional.specialite ?? ''),
+		specialityLabel: getProfessionalSpecialityLabel(professional.specialite),
+		description: String(professional.description ?? ''),
+		experienceYears: Number(professional.experience_annees ?? 0),
+		city: String(professional.ville ?? ''),
+		price: Number(professional.tarif_consultation ?? 0),
+		consultationModes: String(professional.modes_consultation ?? '')
+			.split(',')
+			.map((item) => item.trim())
+			.filter(Boolean),
+		isActive: Boolean(professional.is_active ?? true),
+	};
+}
+
+export async function getProfessionalsCatalog(selectedSpeciality?: string) {
+	const adminToken = await authenticatePocketBaseAdmin();
+	await seedProfessionalsIfEmpty(adminToken);
+
+	const professionals = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_professionnels',
+		`perPage=200&filter=${encodeURIComponent('is_active=true')}`,
+		adminToken,
+	);
+
+	const items = professionals
+		.map(buildProfessionalCard)
+		.filter((item) => !selectedSpeciality || item.speciality === selectedSpeciality);
+
+	const specialities = [
+		{ slug: '', label: 'Tous' },
+		{ slug: 'dieteticien', label: getProfessionalSpecialityLabel('dieteticien') },
+		{ slug: 'nutritionniste', label: getProfessionalSpecialityLabel('nutritionniste') },
+		{ slug: 'nutritionniste_sportif', label: getProfessionalSpecialityLabel('nutritionniste_sportif') },
+		{ slug: 'coach_alimentaire', label: getProfessionalSpecialityLabel('coach_alimentaire') },
+	];
+
+	return {
+		professionals: items,
+		filters: specialities,
+		selectedSpeciality: selectedSpeciality ?? '',
+	};
+}
+
+export async function getProfessionalDetail(slug: string) {
+	const adminToken = await authenticatePocketBaseAdmin();
+	await seedProfessionalsIfEmpty(adminToken);
+
+	const items = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_professionnels',
+		`perPage=1&filter=${encodeURIComponent(`slug="${slug}" && is_active=true`)}`,
+		adminToken,
+	);
+	const professional = items[0];
+	if (!professional) {
+		throw new Error('Professionnel introuvable.');
+	}
+
+	const [availabilities, appointments] = await Promise.all([
+		listRecordsWithQuery<Record<string, any>>(
+			'nutrition_disponibilites',
+			`perPage=500&filter=${encodeURIComponent(`professionnel_id="${professional.id}"`)}`,
+			adminToken,
+		),
+		listRecordsWithQuery<Record<string, any>>(
+			'nutrition_rendezvous',
+			`perPage=500&filter=${encodeURIComponent(`professionnel_id="${professional.id}" && statut="confirme"`)}`,
+			adminToken,
+		),
+	]);
+
+	const futureAvailabilities = sortByCreatedAsc(
+		availabilities.filter((slot) => new Date(String(slot.debut_at)).getTime() > Date.now()),
+	).filter(
+		(slot) =>
+			!appointments.some((appointment) =>
+				hasTimeOverlap(
+					String(slot.debut_at),
+					String(slot.fin_at),
+					String(appointment.debut_at),
+					String(appointment.fin_at),
+				),
+			),
+	);
+
+	return {
+		professional: buildProfessionalCard(professional),
+		availabilities: futureAvailabilities.slice(0, 20).map((slot) => ({
+			id: String(slot.id),
+			startAt: String(slot.debut_at),
+			endAt: String(slot.fin_at),
+			dateLabel: formatAppointmentDateLabel(String(slot.debut_at)),
+			timeLabel: `${formatAppointmentTimeLabel(String(slot.debut_at))} - ${formatAppointmentTimeLabel(String(slot.fin_at))}`,
+		})),
+	};
+}
+
+export async function bookProfessionalAppointment(
+	userToken: string,
+	data: {
+		professionalId: string;
+		availabilityId: string;
+		motif?: string;
+	},
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureProfessionalCollections(adminToken);
+
+	const user = await getUserRecordById(String(refreshedAuth.record.id), adminToken);
+	const availability = await getRecordById('nutrition_disponibilites', String(data.availabilityId), adminToken);
+	const professional = await getRecordById('nutrition_professionnels', String(data.professionalId), adminToken);
+
+	if (!availability?.id || !professional?.id) {
+		throw new Error('Créneau ou professionnel introuvable.');
+	}
+	if (String(availability.professionnel_id) !== String(professional.id)) {
+		throw new Error('Créneau invalide pour ce professionnel.');
+	}
+	if (new Date(String(availability.debut_at)).getTime() <= Date.now()) {
+		throw new Error('Ce créneau n’est plus disponible.');
+	}
+
+	const existing = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_rendezvous',
+		`perPage=50&filter=${encodeURIComponent(`professionnel_id="${professional.id}" && statut="confirme"`)}`,
+		adminToken,
+	);
+
+	if (
+		existing.some((appointment) =>
+			hasTimeOverlap(
+				String(availability.debut_at),
+				String(availability.fin_at),
+				String(appointment.debut_at),
+				String(appointment.fin_at),
+			),
+		)
+	) {
+		throw new Error('Ce créneau vient d’être réservé. Choisissez-en un autre.');
+	}
+
+	const created = (await createRecord(
+		'nutrition_rendezvous',
+		{
+			professionnel_id: String(professional.id),
+			user_id: String(user.id),
+			disponibilite_id: String(availability.id),
+			debut_at: String(availability.debut_at),
+			fin_at: String(availability.fin_at),
+			statut: 'confirme',
+			motif: String(data.motif ?? '').trim(),
+			user_nom_snapshot: String(`${user.prenom ?? ''} ${user.nom ?? ''}`.trim() || user.name || user.email || 'Utilisateur'),
+			user_email_snapshot: String(user.email ?? ''),
+		},
+		adminToken,
+	)) as Record<string, any>;
+
+	return {
+		token: refreshedAuth.token,
+		appointment: {
+			id: String(created.id),
+			professionalName: String(professional.nom_affiche ?? ''),
+			dateLabel: formatAppointmentDateLabel(String(created.debut_at)),
+			timeLabel: `${formatAppointmentTimeLabel(String(created.debut_at))} - ${formatAppointmentTimeLabel(String(created.fin_at))}`,
+			status: 'confirmé',
+		},
+	};
+}
+
+export async function getUserAppointments(userToken: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await seedProfessionalsIfEmpty(adminToken);
+
+	const userId = String(refreshedAuth.record.id);
+	const appointments = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_rendezvous',
+		`perPage=300&filter=${encodeURIComponent(`user_id="${userId}"`)}&expand=professionnel_id`,
+		adminToken,
+	);
+
+	const now = Date.now();
+	const items = appointments
+		.map((item) => {
+			const professionalRecord = item.expand?.professionnel_id ?? null;
+			const professionalCard = professionalRecord ? buildProfessionalCard(professionalRecord) : null;
+			const startAt = String(item.debut_at ?? '');
+			const endAt = String(item.fin_at ?? '');
+			const status = String(item.statut ?? 'confirme');
+
+			return {
+				id: String(item.id),
+				status,
+				professionalName: professionalCard?.name ?? 'Professionnel',
+				professionalSlug: professionalCard?.slug ?? '',
+				professionalSpeciality: professionalCard?.specialityLabel ?? 'Professionnel nutrition',
+				dateLabel: formatAppointmentDateLabel(startAt),
+				timeLabel: `${formatAppointmentTimeLabel(startAt)} - ${formatAppointmentTimeLabel(endAt)}`,
+				startAt,
+				endAt,
+				motif: String(item.motif ?? ''),
+				isPast: new Date(endAt).getTime() < now,
+			};
+		})
+		.sort((left, right) => new Date(left.startAt).getTime() - new Date(right.startAt).getTime());
+
+	return {
+		token: refreshedAuth.token,
+		upcoming: items.filter((item) => !item.isPast && item.status === 'confirme'),
+		past: items.filter((item) => item.isPast || item.status !== 'confirme'),
+	};
+}
+
+async function getProfessionalProfileByUserId(userId: string, token: string) {
+	const items = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_professionnels',
+		`perPage=1&filter=${encodeURIComponent(`user_id="${userId}"`)}`,
+		token,
+	);
+	return items[0] ?? null;
+}
+
+export async function getProfessionalDashboard(userToken: string) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await seedProfessionalsIfEmpty(adminToken);
+
+	const user = await getUserRecordById(String(refreshedAuth.record.id), adminToken);
+	const profile = await getProfessionalProfileByUserId(String(user.id), adminToken);
+
+	if (!profile) {
+		return {
+			token: refreshedAuth.token,
+			isProfessional: false,
+			viewer: {
+				firstName: String(user.prenom ?? user.name ?? user.email ?? 'Professionnel').split(' ')[0],
+				fullName: String(`${user.prenom ?? ''} ${user.nom ?? ''}`.trim() || user.name || user.email || 'Professionnel'),
+			},
+		};
+	}
+
+	const [availabilities, appointments] = await Promise.all([
+		listRecordsWithQuery<Record<string, any>>(
+			'nutrition_disponibilites',
+			`perPage=300&filter=${encodeURIComponent(`professionnel_id="${profile.id}"`)}`,
+			adminToken,
+		),
+		listRecordsWithQuery<Record<string, any>>(
+			'nutrition_rendezvous',
+			`perPage=300&filter=${encodeURIComponent(`professionnel_id="${profile.id}"`)}`,
+			adminToken,
+		),
+	]);
+
+	const upcomingAppointments = sortByCreatedAsc(
+		appointments.filter(
+			(item) => String(item.statut) === 'confirme' && new Date(String(item.debut_at)).getTime() >= Date.now(),
+		),
+	).map((item) => ({
+		id: String(item.id),
+		userName: String(item.user_nom_snapshot ?? 'Utilisateur'),
+		userEmail: String(item.user_email_snapshot ?? ''),
+		dateLabel: formatAppointmentDateLabel(String(item.debut_at)),
+		timeLabel: `${formatAppointmentTimeLabel(String(item.debut_at))} - ${formatAppointmentTimeLabel(String(item.fin_at))}`,
+		motif: String(item.motif ?? ''),
+	}));
+
+	const futureAvailabilities = sortByCreatedAsc(
+		availabilities.filter((item) => new Date(String(item.debut_at)).getTime() >= Date.now()),
+	).map((item) => ({
+		id: String(item.id),
+		dateLabel: formatAppointmentDateLabel(String(item.debut_at)),
+		timeLabel: `${formatAppointmentTimeLabel(String(item.debut_at))} - ${formatAppointmentTimeLabel(String(item.fin_at))}`,
+	}));
+
+	return {
+		token: refreshedAuth.token,
+		isProfessional: true,
+		viewer: {
+			firstName: String(user.prenom ?? user.name ?? user.email ?? 'Professionnel').split(' ')[0],
+			fullName: String(`${user.prenom ?? ''} ${user.nom ?? ''}`.trim() || user.name || user.email || 'Professionnel'),
+		},
+		professional: buildProfessionalCard(profile),
+		stats: {
+			upcomingAppointments: upcomingAppointments.length,
+			availableSlots: futureAvailabilities.length,
+		},
+		appointments: upcomingAppointments,
+		availabilities: futureAvailabilities,
+	};
+}
+
+export async function createProfessionalProfile(
+	userToken: string,
+	data: {
+		nomAffiche: string;
+		specialite: string;
+		description: string;
+		ville?: string;
+		experienceAnnees?: number;
+		tarifConsultation?: number;
+		modesConsultation?: string[];
+	},
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureProfessionalCollections(adminToken);
+
+	const userId = String(refreshedAuth.record.id);
+	const existing = await getProfessionalProfileByUserId(userId, adminToken);
+	if (existing?.id) {
+		throw new Error('Un espace professionnel existe déjà pour ce compte.');
+	}
+
+	const user = await getUserRecordById(userId, adminToken);
+	const slugBase = slugifyKey(data.nomAffiche || `${user.prenom ?? ''}-${user.nom ?? ''}`) || `professionnel-${userId.slice(0, 6)}`;
+	const allProfiles = await listRecordsWithQuery<Record<string, any>>('nutrition_professionnels', 'perPage=400', adminToken);
+	let slug = slugBase;
+	let suffix = 2;
+	const slugs = new Set(allProfiles.map((item) => String(item.slug ?? '')).filter(Boolean));
+	while (slugs.has(slug)) {
+		slug = `${slugBase}-${suffix}`;
+		suffix += 1;
+	}
+
+	await createRecord(
+		'nutrition_professionnels',
+		{
+			user_id: userId,
+			slug,
+			nom_affiche: String(data.nomAffiche).trim(),
+			specialite: String(data.specialite).trim(),
+			description: String(data.description).trim(),
+			experience_annees: Math.max(0, Number(data.experienceAnnees ?? 0)),
+			ville: String(data.ville ?? '').trim(),
+			tarif_consultation: Math.max(0, Number(data.tarifConsultation ?? 0)),
+			modes_consultation: Array.isArray(data.modesConsultation) ? data.modesConsultation.join(',') : '',
+			is_active: true,
+		},
+		adminToken,
+	);
+
+	await updateRecord('users', userId, { role: 'professionnel' }, adminToken);
+	return getProfessionalDashboard(refreshedAuth.token);
+}
+
+export async function createProfessionalAvailability(
+	userToken: string,
+	data: {
+		date: string;
+		startTime: string;
+		endTime: string;
+	},
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureProfessionalCollections(adminToken);
+
+	const profile = await getProfessionalProfileByUserId(String(refreshedAuth.record.id), adminToken);
+	if (!profile?.id) {
+		throw new Error('Profil professionnel introuvable.');
+	}
+
+	const startAt = toIsoDateTime(data.date, data.startTime);
+	const endAt = toIsoDateTime(data.date, data.endTime);
+	if (new Date(endAt).getTime() <= new Date(startAt).getTime()) {
+		throw new Error('Le créneau de fin doit être après le début.');
+	}
+
+	const existing = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_disponibilites',
+		`perPage=300&filter=${encodeURIComponent(`professionnel_id="${profile.id}"`)}`,
+		adminToken,
+	);
+
+	if (
+		existing.some((slot) =>
+			hasTimeOverlap(startAt, endAt, String(slot.debut_at), String(slot.fin_at)),
+		)
+	) {
+		throw new Error('Ce créneau chevauche une disponibilité existante.');
+	}
+
+	await createRecord(
+		'nutrition_disponibilites',
+		{
+			professionnel_id: String(profile.id),
+			debut_at: startAt,
+			fin_at: endAt,
+			notes: '',
+		},
+		adminToken,
+	);
+
+	return getProfessionalDashboard(refreshedAuth.token);
+}
+
+export async function deleteProfessionalAvailability(
+	userToken: string,
+	availabilityId: string,
+) {
+	const refreshedAuth = await refreshUserAuth(userToken);
+	const adminToken = await authenticatePocketBaseAdmin();
+	await ensureProfessionalCollections(adminToken);
+
+	const profile = await getProfessionalProfileByUserId(String(refreshedAuth.record.id), adminToken);
+	if (!profile?.id) {
+		throw new Error('Profil professionnel introuvable.');
+	}
+
+	const slot = await getRecordById('nutrition_disponibilites', availabilityId, adminToken);
+	if (!slot?.id || String(slot.professionnel_id) !== String(profile.id)) {
+		throw new Error('Créneau introuvable.');
+	}
+
+	const appointments = await listRecordsWithQuery<Record<string, any>>(
+		'nutrition_rendezvous',
+		`perPage=50&filter=${encodeURIComponent(`disponibilite_id="${availabilityId}" && statut="confirme"`)}`,
+		adminToken,
+	);
+	if (appointments.length > 0) {
+		throw new Error('Impossible de supprimer un créneau déjà réservé.');
+	}
+
+	await deleteRecord('nutrition_disponibilites', availabilityId, adminToken);
+	return getProfessionalDashboard(refreshedAuth.token);
+}

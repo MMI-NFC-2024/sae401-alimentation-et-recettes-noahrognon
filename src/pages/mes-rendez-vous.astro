@@ -1,0 +1,196 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Mes rendez-vous">
+	<section class="bg-[radial-gradient(circle_at_top_left,_rgba(205,248,224,0.75),_transparent_42%),linear-gradient(180deg,#fbffff_0%,#f5fbff_100%)]">
+		<div class="mx-auto max-w-[1100px] px-4 py-8 md:px-6 md:py-10">
+			<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+				<div>
+					<span class="inline-flex rounded-full bg-[#d8f7e1] px-3 py-1 text-sm font-semibold text-[#0a9a68]">Consultations</span>
+					<h1 class="mt-4 text-3xl font-semibold tracking-[-0.03em] text-slate-900 md:text-[2.4rem]">Mes rendez-vous</h1>
+					<p class="mt-3 max-w-[720px] text-base leading-7 text-slate-600">
+						Retrouvez vos consultations nutrition réservées, avec les dates, créneaux et professionnels associés.
+					</p>
+				</div>
+				<a
+					href="/professionnels"
+					class="inline-flex items-center justify-center rounded-[18px] bg-[#08b37d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#079765]"
+				>
+					Prendre un rendez-vous
+				</a>
+			</div>
+
+			<div id="appointments-auth-needed" class="mt-8 hidden rounded-[28px] border border-[#d8e5f1] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-8">
+				<h2 class="text-2xl font-semibold text-slate-900">Connexion requise</h2>
+				<p class="mt-3 text-sm leading-6 text-slate-600">Connectez-vous pour consulter les rendez-vous que vous avez réservés.</p>
+				<a href="/auth/login?redirect=/mes-rendez-vous" class="mt-5 inline-flex rounded-[18px] bg-[#08b37d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#079765]">
+					Se connecter
+				</a>
+			</div>
+
+			<div id="appointments-error" class="mt-8 hidden rounded-2xl border border-[#ffd8d8] bg-[#fff6f6] px-4 py-3 text-sm font-medium text-[#c24141]"></div>
+			<div id="appointments-loading" class="mt-8 text-sm font-medium text-slate-500">Chargement de vos rendez-vous...</div>
+
+			<div id="appointments-shell" class="mt-8 hidden grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
+				<div class="space-y-6">
+					<section class="rounded-[28px] border border-[#d8e5f1] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-7">
+						<div class="flex items-center justify-between gap-4">
+							<div>
+								<h2 class="text-2xl font-semibold text-slate-900">À venir</h2>
+								<p class="mt-2 text-sm text-slate-500">Vos prochaines consultations confirmées.</p>
+							</div>
+							<span id="appointments-upcoming-count" class="rounded-full bg-[#d8f7e1] px-3 py-1 text-sm font-semibold text-[#0a9a68]">0</span>
+						</div>
+						<div id="appointments-upcoming" class="mt-6 space-y-4"></div>
+					</section>
+
+					<section class="rounded-[28px] border border-[#d8e5f1] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-7">
+						<div class="flex items-center justify-between gap-4">
+							<div>
+								<h2 class="text-2xl font-semibold text-slate-900">Historique</h2>
+								<p class="mt-2 text-sm text-slate-500">Vos rendez-vous passés ou clôturés.</p>
+							</div>
+							<span id="appointments-past-count" class="rounded-full bg-slate-100 px-3 py-1 text-sm font-semibold text-slate-600">0</span>
+						</div>
+						<div id="appointments-past" class="mt-6 space-y-4"></div>
+					</section>
+				</div>
+
+				<aside class="space-y-6">
+					<article class="rounded-[28px] bg-[linear-gradient(135deg,#0aa975_0%,#3fd0b1_100%)] p-6 text-white shadow-[0_24px_70px_rgba(8,179,125,0.28)]">
+						<p class="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">Organisation</p>
+						<h2 class="mt-4 text-2xl font-semibold tracking-[-0.03em]">Préparez votre consultation</h2>
+						<p class="mt-3 text-sm leading-6 text-white/90">
+							Pensez à noter vos objectifs, vos habitudes et les questions à poser au professionnel avant votre rendez-vous.
+						</p>
+						<a href="/profile" class="mt-5 inline-flex items-center justify-center rounded-[18px] bg-white px-5 py-3 text-sm font-semibold text-[#0a9a68] transition hover:bg-white/90">
+							Voir mon profil nutritionnel
+						</a>
+					</article>
+
+					<article class="rounded-[28px] border border-[#d8e5f1] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)]">
+						<h2 class="text-xl font-semibold text-slate-900">Accès rapide</h2>
+						<div class="mt-5 grid gap-3">
+							<a href="/professionnels" class="rounded-[18px] border border-[#cad8e7] px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#08b37d] hover:text-[#08b37d]">Trouver un professionnel</a>
+							<a href="/dashboard" class="rounded-[18px] border border-[#cad8e7] px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#08b37d] hover:text-[#08b37d]">Retour au dashboard</a>
+						</div>
+					</article>
+				</aside>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const authNeeded = document.querySelector('#appointments-auth-needed');
+	const loading = document.querySelector('#appointments-loading');
+	const shell = document.querySelector('#appointments-shell');
+	const errorBox = document.querySelector('#appointments-error');
+
+	function readStoredAuth() {
+		try {
+			return JSON.parse(localStorage.getItem(authKey) || 'null');
+		} catch {
+			return null;
+		}
+	}
+
+	function saveAuth(payload) {
+		if (!payload?.token) return;
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function clearAuth() {
+		localStorage.removeItem(authKey);
+	}
+
+	function escapeHtml(value) {
+		return String(value ?? '')
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#039;');
+	}
+
+	function showError(message = '') {
+		if (!errorBox) return;
+		errorBox.textContent = message;
+		errorBox.classList.toggle('hidden', !message);
+	}
+
+	function renderAppointments(container, items, emptyMessage, tone = 'upcoming') {
+		if (!container) return;
+		if (!items.length) {
+			container.innerHTML = `<div class="rounded-[24px] border border-dashed border-[#cad8e7] bg-slate-50 p-6 text-sm text-slate-500">${emptyMessage}</div>`;
+			return;
+		}
+
+		container.innerHTML = items
+			.map(
+				(item) => `
+					<article class="rounded-[24px] border border-[#d8e5f1] bg-white p-5">
+						<div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+							<div>
+								<p class="text-lg font-semibold text-slate-900">${escapeHtml(item.professionalName)}</p>
+								<p class="mt-1 text-sm font-medium text-[#08b37d]">${escapeHtml(item.professionalSpeciality)}</p>
+								<p class="mt-3 text-sm text-slate-500">${escapeHtml(item.dateLabel)} · ${escapeHtml(item.timeLabel)}</p>
+								${item.motif ? `<p class="mt-3 text-sm leading-6 text-slate-600">${escapeHtml(item.motif)}</p>` : ''}
+							</div>
+							<div class="flex flex-col items-start gap-3 md:items-end">
+								<span class="rounded-full px-3 py-1 text-xs font-semibold ${
+									tone === 'upcoming' ? 'bg-[#d8f7e1] text-[#0a9a68]' : 'bg-slate-100 text-slate-600'
+								}">${tone === 'upcoming' ? 'Confirmé' : 'Passé'}</span>
+								${item.professionalSlug ? `<a href="/professionnels/${escapeHtml(item.professionalSlug)}" class="text-sm font-semibold text-[#08b37d]">Voir le profil</a>` : ''}
+							</div>
+						</div>
+					</article>
+				`,
+			)
+			.join('');
+	}
+
+	async function loadAppointments() {
+		const auth = readStoredAuth();
+		if (!auth?.token) {
+			loading.classList.add('hidden');
+			authNeeded.classList.remove('hidden');
+			return;
+		}
+
+		try {
+			const response = await fetch('/app-api/my-appointments', {
+				headers: {
+					Authorization: `Bearer ${auth.token}`,
+				},
+			});
+			const payload = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearAuth();
+					authNeeded.classList.remove('hidden');
+					return;
+				}
+				throw new Error(payload.message || 'Impossible de charger vos rendez-vous.');
+			}
+
+			if (payload.token) {
+				saveAuth({ ...auth, token: payload.token });
+			}
+
+			document.querySelector('#appointments-upcoming-count').textContent = String((payload.upcoming || []).length);
+			document.querySelector('#appointments-past-count').textContent = String((payload.past || []).length);
+			renderAppointments(document.querySelector('#appointments-upcoming'), payload.upcoming || [], 'Vous n’avez pas encore de rendez-vous à venir.', 'upcoming');
+			renderAppointments(document.querySelector('#appointments-past'), payload.past || [], 'Aucun rendez-vous passé pour le moment.', 'past');
+			shell.classList.remove('hidden');
+		} catch (error) {
+			showError(error instanceof Error ? error.message : 'Impossible de charger vos rendez-vous.');
+		} finally {
+			loading.classList.add('hidden');
+		}
+	}
+
+	loadAppointments();
+</script>

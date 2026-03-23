@@ -15,6 +15,7 @@ const navItems = [
 	{ label: 'Planificateur', href: '/planificateur', icon: 'planner' },
 	{ label: 'Suivi', href: '/suivi', icon: 'progress' },
 	{ label: 'Communauté', href: '/communaute', icon: 'community' },
+	{ label: 'Professionnels', href: '/professionnels', icon: 'community' },
 	{ label: 'Liste de courses', href: '/liste-courses', icon: 'shopping' },
 	{ label: 'Scanner', href: '/scanner', icon: 'assistant' },
 	{ label: 'Aliments', href: '/aliments', icon: 'foods' },
@@ -25,20 +26,20 @@ const navItems = [
 <header class="sticky top-0 z-20 border-b border-slate-100 bg-white/95 backdrop-blur-md">
 	<input id="mobile-menu-toggle" type="checkbox" class="peer sr-only" />
 
-	<div class="mx-auto flex items-center justify-between gap-3 bg-white/95 px-4 py-3 lg:max-w-[1380px] lg:gap-[18px] lg:px-6 lg:py-[15px]">
+	<div class="mx-auto flex items-center justify-between gap-3 bg-white/95 px-4 py-3 lg:max-w-[1540px] lg:gap-6 lg:px-7 lg:py-[15px]">
 		<a href="/" aria-label="Nutrivia - Accueil" class="inline-flex items-center">
-			<img src={logo.src} alt="Nutrivia" class="block h-auto w-[110px] lg:w-[124px]" />
+			<img src={logo.src} alt="Nutrivia" class="block h-auto w-[110px] lg:w-[132px]" />
 		</a>
 
-		<nav aria-label="Navigation principale" class="hidden min-w-0 flex-1 justify-center lg:flex">
-			<ul class="flex items-center justify-center gap-0.5 whitespace-nowrap">
+		<nav aria-label="Navigation principale" class="hidden min-w-0 flex-1 justify-center px-2 lg:flex">
+			<ul class="flex items-center justify-center gap-1 whitespace-nowrap">
 				{
 					navItems.map((item) => (
 						<li>
 							<a
 								href={item.href}
 								class:list={[
-									'inline-flex items-center justify-center rounded-[14px] px-[11px] py-2.5 text-[0.92rem] font-medium text-slate-700 transition-colors hover:bg-slate-50',
+									'inline-flex items-center justify-center rounded-[14px] px-[9px] py-2.5 text-[0.88rem] font-medium text-slate-700 transition-colors hover:bg-slate-50 xl:px-[11px] xl:text-[0.92rem]',
 									{ 'bg-[#d6f7df] text-[#0b8c5f]': currentPath === item.href },
 								]}
 							>
@@ -50,10 +51,10 @@ const navItems = [
 			</ul>
 		</nav>
 
-		<div class="flex shrink-0 items-center gap-2.5">
+		<div class="flex shrink-0 items-center gap-2 lg:gap-2.5">
 			<a
 				href="/assistant"
-				class="hidden items-center gap-2.5 rounded-2xl bg-[#06b37a] px-4 py-2.5 text-[0.95rem] font-semibold whitespace-nowrap text-white shadow-[0_8px_18px_rgba(6,179,122,0.18)] lg:inline-flex"
+				class="hidden items-center gap-2 rounded-2xl bg-[#06b37a] px-3.5 py-2.5 text-[0.92rem] font-semibold whitespace-nowrap text-white shadow-[0_8px_18px_rgba(6,179,122,0.18)] xl:px-4 xl:text-[0.95rem] lg:inline-flex"
 			>
 				<img src={iconIA.src} alt="" aria-hidden="true" class="block h-4 w-4" />
 				<span>Assistant IA</span>

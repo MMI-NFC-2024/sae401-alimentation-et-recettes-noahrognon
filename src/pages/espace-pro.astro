@@ -1,0 +1,439 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Espace professionnel">
+	<section class="bg-[radial-gradient(circle_at_top_left,_rgba(205,248,224,0.75),_transparent_42%),linear-gradient(180deg,#fbffff_0%,#f5fbff_100%)]">
+		<div class="mx-auto max-w-[1180px] px-4 py-8 md:px-6 md:py-10">
+			<div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
+				<div class="max-w-[760px]">
+					<span class="inline-flex rounded-full bg-[#d8f7e1] px-3 py-1 text-sm font-semibold text-[#0a9a68]">Espace professionnel</span>
+					<h1 class="mt-4 text-3xl font-semibold tracking-[-0.03em] text-slate-900 md:text-[2.55rem]">Gérez vos consultations nutrition</h1>
+					<p class="mt-3 text-base leading-7 text-slate-600 md:text-lg">
+						Créez votre profil professionnel, publiez vos disponibilités et consultez vos rendez-vous à venir.
+					</p>
+				</div>
+				<a
+					href="/professionnels"
+					class="inline-flex items-center justify-center rounded-[18px] border border-[#cad8e7] bg-white px-5 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#08b37d] hover:text-[#08b37d]"
+				>
+					Voir la page professionnels
+				</a>
+			</div>
+
+			<div id="pro-auth-needed" class="mt-8 hidden rounded-[28px] border border-[#d8e5f1] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-8">
+				<h2 class="text-2xl font-semibold text-slate-900">Connexion requise</h2>
+				<p class="mt-3 text-sm leading-6 text-slate-600">Connectez-vous avec votre compte pour accéder à votre espace professionnel.</p>
+				<a href="/auth/login?redirect=/espace-pro" class="mt-5 inline-flex rounded-[18px] bg-[#08b37d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#079765]">
+					Se connecter
+				</a>
+			</div>
+
+			<div id="pro-error" class="mt-8 hidden rounded-2xl border border-[#ffd8d8] bg-[#fff6f6] px-4 py-3 text-sm font-medium text-[#c24141]"></div>
+			<div id="pro-loading" class="mt-8 text-sm font-medium text-slate-500">Chargement de l'espace professionnel...</div>
+
+			<div id="pro-onboarding" class="mt-8 hidden rounded-[28px] border border-[#d8e5f1] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-7">
+				<div class="grid gap-8 lg:grid-cols-[minmax(0,1.05fr)_320px]">
+					<div>
+						<h2 class="text-2xl font-semibold text-slate-900">Créer mon profil professionnel</h2>
+						<p class="mt-3 text-sm leading-6 text-slate-600">
+							La création du profil vous rend visible sur la page Professionnels et vous permet d'ouvrir des créneaux de rendez-vous.
+						</p>
+
+						<form id="pro-profile-form" class="mt-6 grid gap-4 md:grid-cols-2">
+							<label class="block md:col-span-2">
+								<span class="mb-2 block text-sm font-semibold text-slate-700">Nom affiché</span>
+								<input id="pro-name" type="text" class="h-[50px] w-full rounded-[18px] border border-[#cad8e7] px-4 text-sm outline-none transition focus:border-[#08b37d]" placeholder="Ex : Claire Martin" required />
+							</label>
+							<label class="block">
+								<span class="mb-2 block text-sm font-semibold text-slate-700">Spécialité</span>
+								<select id="pro-speciality" class="h-[50px] w-full rounded-[18px] border border-[#cad8e7] px-4 text-sm outline-none transition focus:border-[#08b37d]">
+									<option value="dieteticien">Diététicien</option>
+									<option value="nutritionniste">Nutritionniste</option>
+									<option value="nutritionniste_sportif">Nutrition sportive</option>
+									<option value="coach_alimentaire">Coach alimentaire</option>
+								</select>
+							</label>
+							<label class="block">
+								<span class="mb-2 block text-sm font-semibold text-slate-700">Ville</span>
+								<input id="pro-city" type="text" class="h-[50px] w-full rounded-[18px] border border-[#cad8e7] px-4 text-sm outline-none transition focus:border-[#08b37d]" placeholder="Paris, Lyon..." />
+							</label>
+							<label class="block">
+								<span class="mb-2 block text-sm font-semibold text-slate-700">Expérience</span>
+								<input id="pro-experience" type="number" min="0" class="h-[50px] w-full rounded-[18px] border border-[#cad8e7] px-4 text-sm outline-none transition focus:border-[#08b37d]" placeholder="5" />
+							</label>
+							<label class="block">
+								<span class="mb-2 block text-sm font-semibold text-slate-700">Tarif consultation</span>
+								<input id="pro-price" type="number" min="0" class="h-[50px] w-full rounded-[18px] border border-[#cad8e7] px-4 text-sm outline-none transition focus:border-[#08b37d]" placeholder="65" />
+							</label>
+							<label class="block md:col-span-2">
+								<span class="mb-2 block text-sm font-semibold text-slate-700">Modes de consultation</span>
+								<input id="pro-modes" type="text" class="h-[50px] w-full rounded-[18px] border border-[#cad8e7] px-4 text-sm outline-none transition focus:border-[#08b37d]" placeholder="Cabinet, Visio, Téléphone" />
+							</label>
+							<label class="block md:col-span-2">
+								<span class="mb-2 block text-sm font-semibold text-slate-700">Description</span>
+								<textarea id="pro-description" rows="6" class="w-full rounded-[22px] border border-[#cad8e7] px-4 py-3 text-sm outline-none transition focus:border-[#08b37d]" placeholder="Présentez votre approche, vos expertises et vos accompagnements." required></textarea>
+							</label>
+							<div class="md:col-span-2">
+								<p id="pro-profile-feedback" class="hidden rounded-2xl px-4 py-3 text-sm font-medium"></p>
+								<button type="submit" class="mt-4 inline-flex rounded-[18px] bg-[#08b37d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#079765]">Créer mon espace professionnel</button>
+							</div>
+						</form>
+					</div>
+
+					<div class="rounded-[28px] bg-[linear-gradient(135deg,#0aa975_0%,#3fd0b1_100%)] p-6 text-white shadow-[0_24px_70px_rgba(8,179,125,0.28)]">
+						<p class="text-sm font-semibold uppercase tracking-[0.18em] text-white/75">Nutrivia Pro</p>
+						<h3 class="mt-4 text-2xl font-semibold tracking-[-0.03em]">Votre visibilité sur la plateforme</h3>
+						<ul class="mt-5 space-y-3 text-sm leading-6 text-white/90">
+							<li>• Présentation claire de votre spécialité</li>
+							<li>• Créneaux réservables depuis Nutrivia</li>
+							<li>• Gestion centralisée de vos rendez-vous</li>
+						</ul>
+					</div>
+				</div>
+			</div>
+
+			<div id="pro-dashboard" class="mt-8 hidden space-y-6">
+				<div class="grid gap-6 xl:grid-cols-[minmax(0,1.15fr)_360px]">
+					<div class="space-y-6">
+						<article class="rounded-[28px] border border-[#d8e5f1] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-7">
+							<div class="flex flex-col gap-5 md:flex-row md:items-start md:justify-between">
+								<div class="flex gap-4">
+									<div id="dashboard-avatar" class="flex h-20 w-20 items-center justify-center rounded-[26px] bg-[linear-gradient(135deg,#08b37d_0%,#5cd6b5_100%)] text-2xl font-semibold text-white"></div>
+									<div>
+										<h2 id="dashboard-name" class="text-2xl font-semibold text-slate-900"></h2>
+										<p id="dashboard-speciality" class="mt-2 text-sm font-semibold text-[#08b37d]"></p>
+										<p id="dashboard-city" class="mt-2 text-sm text-slate-500"></p>
+									</div>
+								</div>
+								<a id="dashboard-public-link" href="/professionnels" class="inline-flex items-center justify-center rounded-[18px] border border-[#cad8e7] bg-white px-4 py-3 text-sm font-semibold text-slate-700 transition hover:border-[#08b37d] hover:text-[#08b37d]">
+									Voir ma fiche
+								</a>
+							</div>
+						</article>
+
+						<article class="rounded-[28px] border border-[#d8e5f1] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-7">
+							<div class="flex items-center justify-between gap-4">
+								<div>
+									<h2 class="text-2xl font-semibold text-slate-900">Mes rendez-vous à venir</h2>
+									<p class="mt-2 text-sm text-slate-500">Retrouvez ici tous les rendez-vous confirmés avec vos clients.</p>
+								</div>
+							</div>
+							<div id="dashboard-appointments" class="mt-6 space-y-3"></div>
+						</article>
+					</div>
+
+					<div class="space-y-6">
+						<div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-1">
+							<div class="rounded-[24px] bg-[linear-gradient(135deg,#08b37d_0%,#5cd6b5_100%)] p-5 text-white shadow-[0_24px_70px_rgba(8,179,125,0.28)]">
+								<p class="text-sm font-medium text-white/70">Rendez-vous à venir</p>
+								<p id="dashboard-stat-appointments" class="mt-2 text-4xl font-semibold tracking-[-0.04em]">0</p>
+							</div>
+							<div class="rounded-[24px] border border-[#d8e5f1] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)]">
+								<p class="text-sm font-medium text-slate-500">Créneaux disponibles</p>
+								<p id="dashboard-stat-availabilities" class="mt-2 text-4xl font-semibold tracking-[-0.04em] text-slate-900">0</p>
+							</div>
+						</div>
+
+						<article class="rounded-[28px] border border-[#d8e5f1] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-6">
+							<h2 class="text-xl font-semibold text-slate-900">Ajouter un créneau</h2>
+							<form id="availability-form" class="mt-5 space-y-4">
+								<label class="block">
+									<span class="mb-2 block text-sm font-semibold text-slate-700">Date</span>
+									<input id="availability-date" type="date" class="h-[50px] w-full rounded-[18px] border border-[#cad8e7] px-4 text-sm outline-none transition focus:border-[#08b37d]" required />
+								</label>
+								<div class="grid grid-cols-2 gap-3">
+									<label class="block">
+										<span class="mb-2 block text-sm font-semibold text-slate-700">Début</span>
+										<input id="availability-start" type="time" class="h-[50px] w-full rounded-[18px] border border-[#cad8e7] px-4 text-sm outline-none transition focus:border-[#08b37d]" required />
+									</label>
+									<label class="block">
+										<span class="mb-2 block text-sm font-semibold text-slate-700">Fin</span>
+										<input id="availability-end" type="time" class="h-[50px] w-full rounded-[18px] border border-[#cad8e7] px-4 text-sm outline-none transition focus:border-[#08b37d]" required />
+									</label>
+								</div>
+								<p id="availability-feedback" class="hidden rounded-2xl px-4 py-3 text-sm font-medium"></p>
+								<button type="submit" class="inline-flex w-full items-center justify-center rounded-[18px] bg-[#08b37d] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#079765]">
+									Publier ce créneau
+								</button>
+							</form>
+						</article>
+
+						<article class="rounded-[28px] border border-[#d8e5f1] bg-white p-5 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-6">
+							<h2 class="text-xl font-semibold text-slate-900">Mes disponibilités</h2>
+							<div id="dashboard-availabilities" class="mt-5 space-y-3"></div>
+						</article>
+					</div>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
+
+<script>
+	const authKey = 'nutrivia_auth';
+	const authNeeded = document.querySelector('#pro-auth-needed');
+	const loading = document.querySelector('#pro-loading');
+	const errorBox = document.querySelector('#pro-error');
+	const onboarding = document.querySelector('#pro-onboarding');
+	const dashboard = document.querySelector('#pro-dashboard');
+
+	function readStoredAuth() {
+		try {
+			return JSON.parse(localStorage.getItem(authKey) || 'null');
+		} catch {
+			return null;
+		}
+	}
+
+	function saveAuth(payload) {
+		if (!payload?.token) return;
+		localStorage.setItem(authKey, JSON.stringify(payload));
+	}
+
+	function clearAuth() {
+		localStorage.removeItem(authKey);
+	}
+
+	function escapeHtml(value) {
+		return String(value ?? '')
+			.replaceAll('&', '&amp;')
+			.replaceAll('<', '&lt;')
+			.replaceAll('>', '&gt;')
+			.replaceAll('"', '&quot;')
+			.replaceAll("'", '&#039;');
+	}
+
+	function setBoxMessage(element, message = '', type = 'error') {
+		if (!element) return;
+		if (!message) {
+			element.className = 'hidden rounded-2xl px-4 py-3 text-sm font-medium';
+			element.textContent = '';
+			return;
+		}
+
+		element.className =
+			type === 'success'
+				? 'rounded-2xl bg-[#ecfdf4] px-4 py-3 text-sm font-medium text-[#0a9a68]'
+				: 'rounded-2xl bg-[#fff6f6] px-4 py-3 text-sm font-medium text-[#c24141]';
+		element.textContent = message;
+	}
+
+	function showError(message = '') {
+		if (!errorBox) return;
+		errorBox.textContent = message;
+		errorBox.classList.toggle('hidden', !message);
+	}
+
+	function getAuthHeaders() {
+		const auth = readStoredAuth();
+		return auth?.token ? { Authorization: `Bearer ${auth.token}` } : {};
+	}
+
+	function renderDashboard(payload) {
+		const professional = payload.professional || {};
+		document.querySelector('#dashboard-avatar').textContent = professional.initials || 'PR';
+		document.querySelector('#dashboard-name').textContent = professional.name || '';
+		document.querySelector('#dashboard-speciality').textContent = professional.specialityLabel || '';
+		document.querySelector('#dashboard-city').textContent = professional.city || 'Consultation en ligne';
+		document.querySelector('#dashboard-public-link').href = `/professionnels/${professional.slug || ''}`;
+		document.querySelector('#dashboard-stat-appointments').textContent = String(payload.stats?.upcomingAppointments || 0);
+		document.querySelector('#dashboard-stat-availabilities').textContent = String(payload.stats?.availableSlots || 0);
+
+		const appointmentsContainer = document.querySelector('#dashboard-appointments');
+		const appointments = payload.appointments || [];
+		appointmentsContainer.innerHTML = appointments.length
+			? appointments
+					.map(
+						(item) => `
+							<article class="rounded-[22px] border border-[#d8e5f1] bg-white px-4 py-4">
+								<div class="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
+									<div>
+										<p class="text-base font-semibold text-slate-900">${escapeHtml(item.userName)}</p>
+										<p class="mt-1 text-sm text-slate-500">${escapeHtml(item.userEmail || 'Utilisateur Nutrivia')}</p>
+									</div>
+									<div class="text-sm font-semibold text-slate-700">${escapeHtml(item.dateLabel)} · ${escapeHtml(item.timeLabel)}</div>
+								</div>
+								${item.motif ? `<p class="mt-3 text-sm leading-6 text-slate-600">${escapeHtml(item.motif)}</p>` : ''}
+							</article>
+						`,
+					)
+					.join('')
+			: `<div class="rounded-[24px] border border-dashed border-[#cad8e7] bg-slate-50 p-6 text-sm text-slate-500">Aucun rendez-vous confirmé pour le moment.</div>`;
+
+		const availabilitiesContainer = document.querySelector('#dashboard-availabilities');
+		const availabilities = payload.availabilities || [];
+		availabilitiesContainer.innerHTML = availabilities.length
+			? availabilities
+					.map(
+						(item) => `
+							<div class="flex items-center justify-between gap-3 rounded-[22px] border border-[#d8e5f1] bg-white px-4 py-4">
+								<div>
+									<p class="text-sm font-semibold text-slate-900">${escapeHtml(item.dateLabel)}</p>
+									<p class="mt-1 text-sm text-slate-500">${escapeHtml(item.timeLabel)}</p>
+								</div>
+								<button type="button" data-delete-availability="${escapeHtml(item.id)}" class="inline-flex rounded-[14px] border border-[#ffd8d8] px-3 py-2 text-xs font-semibold text-[#c24141] transition hover:bg-[#fff6f6]">
+									Supprimer
+								</button>
+							</div>
+						`,
+					)
+					.join('')
+			: `<div class="rounded-[24px] border border-dashed border-[#cad8e7] bg-slate-50 p-6 text-sm text-slate-500">Aucun créneau publié pour l'instant.</div>`;
+
+		Array.from(availabilitiesContainer.querySelectorAll('[data-delete-availability]')).forEach((button) => {
+			button.addEventListener('click', async () => {
+				const availabilityId = button.getAttribute('data-delete-availability') || '';
+				const feedback = document.querySelector('#availability-feedback');
+				setBoxMessage(feedback, '');
+				try {
+					const response = await fetch('/app-api/professional-dashboard', {
+						method: 'DELETE',
+						headers: {
+							'Content-Type': 'application/json',
+							...getAuthHeaders(),
+						},
+						body: JSON.stringify({ availabilityId }),
+					});
+					const nextPayload = await response.json();
+					if (!response.ok) {
+						if (response.status === 401) {
+							clearAuth();
+							window.location.href = '/auth/login?redirect=/espace-pro';
+							return;
+						}
+						throw new Error(nextPayload.message || 'Impossible de supprimer ce créneau.');
+					}
+					if (nextPayload.token) {
+						saveAuth({ ...(readStoredAuth() || {}), token: nextPayload.token });
+					}
+					renderDashboard(nextPayload);
+					setBoxMessage(feedback, 'Créneau supprimé.', 'success');
+				} catch (error) {
+					setBoxMessage(feedback, error instanceof Error ? error.message : 'Impossible de supprimer ce créneau.');
+				}
+			});
+		});
+	}
+
+	function renderState(payload) {
+		if (payload.token) {
+			saveAuth({ ...(readStoredAuth() || {}), token: payload.token });
+		}
+
+		onboarding.classList.toggle('hidden', payload.isProfessional !== false);
+		dashboard.classList.toggle('hidden', payload.isProfessional !== true);
+
+		if (payload.isProfessional) {
+			renderDashboard(payload);
+		}
+	}
+
+	async function loadDashboard() {
+		showError('');
+		const auth = readStoredAuth();
+		if (!auth?.token) {
+			loading.classList.add('hidden');
+			authNeeded.classList.remove('hidden');
+			return;
+		}
+
+		try {
+			const response = await fetch('/app-api/professional-dashboard', {
+				headers: getAuthHeaders(),
+			});
+			const payload = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearAuth();
+					authNeeded.classList.remove('hidden');
+					return;
+				}
+				throw new Error(payload.message || "Impossible de charger l'espace professionnel.");
+			}
+
+			renderState(payload);
+		} catch (error) {
+			showError(error instanceof Error ? error.message : "Impossible de charger l'espace professionnel.");
+		} finally {
+			loading.classList.add('hidden');
+		}
+	}
+
+	document.querySelector('#pro-profile-form')?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		const feedback = document.querySelector('#pro-profile-feedback');
+		setBoxMessage(feedback, '');
+		try {
+			const response = await fetch('/app-api/professional-dashboard', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					...getAuthHeaders(),
+				},
+				body: JSON.stringify({
+					action: 'create_profile',
+					nomAffiche: document.querySelector('#pro-name')?.value || '',
+					specialite: document.querySelector('#pro-speciality')?.value || '',
+					ville: document.querySelector('#pro-city')?.value || '',
+					experienceAnnees: Number(document.querySelector('#pro-experience')?.value || 0),
+					tarifConsultation: Number(document.querySelector('#pro-price')?.value || 0),
+					modesConsultation: String(document.querySelector('#pro-modes')?.value || '')
+						.split(',')
+						.map((item) => item.trim())
+						.filter(Boolean),
+					description: document.querySelector('#pro-description')?.value || '',
+				}),
+			});
+			const payload = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearAuth();
+					window.location.href = '/auth/login?redirect=/espace-pro';
+					return;
+				}
+				throw new Error(payload.message || 'Impossible de créer le profil professionnel.');
+			}
+			renderState(payload);
+			setBoxMessage(feedback, 'Profil professionnel créé avec succès.', 'success');
+		} catch (error) {
+			setBoxMessage(feedback, error instanceof Error ? error.message : 'Impossible de créer le profil professionnel.');
+		}
+	});
+
+	document.querySelector('#availability-form')?.addEventListener('submit', async (event) => {
+		event.preventDefault();
+		const feedback = document.querySelector('#availability-feedback');
+		setBoxMessage(feedback, '');
+		try {
+			const response = await fetch('/app-api/professional-dashboard', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+					...getAuthHeaders(),
+				},
+				body: JSON.stringify({
+					date: document.querySelector('#availability-date')?.value || '',
+					startTime: document.querySelector('#availability-start')?.value || '',
+					endTime: document.querySelector('#availability-end')?.value || '',
+				}),
+			});
+			const payload = await response.json();
+			if (!response.ok) {
+				if (response.status === 401) {
+					clearAuth();
+					window.location.href = '/auth/login?redirect=/espace-pro';
+					return;
+				}
+				throw new Error(payload.message || 'Impossible de publier ce créneau.');
+			}
+			renderState(payload);
+			event.target.reset();
+			setBoxMessage(feedback, 'Créneau ajouté avec succès.', 'success');
+		} catch (error) {
+			setBoxMessage(feedback, error instanceof Error ? error.message : 'Impossible de publier ce créneau.');
+		}
+	});
+
+	loadDashboard();
+</script>

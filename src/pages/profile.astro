@@ -11,9 +11,14 @@ import Layout from '../layouts/Layout.astro';
 						<h1 class="text-[2.2rem] font-semibold tracking-[-0.04em] text-[#16223c]">Mon Profil</h1>
 						<p class="mt-2 text-[1.05rem] text-slate-500">Gérez vos informations et suivez votre progression</p>
 					</div>
-					<button id="logout-button" type="button" class="inline-flex min-h-[44px] items-center justify-center rounded-[14px] border border-slate-300 px-5 py-2.5 text-[1rem] font-medium text-slate-700 transition hover:border-slate-400">
-						Se déconnecter
-					</button>
+					<div class="flex flex-wrap gap-3">
+						<a href="/mes-rendez-vous" class="inline-flex min-h-[44px] items-center justify-center rounded-[14px] bg-[#08b37d] px-5 py-2.5 text-[1rem] font-medium text-white transition hover:bg-[#079765]">
+							Mes rendez-vous
+						</a>
+						<button id="logout-button" type="button" class="inline-flex min-h-[44px] items-center justify-center rounded-[14px] border border-slate-300 px-5 py-2.5 text-[1rem] font-medium text-slate-700 transition hover:border-slate-400">
+							Se déconnecter
+						</button>
+					</div>
 				</div>
 
 				<p id="profile-error" class="mb-4 hidden rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600"></p>
