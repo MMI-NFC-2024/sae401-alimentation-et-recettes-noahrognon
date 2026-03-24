@@ -4,15 +4,30 @@ import logo from '../assets/logonutriviafooter.svg';
 const footerSections = [
 	{
 		title: 'Navigation',
-		links: ['Recettes', 'Régimes', 'Aliments', 'Planificateur'],
+		links: [
+			{ label: 'Recettes', href: '/recettes' },
+			{ label: 'Régimes', href: '/regimes' },
+			{ label: 'Aliments', href: '/aliments' },
+			{ label: 'Planificateur', href: '/planificateur' },
+		],
 	},
 	{
 		title: 'Support',
-		links: ["Centre d'aide", 'FAQ', 'Contactez-nous', 'Blog'],
+		links: [
+			{ label: "Centre d'aide", href: '/support#centre-aide' },
+			{ label: 'FAQ', href: '/support#faq' },
+			{ label: 'Contactez-nous', href: '/support#contact' },
+			{ label: 'Blog', href: '/support#blog' },
+		],
 	},
 	{
 		title: 'Légal',
-		links: ['Mentions légales', 'Politique de confidentialité', 'CGU', 'Cookies'],
+		links: [
+			{ label: 'Mentions légales', href: '/mentions-legales' },
+			{ label: 'Politique de confidentialité', href: '/politique-confidentialite' },
+			{ label: 'CGU', href: '/cgu' },
+			{ label: 'Cookies', href: '/cookies' },
+		],
 	},
 ];
 ---
@@ -32,7 +47,7 @@ const footerSections = [
 					<section>
 						<h2 class="mb-[18px] text-base font-bold text-white">{section.title}</h2>
 						<ul class="grid gap-[14px]">
-							{section.links.map((link) => <li><a href="#" class="text-base text-slate-300 transition-colors hover:text-white">{link}</a></li>)}
+							{section.links.map((link) => <li><a href={link.href} class="text-base text-slate-300 transition-colors hover:text-white">{link.label}</a></li>)}
 						</ul>
 					</section>
 				))
@@ -41,6 +56,6 @@ const footerSections = [
 	</div>
 
 	<div class="border-t border-white/10 px-5 pt-6 pb-12 text-center md:px-8 md:pt-[30px] md:pb-[92px]">
-		<p class="text-base text-slate-400">© 2026 NutriPlan. Tous droits réservés.</p>
+		<p class="text-base text-slate-400">© 2026 Nutrivia. Tous droits réservés.</p>
 	</div>
 </footer>

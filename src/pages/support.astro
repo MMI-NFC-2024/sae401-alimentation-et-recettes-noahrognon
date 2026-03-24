@@ -1,0 +1,197 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+const helpCards = [
+	{
+		title: 'Créer et personnaliser son compte',
+		description:
+			'Comprenez le parcours d’inscription, le profil nutritionnel, les objectifs et les calculs automatiques des besoins journaliers.',
+		link: '/auth/register',
+		linkLabel: 'Voir l’inscription',
+	},
+	{
+		title: 'Utiliser le suivi alimentaire',
+		description:
+			'Ajoutez vos repas, recettes et collations, puis comparez vos apports à vos objectifs nutritionnels.',
+		link: '/suivi',
+		linkLabel: 'Accéder au suivi',
+	},
+	{
+		title: 'Planifier sa semaine',
+		description:
+			'Organisez vos petits-déjeuners, déjeuners et dîners pour générer ensuite votre liste de courses.',
+		link: '/planificateur',
+		linkLabel: 'Ouvrir le planificateur',
+	},
+	{
+		title: 'Utiliser le scanner et l’IA',
+		description:
+			'Scannez un produit, analysez une assiette ou posez une question à Nutriv’IA pour être accompagné.',
+		link: '/scanner',
+		linkLabel: 'Ouvrir le scanner',
+	},
+];
+
+const faqItems = [
+	{
+		question: 'Comment Nutrivia calcule mes besoins nutritionnels ?',
+		answer:
+			'Lors de l’inscription, Nutrivia prend en compte votre âge, votre taille, votre poids, votre niveau d’activité, votre objectif et votre régime alimentaire. Ces données servent à estimer vos calories et vos macronutriments cibles.',
+	},
+	{
+		question: 'Puis-je modifier mes objectifs après inscription ?',
+		answer:
+			'Oui. Vous pouvez mettre à jour vos informations depuis votre profil. Les objectifs et les recommandations du site sont alors recalculés en conséquence.',
+	},
+	{
+		question: 'Le planificateur est-il relié au suivi alimentaire ?',
+		answer:
+			'Oui. Les repas planifiés peuvent être envoyés vers le suivi afin de faciliter le remplissage de vos journées alimentaires.',
+	},
+	{
+		question: 'Puis-je prendre rendez-vous avec un professionnel ?',
+		answer:
+			'Oui. La page Professionnels permet de consulter les profils disponibles, de choisir un créneau et de réserver un rendez-vous directement depuis la plateforme.',
+	},
+	{
+		question: 'Le scanner produit ajoute-t-il automatiquement un aliment à la base ?',
+		answer:
+			'Le scan propose d’abord une fiche préremplie à partir de l’analyse IA. Vous gardez la main pour vérifier, corriger puis confirmer l’ajout.',
+	},
+	{
+		question: 'Comment fonctionnent les notifications ?',
+		answer:
+			'Le centre de notifications vous informe des événements importants du site : rendez-vous confirmés, nouveaux commentaires, likes, ajout de produits scannés ou encore recettes ajoutées via l’IA.',
+	},
+];
+
+const blogCards = [
+	{
+		title: 'Bien démarrer avec Nutrivia',
+		description:
+			'Découvrez comment configurer votre profil, utiliser le tableau de bord et activer les fonctionnalités clés du site.',
+		category: 'Guide',
+		link: '/dashboard',
+	},
+	{
+		title: 'Mieux organiser sa semaine de repas',
+		description:
+			'Utilisez le planificateur et la liste de courses pour transformer vos idées repas en organisation concrète.',
+		category: 'Conseil',
+		link: '/planificateur',
+	},
+	{
+		title: 'Scanner, analyser, ajuster',
+		description:
+			'Un aperçu des outils intelligents de Nutrivia : scan produit, analyse photo d’assiette et assistant nutritionnel.',
+		category: 'IA',
+		link: '/scanner',
+	},
+];
+---
+
+<Layout title="Support - Nutrivia">
+	<section class="bg-[radial-gradient(circle_at_top_left,_rgba(205,248,224,0.7),_transparent_40%),linear-gradient(180deg,#fbffff_0%,#f5fbff_100%)]">
+		<div class="mx-auto max-w-[1180px] px-4 py-10 md:px-6 md:py-14">
+			<div class="max-w-[760px]">
+				<span class="inline-flex rounded-full bg-[#d8f7e1] px-3 py-1 text-sm font-semibold text-[#0a9a68]">Support Nutrivia</span>
+				<h1 class="mt-4 text-3xl font-semibold tracking-[-0.03em] text-slate-900 md:text-[2.7rem]">Centre d’aide, FAQ, contact et ressources</h1>
+				<p class="mt-4 text-base leading-7 text-slate-600 md:text-lg">
+					Retrouvez ici les réponses aux questions les plus fréquentes, les ressources utiles pour utiliser Nutrivia et les moyens de nous contacter.
+				</p>
+			</div>
+
+			<div class="mt-8 grid gap-4 md:grid-cols-4">
+				<a href="#centre-aide" class="rounded-[20px] border border-[#d8e5f1] bg-white px-5 py-4 text-sm font-semibold text-slate-700 shadow-[0_16px_40px_rgba(15,23,42,0.06)] transition hover:border-[#08b37d] hover:text-[#08b37d]">Centre d’aide</a>
+				<a href="#faq" class="rounded-[20px] border border-[#d8e5f1] bg-white px-5 py-4 text-sm font-semibold text-slate-700 shadow-[0_16px_40px_rgba(15,23,42,0.06)] transition hover:border-[#08b37d] hover:text-[#08b37d]">FAQ</a>
+				<a href="#contact" class="rounded-[20px] border border-[#d8e5f1] bg-white px-5 py-4 text-sm font-semibold text-slate-700 shadow-[0_16px_40px_rgba(15,23,42,0.06)] transition hover:border-[#08b37d] hover:text-[#08b37d]">Contact</a>
+				<a href="#blog" class="rounded-[20px] border border-[#d8e5f1] bg-white px-5 py-4 text-sm font-semibold text-slate-700 shadow-[0_16px_40px_rgba(15,23,42,0.06)] transition hover:border-[#08b37d] hover:text-[#08b37d]">Blog</a>
+			</div>
+
+			<section id="centre-aide" class="mt-10 rounded-[28px] border border-[#d8e5f1] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-8">
+				<div class="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
+					<div>
+						<h2 class="text-2xl font-semibold text-slate-900">Centre d’aide</h2>
+						<p class="mt-2 text-sm leading-6 text-slate-500">Les principales portes d’entrée pour comprendre et utiliser la plateforme.</p>
+					</div>
+				</div>
+
+				<div class="mt-6 grid gap-4 md:grid-cols-2">
+					{
+						helpCards.map((card) => (
+							<article class="rounded-[24px] border border-[#d8e5f1] bg-[#fbfdff] p-5">
+								<h3 class="text-xl font-semibold text-slate-900">{card.title}</h3>
+								<p class="mt-3 text-sm leading-6 text-slate-600">{card.description}</p>
+								<a href={card.link} class="mt-5 inline-flex items-center rounded-[16px] bg-[#08b37d] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#079765]">
+									{card.linkLabel}
+								</a>
+							</article>
+						))
+					}
+				</div>
+			</section>
+
+			<div class="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.25fr)_360px]">
+				<section id="faq" class="rounded-[28px] border border-[#d8e5f1] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-8">
+					<h2 class="text-2xl font-semibold text-slate-900">FAQ</h2>
+					<p class="mt-2 text-sm leading-6 text-slate-500">Les questions les plus fréquentes sur le fonctionnement de Nutrivia.</p>
+
+					<div class="mt-6 space-y-4">
+						{
+							faqItems.map((item) => (
+								<article class="rounded-[22px] border border-[#d8e5f1] bg-[#fbfdff] p-5">
+									<h3 class="text-lg font-semibold text-slate-900">{item.question}</h3>
+									<p class="mt-3 text-sm leading-7 text-slate-600">{item.answer}</p>
+								</article>
+							))
+						}
+					</div>
+				</section>
+
+				<div class="space-y-8">
+					<section id="contact" class="rounded-[28px] border border-[#d8e5f1] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-8">
+						<h2 class="text-2xl font-semibold text-slate-900">Contact</h2>
+						<p class="mt-2 text-sm leading-6 text-slate-500">Pour toute question liée au projet, au fonctionnement du site ou à vos données.</p>
+
+						<div class="mt-6 grid gap-4">
+							<div class="rounded-[20px] bg-[#f7fbff] px-5 py-4">
+								<p class="text-sm font-medium text-slate-500">Email</p>
+								<a href="mailto:noah.rognon@gmail.com" class="mt-2 inline-block text-[1rem] font-semibold text-[#08b37d] hover:underline">noah.rognon@gmail.com</a>
+							</div>
+							<div class="rounded-[20px] bg-[#f7fbff] px-5 py-4">
+								<p class="text-sm font-medium text-slate-500">Site</p>
+								<a href="https://nutrivia.noahrognon.fr" class="mt-2 inline-block text-[1rem] font-semibold text-[#08b37d] hover:underline">nutrivia.noahrognon.fr</a>
+							</div>
+							<div class="rounded-[20px] bg-[#f7fbff] px-5 py-4">
+								<p class="text-sm font-medium text-slate-500">Auteur</p>
+								<p class="mt-2 text-[1rem] font-semibold text-slate-900">Noah Rognon</p>
+							</div>
+						</div>
+					</section>
+
+					<section id="blog" class="rounded-[28px] border border-[#d8e5f1] bg-white p-6 shadow-[0_20px_60px_rgba(15,23,42,0.07)] md:p-8">
+						<div class="flex items-center justify-between gap-4">
+							<div>
+								<h2 class="text-2xl font-semibold text-slate-900">Mini blog</h2>
+								<p class="mt-2 text-sm leading-6 text-slate-500">Quelques contenus éditoriaux pour mieux découvrir la plateforme.</p>
+							</div>
+						</div>
+
+						<div class="mt-6 grid gap-4">
+							{
+								blogCards.map((card) => (
+									<article class="rounded-[22px] border border-[#d8e5f1] bg-[#fbfdff] p-5">
+										<span class="inline-flex rounded-full bg-[#d8f7e1] px-3 py-1 text-xs font-semibold text-[#0a9a68]">{card.category}</span>
+										<h3 class="mt-4 text-lg font-semibold text-slate-900">{card.title}</h3>
+										<p class="mt-3 text-sm leading-6 text-slate-600">{card.description}</p>
+										<a href={card.link} class="mt-4 inline-flex text-sm font-semibold text-[#08b37d] hover:underline">Lire</a>
+									</article>
+								))
+							}
+						</div>
+					</section>
+				</div>
+			</div>
+		</div>
+	</section>
+</Layout>
