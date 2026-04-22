@@ -1,0 +1,20 @@
+User-agent: *
+Allow: /
+
+Disallow: /app-api/
+Disallow: /api/
+Disallow: /admin/
+Disallow: /auth/
+Disallow: /dashboard
+Disallow: /profile
+Disallow: /suivi
+Disallow: /planificateur
+Disallow: /liste-courses
+Disallow: /assistant
+Disallow: /notifications
+Disallow: /scanner
+Disallow: /mes-rendez-vous
+Disallow: /espace-pro
+Disallow: /rendez-vous/
+
+Sitemap: https://nutrivia.noahrognon.fr/sitemap.xml

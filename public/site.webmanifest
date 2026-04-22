@@ -1,0 +1,18 @@
+{
+  "name": "Nutrivia",
+  "short_name": "Nutrivia",
+  "description": "Plateforme de nutrition personnalisée, recettes, planification de repas, suivi alimentaire et assistance IA.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f7fdf9",
+  "theme_color": "#08b37d",
+  "lang": "fr-FR",
+  "icons": [
+    {
+      "src": "/logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

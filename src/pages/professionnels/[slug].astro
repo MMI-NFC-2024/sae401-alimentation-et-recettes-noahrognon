@@ -4,7 +4,10 @@ import Layout from '../../layouts/Layout.astro';
 const slug = Astro.params.slug ?? '';
 ---
 
-<Layout title="Rendez-vous nutrition">
+<Layout
+	title="Rendez-vous avec un professionnel de la nutrition - Nutrivia"
+	description="Consultez le profil d’un professionnel de la nutrition, ses spécialités, ses modes de consultation, ses disponibilités et réservez un rendez-vous."
+>
 	<section class="bg-[radial-gradient(circle_at_top_left,_rgba(205,248,224,0.75),_transparent_42%),linear-gradient(180deg,#fbffff_0%,#f5fbff_100%)]">
 		<div class="mx-auto max-w-[1180px] px-4 py-8 md:px-6 md:py-10">
 			<a href="/professionnels" class="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-[#08b37d]">

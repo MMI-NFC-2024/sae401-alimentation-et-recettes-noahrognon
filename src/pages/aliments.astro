@@ -1,8 +1,20 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const foodsJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'CollectionPage',
+	name: 'Base de données alimentaires Nutrivia',
+	url: 'https://nutrivia.noahrognon.fr/aliments',
+	description: 'Base de données nutritionnelles avec calories, protéines, glucides, lipides et fibres pour composer des repas équilibrés.',
+};
 ---
 
-<Layout title="Base de données alimentaires - Nutrivia">
+<Layout
+	title="Base alimentaire : calories et macros - Nutrivia"
+	description="Consultez les valeurs nutritionnelles des aliments : calories, protéines, glucides, lipides et fibres pour mieux composer vos repas et suivre votre alimentation."
+	jsonLd={foodsJsonLd}
+>
 	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.78),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_32%),linear-gradient(180deg,#f6fdf9_0%,#fbfdff_64%,#f4f9ff_100%)] py-8 lg:py-10">
 		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
 			<div class="mx-auto max-w-[1080px]">

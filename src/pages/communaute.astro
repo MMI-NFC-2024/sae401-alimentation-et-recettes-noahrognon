@@ -1,8 +1,20 @@
 ---
 import Layout from '../layouts/Layout.astro';
+
+const communityJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'CollectionPage',
+	name: 'Communauté Nutrivia',
+	url: 'https://nutrivia.noahrognon.fr/communaute',
+	description: 'Espace communautaire Nutrivia pour partager recettes, expériences, photos, questions nutritionnelles et avis entre utilisateurs.',
+};
 ---
 
-<Layout title="Communaute - Nutrivia">
+<Layout
+	title="Communauté nutrition : recettes, avis et échanges - Nutrivia"
+	description="Rejoignez la communauté Nutrivia pour partager vos recettes, photos d’assiettes, questions nutritionnelles, conseils et retours d’expérience."
+	jsonLd={communityJsonLd}
+>
 	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)] py-8 lg:py-10">
 		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
 			<div class="mx-auto max-w-[760px]">

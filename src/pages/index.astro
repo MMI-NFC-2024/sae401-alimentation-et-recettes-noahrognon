@@ -93,9 +93,29 @@ const features = [
 		icon: '◌',
 	},
 ];
+
+const homeJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'SoftwareApplication',
+	name: 'Nutrivia',
+	applicationCategory: 'HealthApplication',
+	operatingSystem: 'Web',
+	url: 'https://nutrivia.noahrognon.fr',
+	description:
+		'Plateforme web de nutrition personnalisée avec recettes, suivi alimentaire, planificateur de repas, liste de courses, assistant IA, scanner produit et rendez-vous nutrition.',
+	offers: {
+		'@type': 'Offer',
+		price: '0',
+		priceCurrency: 'EUR',
+	},
+};
 ---
 
-<Layout title="Nutrivia">
+<Layout
+	title="Nutrivia - Nutrition personnalisée, recettes, planning repas et suivi alimentaire"
+	description="Nutrivia vous aide à calculer vos besoins nutritionnels, découvrir des recettes adaptées, planifier vos repas, suivre vos calories et générer votre liste de courses avec l’aide de l’IA."
+	jsonLd={homeJsonLd}
+>
 	<section class="bg-[radial-gradient(circle_at_left_top,rgba(200,248,224,0.8),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(207,230,255,0.75),transparent_28%),linear-gradient(180deg,#ecfbf4_0%,#f8fdff_72%,#eef6ff_100%)] py-10 md:py-14 lg:py-[72px] lg:pb-[88px]">
 		<div class="mx-auto grid w-full max-w-[1180px] gap-8 px-4 md:px-6 lg:grid-cols-[minmax(0,1fr)_minmax(420px,0.95fr)] lg:gap-[52px]">
 			<div class="grid gap-5 self-center">

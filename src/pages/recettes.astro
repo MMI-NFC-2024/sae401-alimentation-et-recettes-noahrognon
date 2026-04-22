@@ -1,8 +1,20 @@
 ---
 import Layout from "../layouts/Layout.astro";
+
+const recipesJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'CollectionPage',
+	name: 'Recettes nutritionnelles Nutrivia',
+	url: 'https://nutrivia.noahrognon.fr/recettes',
+	description: 'Catalogue de recettes personnalisées selon les objectifs nutritionnels, les régimes alimentaires et les besoins en calories.',
+};
 ---
 
-<Layout title="Recettes - Nutrivia">
+<Layout
+	title="Recettes saines personnalisées - Nutrivia"
+	description="Explorez des recettes saines et personnalisées selon votre objectif : perte de poids, prise de masse, maintien, régime végétarien, méditerranéen ou faible en glucides."
+	jsonLd={recipesJsonLd}
+>
 	<section
 		class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.8),transparent_30%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_32%),linear-gradient(180deg,#f6fdf9_0%,#fbfdff_64%,#f4f9ff_100%)] py-8 lg:py-10"
 	>

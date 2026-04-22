@@ -5,23 +5,133 @@ import '../styles/global.css';
 
 interface Props {
 	title?: string;
+	description?: string;
+	image?: string;
+	type?: string;
+	noindex?: boolean;
+	jsonLd?: Record<string, unknown> | Array<Record<string, unknown>>;
 	hideFooter?: boolean;
 	mainClass?: string;
 	bodyClass?: string;
 }
 
-const { title = 'Nutrivia', hideFooter = false, mainClass = '', bodyClass = '' } = Astro.props;
+const siteUrl = 'https://nutrivia.noahrognon.fr';
+const currentUrl = new URL(Astro.url.pathname, siteUrl);
+const path = Astro.url.pathname.replace(/\/+$/, '') || '/';
+const privatePathPrefixes = ['/auth', '/admin', '/dashboard', '/profile', '/suivi', '/planificateur', '/liste-courses', '/assistant', '/notifications', '/scanner', '/mes-rendez-vous', '/espace-pro', '/rendez-vous'];
+
+const pageDescriptions: Record<string, string> = {
+	'/': 'Nutrivia est une plateforme de nutrition personnalisée pour calculer vos besoins, planifier vos repas, suivre votre alimentation et générer vos listes de courses.',
+	'/recettes': 'Découvrez des recettes personnalisées selon vos objectifs nutritionnels, votre régime alimentaire, vos calories et vos préférences.',
+	'/aliments': 'Consultez la base alimentaire Nutrivia avec calories, protéines, glucides, lipides et fibres pour mieux composer vos repas.',
+	'/regimes': 'Comparez les régimes alimentaires disponibles sur Nutrivia : végétarien, végétalien, méditerranéen, faible en glucides et classique.',
+	'/professionnels': 'Trouvez un diététicien, nutritionniste ou coach alimentaire et réservez un rendez-vous nutrition directement depuis Nutrivia.',
+	'/communaute': 'Rejoignez la communauté Nutrivia pour partager vos repas, vos recettes, vos questions et vos progrès nutritionnels.',
+	'/support': 'Centre d’aide Nutrivia : FAQ, contact, ressources et conseils pour utiliser la plateforme de nutrition personnalisée.',
+	'/mentions-legales': 'Mentions légales de Nutrivia, plateforme de nutrition personnalisée éditée par Noah Rognon.',
+	'/politique-confidentialite': 'Politique de confidentialité Nutrivia : données collectées, finalités, droits utilisateurs et sécurité.',
+	'/cgu': 'Conditions générales d’utilisation de Nutrivia et règles d’usage de la plateforme.',
+	'/cookies': 'Politique cookies de Nutrivia : informations sur les cookies et stockages techniques utilisés par la plateforme.',
+};
+
+const defaultDescription = pageDescriptions[path] ?? 'Nutrivia accompagne les utilisateurs dans la nutrition personnalisée, la planification des repas, le suivi alimentaire, les recettes, les courses et l’assistance IA.';
+const {
+	title = 'Nutrivia - Nutrition personnalisée, recettes et planification de repas',
+	description = defaultDescription,
+	image = '/seo/og-nutrivia.svg',
+	type = 'website',
+	noindex = privatePathPrefixes.some((prefix) => path === prefix || path.startsWith(`${prefix}/`)),
+	jsonLd,
+	hideFooter = false,
+	mainClass = '',
+	bodyClass = '',
+} = Astro.props;
+
+const fullTitle = title.includes('Nutrivia') ? title : `${title} - Nutrivia`;
+const imageUrl = new URL(image, siteUrl).toString();
+const organizationJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'Organization',
+	name: 'Nutrivia',
+	url: siteUrl,
+	logo: new URL('/logo.svg', siteUrl).toString(),
+	founder: {
+		'@type': 'Person',
+		name: 'Noah Rognon',
+	},
+	sameAs: [],
+};
+const websiteJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'WebSite',
+	name: 'Nutrivia',
+	url: siteUrl,
+	description,
+	inLanguage: 'fr-FR',
+	potentialAction: {
+		'@type': 'SearchAction',
+		target: `${siteUrl}/recettes?q={search_term_string}`,
+		'query-input': 'required name=search_term_string',
+	},
+};
+const breadcrumbJsonLd =
+	path === '/'
+		? null
+		: {
+			'@context': 'https://schema.org',
+			'@type': 'BreadcrumbList',
+			itemListElement: [
+				{
+					'@type': 'ListItem',
+					position: 1,
+					name: 'Accueil',
+					item: siteUrl,
+				},
+				{
+					'@type': 'ListItem',
+					position: 2,
+					name: fullTitle.replace(' - Nutrivia', ''),
+					item: currentUrl.toString(),
+				},
+			],
+		};
+const allJsonLd = [
+	organizationJsonLd,
+	websiteJsonLd,
+	...(breadcrumbJsonLd ? [breadcrumbJsonLd] : []),
+	...(Array.isArray(jsonLd) ? jsonLd : jsonLd ? [jsonLd] : []),
+];
 ---
 
 <!doctype html>
 <html lang="fr">
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
 		<link rel="icon" type="image/svg+xml" href="/logo.svg" />
 		<link rel="icon" href="/logo.svg" />
+		<link rel="apple-touch-icon" href="/logo.svg" />
+		<link rel="manifest" href="/site.webmanifest" />
+		<link rel="canonical" href={currentUrl.toString()} />
 		<meta name="generator" content={Astro.generator} />
-		<title>{title}</title>
+		<meta name="description" content={description} />
+		<meta name="robots" content={noindex ? 'noindex, nofollow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1'} />
+		<meta name="author" content="Noah Rognon" />
+		<meta name="theme-color" content="#08b37d" />
+		<meta property="og:locale" content="fr_FR" />
+		<meta property="og:site_name" content="Nutrivia" />
+		<meta property="og:type" content={type} />
+		<meta property="og:title" content={fullTitle} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={currentUrl.toString()} />
+		<meta property="og:image" content={imageUrl} />
+		<meta property="og:image:alt" content="Nutrivia, plateforme de nutrition personnalisée" />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={fullTitle} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={imageUrl} />
+		<title>{fullTitle}</title>
+		<script type="application/ld+json" set:html={JSON.stringify(allJsonLd)} />
 	</head>
 	<body class={`min-h-screen bg-white text-slate-700 antialiased ${bodyClass}`.trim()}>
 		<div class="flex min-h-screen flex-col">

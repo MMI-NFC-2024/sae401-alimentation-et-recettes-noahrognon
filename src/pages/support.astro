@@ -1,6 +1,37 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
+const supportJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'FAQPage',
+	mainEntity: [
+		{
+			'@type': 'Question',
+			name: 'Comment Nutrivia calcule mes besoins nutritionnels ?',
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: 'Nutrivia prend en compte les informations du profil utilisateur comme l’âge, la taille, le poids, le niveau d’activité, l’objectif et le régime alimentaire pour estimer les calories et macronutriments cibles.',
+			},
+		},
+		{
+			'@type': 'Question',
+			name: 'Le planificateur est-il relié au suivi alimentaire ?',
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: 'Oui. Les repas planifiés peuvent être envoyés vers le suivi alimentaire afin de faciliter le remplissage des journées.',
+			},
+		},
+		{
+			'@type': 'Question',
+			name: 'Puis-je prendre rendez-vous avec un professionnel ?',
+			acceptedAnswer: {
+				'@type': 'Answer',
+				text: 'Oui. La page Professionnels permet de consulter des profils, choisir un créneau disponible et réserver un rendez-vous nutrition.',
+			},
+		},
+	],
+};
+
 const helpCards = [
 	{
 		title: 'Créer et personnaliser son compte',
@@ -90,7 +121,11 @@ const blogCards = [
 ];
 ---
 
-<Layout title="Support - Nutrivia">
+<Layout
+	title="Support Nutrivia : aide, FAQ, contact et guides"
+	description="Consultez le centre d’aide Nutrivia, la FAQ, les ressources pratiques et les informations de contact pour utiliser le suivi, le planificateur, l’IA et les rendez-vous nutrition."
+	jsonLd={supportJsonLd}
+>
 	<section class="bg-[radial-gradient(circle_at_top_left,_rgba(205,248,224,0.7),_transparent_40%),linear-gradient(180deg,#fbffff_0%,#f5fbff_100%)]">
 		<div class="mx-auto max-w-[1180px] px-4 py-10 md:px-6 md:py-14">
 			<div class="max-w-[760px]">

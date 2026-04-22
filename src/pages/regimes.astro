@@ -1,6 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
 
+const dietsJsonLd = {
+	'@context': 'https://schema.org',
+	'@type': 'CollectionPage',
+	name: 'Régimes alimentaires Nutrivia',
+	url: 'https://nutrivia.noahrognon.fr/regimes',
+	description: 'Guide des régimes alimentaires avec avantages, points de vigilance et aliments conseillés.',
+};
+
 type DietCard = {
 	slug: string;
 	title: string;
@@ -203,7 +211,11 @@ function renderDietIcon(icon: DietCard['icon']) {
 }
 ---
 
-<Layout title="Régimes alimentaires - Nutrivia">
+<Layout
+	title="Régimes alimentaires : végétarien, méditerranéen, faible glucides - Nutrivia"
+	description="Comparez les régimes alimentaires disponibles sur Nutrivia : végétarien, végétalien, méditerranéen, faible en glucides et alimentation classique."
+	jsonLd={dietsJsonLd}
+>
 	<section class="bg-[radial-gradient(circle_at_left_top,rgba(214,247,223,0.76),transparent_28%),radial-gradient(circle_at_right_bottom,rgba(218,236,255,0.72),transparent_34%),linear-gradient(180deg,#f7fdf9_0%,#fbfdff_66%,#f4f9ff_100%)] py-8 lg:py-10">
 		<div class="mx-auto max-w-[1180px] px-4 md:px-6">
 			<div class="mx-auto max-w-[980px]">
